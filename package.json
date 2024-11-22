@@ -1,5 +1,5 @@
 {
-  "name": "my-first-vue",
+  "name": "SchoolBusCodesCollect",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -15,6 +15,7 @@
     "my-first-vue": "file:",
     "pinia": "^2.2.6",
     "props": "^0.3.0",
+    "SchoolBusCodesCollect": "file:",
     "vue": "^3.2.13",
     "vue-router": "^4.4.5"
   },
