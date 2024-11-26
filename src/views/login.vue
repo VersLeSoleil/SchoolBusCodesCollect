@@ -2,10 +2,10 @@
   <div class="main">
     <div class="bg"></div>
     <div class="page">
-    <h2>登录</h2>
-    <input type="text" placeholder="用户名" class = "input" v-model="username"/>
-    <input type="password" placeholder="密码" class = "input" v-model="password"/>
-    <button class = "login-button" @click="handleLogin">登录</button>
+      <h2>登录</h2>
+      <input type="text" placeholder="用户名" class="input" v-model="username"/>
+      <input type="password" placeholder="密码" class="input" v-model="password"/>
+      <button class="login-button" @click="handleLogin">登录</button>
     </div>
   </div>
 </template>

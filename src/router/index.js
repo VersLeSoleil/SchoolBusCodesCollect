@@ -7,6 +7,7 @@ import Driver_Info from '@/views/driver_0/driver_Info.vue';
 import test_user_map from '@/views/components/Map-user.vue';
 import User_main from '@/views/user/user_main.vue';
 import User_person from '@/views/user/user_person.vue';
+import Admin_home from '@/views/admin/admin_home.vue';
 import { validateToken } from '@/auth.js'; // 导入验证函数
 
 const routes = [
@@ -53,6 +54,11 @@ const routes = [
         path: '/user-person',
         name: 'user-person',
         component: User_person,
+    },
+    {
+        path: '/admin_home',
+        name: 'admin_home',
+        component: Admin_home,
     }
 ];
 
