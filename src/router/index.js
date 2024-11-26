@@ -7,7 +7,8 @@ import Driver_Info from '@/views/driver_0/driver_Info.vue';
 import test_user_map from '@/views/components/Map-user.vue';
 import User_main from '@/views/user/user_main.vue';
 import User_person from '@/views/user/user_person.vue';
-import Admin_home from '@/views/admin/admin_home.vue';
+import Error404 from '@/views/404.vue';
+import Lay_out from '@/views/admin/Admin_layout.vue';
 import { validateToken } from '@/auth.js'; // 导入验证函数
 
 const routes = [
@@ -58,8 +59,20 @@ const routes = [
     {
         path: '/admin_home',
         name: 'admin_home',
-        component: Admin_home,
-    }
+        component: Lay_out,
+        children: [{
+            path: 'dashboard',
+            name: 'Dashboard',
+            component: () => import('@/views/admin/Admin_dashboard.vue'),
+            meta: { title: 'Dashboard', icon: 'dashboard' }
+        }]
+    },
+    {
+        path: '/404',
+        name: 'Error404',
+        component: Error404,
+        hidden: true,
+    },
 ];
 
 
@@ -71,6 +84,12 @@ const router = createRouter({
 
 // 添加导航守卫，确保用户只有在登录后才能访问主页
 router.beforeEach(async (to, from, next) => {
+    // 先检查是否是非法URL，如果是则访问404界面
+    const routeExists = router.hasRoute(to.name);
+    if (!routeExists) {
+        next('/404'); // 重定向到 404 页面
+    }
+    // URL正常
     if (to.name === 'Login') {
         // 如果用户试图访问登录页面
         const validation = await validateToken(); // 验证令牌

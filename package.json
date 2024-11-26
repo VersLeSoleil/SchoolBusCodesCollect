@@ -9,12 +9,15 @@
   },
   "dependencies": {
     "@amap/amap-jsapi-loader": "^1.0.1",
+    "@fortawesome/fontawesome-free": "^6.7.1",
     "axios": "^1.7.7",
     "core-js": "^3.8.3",
     "element-plus": "^2.8.7",
     "my-first-vue": "file:",
     "pinia": "^2.2.6",
     "props": "^0.3.0",
+    "sass": "^1.81.0",
+    "sass-loader": "^16.0.3",
     "SchoolBusCodesCollect": "file:",
     "vue": "^3.2.13",
     "vue-router": "^4.4.5"

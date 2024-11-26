@@ -3,6 +3,7 @@ import { createApp } from 'vue'; // Vue 3 的导入方式
 import App from './App.vue';
 import router from './router'; // 导入路由
 import { createPinia } from 'pinia';
+import '@fortawesome/fontawesome-free/css/all.css';
 
 const app = createApp(App);
 app.use(router); // 使用路由
