@@ -9,12 +9,13 @@ import MapComponent from '@/views/driver_0/components/MapComponent.vue';
       <span>中山大学 (1号车)</span>
     </div>
     <div class="main-container">
-      <MapComponent />
+      <MapComponent />    
     </div>
   </div>
 </template>
 
 <style scoped>
+
 .page-container {
   display: flex;
   flex-direction: column;
@@ -66,4 +67,5 @@ import MapComponent from '@/views/driver_0/components/MapComponent.vue';
     height: 600px;
   }
 }
+
 </style>

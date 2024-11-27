@@ -1,31 +1,35 @@
 <template>
     <div>
       <!-- 按钮 -->
-      <button @click="openForm" class="form-button">处理工作班次</button>
+      <button @click="openForm" class="form-button">上班！=。=</button>
       <!-- 信息填写窗口 -->
       <div v-if="showForm" class="form-modal">
         <div class="form-content">
-          <h3>填写工作班次信息</h3>
+          <h3>请填写工作班次信息</h3>
           <form @submit.prevent="submitForm">
             <div class="form-item">
-              <label for="route">路线路径:</label>
-              <input v-model="formData.route" id="route" type="text" placeholder="请输入路线路径" required />
+              <label for="driver_id">司机编号:</label>
+              <input v-model="formData.driver_id" id="driver_id" type="text" placeholder="请输入司机编号" required />
             </div>
             <div class="form-item">
-              <label for="plate">车牌号:</label>
-              <input v-model="formData.plate" id="plate" type="text" placeholder="请输入车牌号" required />
+              <label for="route_id">路线路径:</label>
+              <input v-model="formData.route_id" id="route_id" type="text" placeholder="请输入路线路径" required />
             </div>
             <div class="form-item">
-              <label for="shiftAction">车辆状态:</label>
-              <select v-model="formData.shiftAction" id="shiftAction" required>
+              <label for="car_id">车牌号:</label>
+              <input v-model="formData.car_id" id="car_id" type="text" placeholder="请输入车牌号" required />
+            </div>
+            <div class="form-item">
+              <label for="car_isusing">车辆状态:</label>
+              <select v-model="formData.car_isusing" id="car_isusing" required>
                 <option value="" disabled>请选择状态</option>
-                <option value="start">正常运营</option>
-                <option value="end">试通行</option>
+                <option value="正常运营"> 正常运营</option>
+                <option value="试通行">试通行</option>
               </select>
             </div>
             
             <div class="form-actions">
-              <button type="submit"  @click="driverInfoSubmmit" class="submit-button">提交</button>
+              <button type="submit"  class="submit-button">提交</button>
               <button type="button" @click="closeForm" class="cancel-button">取消</button>
             </div>
           </form>
@@ -35,15 +39,15 @@
   </template>
   
   <script>
-  import router from '@/router';
   export default {
     data() {
       return {
         showForm: false, // 控制弹窗显示与否
         formData: {
-          driverID: "",    // 工号
-          route: "",       // 路线路径
-          plate: "",       // 车牌号
+          driver_id: "",    // 工号
+          route_id: "",       // 路线路径
+          car_id: "",       // 车牌号
+          car_isusing: "",
         },
       };
     },
@@ -60,42 +64,25 @@
       // 重置表单
       resetForm() {
         this.formData = {
-          driverID: "",
-          route: "",
-          plate: "",
-          vehicle_status: "",
+          driver_id: "",
+          route_id: "",
+          car_id: "",
+          car_isusing: "",
         };
-      },
-
-      todiver_page_1(){
-        router.push('/driver-1');
       },
       // 提交表单
       async submitForm() {
         try {
-          let endpoint = "";
-          let method = "";
-          let requestBody = {};
-  
-          // 根据操作选择不同的请求路径和请求体
-          if (this.formData.shiftAction === "start") {
-            endpoint = "http://localhost:3456/start";
-            method = "POST";
-            requestBody = {
-              driver_id: this.formData.driverID,
-              vehicle_no: this.formData.plate,
-              route: this.formData.route,
+
+          let endpoint = "http://localhost:8888/start";
+          let method = "POST";
+          let requestBody = {
+              driver_id: this.formData.driver_id,
+              car_id: this.formData.car_id,
+              route_id: parseInt(this.formData.route_id, 10),
+              car_isusing:this.formData.car_isusing
             };
-          } else if (this.formData.shiftAction === "end") {
-            endpoint = "http://localhost:3456/end";
-            method = "POST";
-            requestBody = {
-              driver_id: this.formData.driverID,
-              vehicle_no: this.formData.plate,
-              num_people: this.formData.numPeople,
-            };
-          }
-  
+
           const response = await fetch(endpoint, {
             method: method,
             headers: {
@@ -103,13 +90,13 @@
             },
             body: JSON.stringify(requestBody),
           });
-  
+          console.log(JSON.stringify(requestBody));
           const result = await response.json();
   
           if (response.ok) {
             // 信息提交成功
             alert("操作成功！");
-            window.location.href = "/shift-detail"; // 替换为目标页面路径
+            window.location.href = "/driver-1"; // 替换为目标页面路径
           } else {
             // 错误处理
             alert(result.message || "操作失败，请检查输入！");
