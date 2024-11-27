@@ -10,6 +10,7 @@ import User_person from '@/views/user/user_person.vue';
 import Error404 from '@/views/404.vue';
 import Lay_out from '@/views/admin/Admin_layout.vue';
 import { validateToken } from '@/auth.js'; // 导入验证函数
+import simulation from '@/views/schoolbus-simulation/schoolbus-simulation.vue';
 
 const routes = [
     {
@@ -72,6 +73,11 @@ const routes = [
         name: 'Error404',
         component: Error404,
         hidden: true,
+    },
+    {
+        path: '/simulation',
+        name: 'simulation',
+        component: simulation,
     },
 ];
 
