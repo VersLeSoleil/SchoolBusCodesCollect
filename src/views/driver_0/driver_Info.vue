@@ -59,21 +59,22 @@ const cancelChanges = () => {
 };
 
 //上传个人信息
-function submitForm() {
-  try {
+// function submitForm() {
+//   try {
 
-    let endpoint = "http://localhost:8888/start";
-    let method = "POST";
-    let requestBody = {
-        driver_id: this.formData.driver_id,
-        driver_avatar:
-        driver_name: 
-        driver_sex:
-        driver_tel
-        driver_wages
-        driver_isworking
-      };
-
+//     let endpoint = "http://localhost:8888/start";
+//     let method = "POST";
+//     let requestBody = {
+//         driver_id: this.formData.driver_id,
+//         driver_avatar:
+//         driver_name: 
+//         driver_sex:
+//         driver_tel
+//         driver_wages
+//         driver_isworking
+//       };
+//   }
+// }
 </script>
 
 <template>
