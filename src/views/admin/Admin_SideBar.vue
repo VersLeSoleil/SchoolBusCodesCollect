@@ -16,11 +16,11 @@
 const menuItems = [
   { path: '/admin_home/dashboard', title: '仪表盘', icon: 'el-icon-s-home', name: 'Dashboard' }
   ,
-  { path: '/admin_home/school', title: '学生账户管理', icon: 'el-icon-s-school', name: 'School' }
+  { path: '/empty_site', title: '学生账户管理', icon: 'el-icon-s-school', name: 'School' }
   ,
-  { path: '/admin_home/school', title: '司机账户管理', icon: 'el-icon-s-school', name: 'School' }
+  { path: '/empty_site', title: '司机账户管理', icon: 'el-icon-s-school', name: 'School' }
   ,
-  { path: '/admin_home/school', title: '学校', icon: 'el-icon-s-school', name: 'School' }
+  { path: '/empty_site', title: '学校', icon: 'el-icon-s-school', name: 'School' }
   ,
 
 ]

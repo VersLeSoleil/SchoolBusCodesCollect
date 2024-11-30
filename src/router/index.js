@@ -85,6 +85,11 @@ const routes = [
         name: 'simulation',
         component: simulation,
     },
+    {
+        path: '/empty_site',
+        name: 'empty_site',
+        component: () => import('@/views/empty_site.vue'),
+    }
 ];
 
 

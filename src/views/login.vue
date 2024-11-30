@@ -9,7 +9,7 @@
             <!-- 登录表单 -->
             <div v-if="!isRegistering">
               <div class="input-wrapper">
-                <input type="text" placeholder="用户名" class="input" v-model="username"
+                <input type="text" placeholder="用户名/邮箱/手机号" class="input" v-model="username"
                        required
                        @input="clearError('username')"
                        :class="{ invalid: errors.username }"/>
@@ -133,6 +133,7 @@
 import { nextTick } from "vue";
 import axios from "axios";
 
+
 export default {
   name: "AuthPage",
   data() {
@@ -207,8 +208,26 @@ export default {
             this.loading = false;
             if (response.data.code === 200) {
               console.log("登陆成功：", response.data.data);
+              console.log("数据：", response.data.role);
               localStorage.setItem('jwtToken', response.data.data);
-              this.$router.push('/home');
+
+              // 按照role跳转
+              if (response.data.role === 0) {
+                this.$router.push({
+                  name: 'admin_home',
+                });
+              } else if (response.data.role === 1) {
+                this.$router.push({
+                  name: 'user-main',
+                });
+              } else if (response.data.role === 2) {
+                this.$router.push({
+                  name: 'Driver-0',
+                });
+              } else {
+                throw new Error('未知角色');
+              }
+
             } else {
               alert('登录失败');
               console.log("登陆失败：", response.data.message);
