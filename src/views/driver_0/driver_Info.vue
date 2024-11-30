@@ -22,12 +22,11 @@ const closepopup = () => {
 const user = reactive({
   avatar: require('@/assets/logo.png'), // 头像图片链接
   name: '张三',
-  username: 'zhangsan',
-  password: '******',
-  gender: '男',
+  id: '223310',
+  password: '1',
+  sex: '男',
   phone: '1234567890',
-  route: '1号线',
-  licensePlate: '粤B12345'
+  status:'在职'
 });
 
 // 用于备份用户数据
@@ -45,11 +44,7 @@ const toggleEditMode = () => {
   isEditingMode.value = !isEditingMode.value;
 };
 
-// 保存修改
-const saveChanges = () => {
-  console.log("保存修改:", user);
-  isEditingMode.value = false; 
-};
+
 
 // 取消修改
 const cancelChanges = () => {
@@ -58,23 +53,51 @@ const cancelChanges = () => {
   isEditingMode.value = false; 
 };
 
-//上传个人信息
-// function submitForm() {
-//   try {
 
-//     let endpoint = "http://localhost:8888/start";
-//     let method = "POST";
-//     let requestBody = {
-//         driver_id: this.formData.driver_id,
-//         driver_avatar:
-//         driver_name: 
-//         driver_sex:
-//         driver_tel
-//         driver_wages
-//         driver_isworking
-//       };
-//   }
-// }
+async function submitForm() {
+  try {
+
+    let endpoint = "http://localhost:8888/modifyDriverInfo";
+    let method = "POST";
+    let requestBody = {
+      driver_id: user.id,
+      //driver_avatar:user.avatar,
+      driver_name: user.name,
+      driver_sex:user.sex,
+      driver_tel:user.phone,
+      driver_isworking:user.status,
+    }
+    const response = await fetch(endpoint, {
+      method: method,
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(requestBody),
+    });
+    console.log(JSON.stringify(requestBody));
+    const result = await response.json();
+
+    if (response.ok) {
+      // 信息提交成功
+      alert("操作成功！");
+    } else {
+      // 错误处理
+      alert(result.message || "操作失败，请检查输入！");
+    }
+   }catch (error) {
+      console.error("提交失败:", error);
+      alert("提交失败，请稍后再试！");
+    }
+}
+
+// 保存修改
+const saveChanges = () => {
+  console.log("保存修改:", user);
+  isEditingMode.value = false; 
+  submitForm();
+};
+
+
 </script>
 
 <template>
@@ -93,8 +116,8 @@ const cancelChanges = () => {
             </p>
             <p>
               <strong>账号:</strong>
-              <span v-if="!isEditingMode.value">{{ user.username }}</span>
-              <input v-else v-model="user.username" type="text" />
+              <span v-if="!isEditingMode.value">{{ user.id }}</span>
+              <input v-else v-model="user.id" type="text" />
             </p>
             <p>
               <strong>密码:</strong>
@@ -103,8 +126,8 @@ const cancelChanges = () => {
             </p>
             <p>
               <strong>性别:</strong>
-              <span v-if="!isEditingMode.value">{{ user.gender }}</span>
-              <select v-else v-model="user.gender">
+              <span v-if="!isEditingMode.value">{{ user.sex }}</span>
+              <select v-else v-model="user.sex">
                 <option value="男">男</option>
                 <option value="女">女</option>
               </select>
@@ -115,15 +138,15 @@ const cancelChanges = () => {
               <input v-else v-model="user.phone" type="text" />
             </p>
             <p>
-              <strong>路线:</strong>
-              <span v-if="!isEditingMode.value">{{ user.route }}</span>
-              <input v-else v-model="user.route" type="text" />
+              <strong>工作状态:</strong>
+              <select v-model="user.status" id="driver_isworking" required>
+                <option value="" disabled>请选择状态</option>
+                <option value=0>停职</option>
+                <option value=1>工作</option>
+                <option value=2>休息</option>
+              </select>
             </p>
-            <p>
-              <strong>车牌号:</strong>
-              <span v-if="!isEditingMode.value">{{ user.licensePlate }}</span>
-              <input v-else v-model="user.licensePlate" type="text" />
-            </p>
+            
           </div>
 
           <button @click="closepopup" class="closebutton">X</button>
