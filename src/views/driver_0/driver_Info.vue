@@ -48,33 +48,32 @@ const toggleEditMode = () => {
 // 保存修改
 const saveChanges = () => {
   console.log("保存修改:", user);
-  isEditingMode.value = false; 
+  isEditingMode.value = false;
 };
 
 // 取消修改
 const cancelChanges = () => {
   // 取消时恢复原来的数据
   Object.assign(user, userBackup);
-  isEditingMode.value = false; 
+  isEditingMode.value = false;
 };
 
 //上传个人信息
 // function submitForm() {
 //   try {
-
+//
 //     let endpoint = "http://localhost:8888/start";
 //     let method = "POST";
 //     let requestBody = {
 //         driver_id: this.formData.driver_id,
 //         driver_avatar:
-//         driver_name: 
+//         driver_name:
 //         driver_sex:
 //         driver_tel
 //         driver_wages
 //         driver_isworking
 //       };
-//   }
-// }
+
 </script>
 
 <template>
@@ -127,8 +126,8 @@ const cancelChanges = () => {
           </div>
 
           <button @click="closepopup" class="closebutton">X</button>
-          
-          
+
+
           <button v-if="!isEditingMode.value" @click="toggleEditMode" class="modifybutton">
             修改信息
           </button>
@@ -137,10 +136,10 @@ const cancelChanges = () => {
             退出账号
           </button>
 
-          
+
           <div v-if="isEditingMode.value" class="action-buttons">
             <button @click="saveChanges" class="savebutton">保存</button>
-            
+
             <button @click="cancelChanges" class="cancelbutton">取消</button>
           </div>
         </div>

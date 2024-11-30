@@ -10,6 +10,7 @@
   "dependencies": {
     "@amap/amap-jsapi-loader": "^1.0.1",
     "@fortawesome/fontawesome-free": "^6.7.1",
+    "@unhead/vue": "^1.11.13",
     "axios": "^1.7.7",
     "core-js": "^3.8.3",
     "element-plus": "^2.8.7",
@@ -20,6 +21,7 @@
     "sass-loader": "^16.0.3",
     "SchoolBusCodesCollect": "file:",
     "vue": "^3.2.13",
+    "vue-recaptcha-v3": "^2.0.1",
     "vue-router": "^4.4.5"
   },
   "devDependencies": {
@@ -29,7 +31,10 @@
     "@vue/cli-plugin-eslint": "~5.0.0",
     "@vue/cli-service": "~5.0.0",
     "eslint": "^7.32.0",
-    "eslint-plugin-vue": "^8.0.3"
+    "eslint-plugin-vue": "^8.0.3",
+    "ts-loader": "^9.5.1",
+    "typescript": "^5.7.2",
+    "vue-tsc": "^2.1.10"
   },
   "eslintConfig": {
     "root": true,
