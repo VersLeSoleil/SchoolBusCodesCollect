@@ -13,18 +13,6 @@
       </div>
     </div>
   </div>
-  <!-- 输入功能卡片 -->
-  <div class="input-card" style="width: 200px">
-    <!-- 按钮和交互内容 -->
-    <div v-if="editingNewRoute" style="margin-left: 10px">
-      <button class="btn" @click="endEditing(false)" style="margin-bottom: 5px">结束(不保存)</button>
-      <button class="btn" @click="endEditing(true)" style="margin-bottom: 5px">结束(保存到JSON)</button>
-    </div>
-    <button class="btn" @click="autoLocateCampus" style="margin-bottom: 5px">
-      自动定位到校区
-    </button>
-    <input type="file" @change="handleFileUpload" accept=".json" style="margin-top: 10px" />
-  </div>
   <div>
     <h1>车辆信息管理</h1>
     <VehicleForm />
@@ -41,12 +29,7 @@
         </ErrorBoundary>
       </div>
 
-      <!-- 地图容器 -->
-      <div id="map-container"></div>
     </div>
-    <!-- 管理员的功能 -->
-    <RouteEditor :polylineEditor="polylineEditor" :polylines="polylines" @add-polyline="addPolyline"
-      @remove-polyline="removePolyline" />
   </div>
 </template>
 
@@ -56,7 +39,6 @@ import AMapLoader from "@amap/amap-jsapi-loader";
 import busStationData from "@/assets/bus_station_data.json";
 import VehicleStatusToggle from "@/views/driver_1/components/VehicleStatusToggle.vue";
 import ErrorBoundary from "@/views/driver_1/components/ErrorBoundary.vue";
-import RouteEditor from "@/views/driver_1/components/RouteEditor.vue";
 import VehicleForm from "@/views/driver_0/components/VehicleForm.vue";
 import driver_Info from '@/views/driver_0/driver_Info.vue';
 import { useUserStore } from "@/stores/user";
@@ -69,7 +51,6 @@ export default {
     VehicleStatusToggle,
     ErrorBoundary,
     VehicleForm,
-    RouteEditor,
     driver_Info,
     // ref,
   },
@@ -87,11 +68,11 @@ export default {
       stationsVisible: true, // 是否显示站点，用于控制站点标记的可见性
       editingNewRoute: false, // 是否正在新增路线，用于控制新增路线模式
       newPolyline: null, // 新建的折线对象，用于新增路线时的存储
-      editingAllRoutes: false, // 是否正在编辑所有路线，用于控制编辑路线模式
       onlineCount: 1, // 假设初始在线人数
       drivers: [], // 存储从后端获取的驾驶员位置数据
       markers: [], // 存储地图上的标记
-      dInfoVisible: false
+      dInfoVisible: false,
+      webSocket: null
     };
   },
   methods: {
@@ -108,11 +89,8 @@ export default {
       });
 
       AMap.plugin(
-        ["AMap.ToolBar", "AMap.Geolocation", "AMap.Driving", "AMap.PolylineEditor"],
+        ["AMap.Geolocation", "AMap.Driving", "AMap.PolylineEditor"],
         () => {
-          const toolbar = new AMap.ToolBar();
-          this.map.addControl(toolbar);
-
           const geolocation = new AMap.Geolocation({
             enableHighAccuracy: true,
             timeout: 10000,
@@ -260,16 +238,6 @@ export default {
         statusDisplay.innerText = `状态：${status === "normal" ? "正常运营" : "试通行"}`;
       }
     },
-    // 管理员的功能
-    addPolyline(newPolyline) {
-      this.polylines.push(newPolyline); // 添加新路线
-    },
-    removePolyline(polyline) {
-      const index = this.polylines.indexOf(polyline);
-      if (index > -1) {
-        this.polylines.splice(index, 1); // 移除指定的路线
-      }
-    },
 
     /** 更新位置 */
     updateLocation() {
@@ -285,7 +253,7 @@ export default {
                 this.marker.setPosition([longitude, latitude]);
               }
               // 调用发送位置信息到后端的方法
-              this.sendLocationToBackend(longitude, latitude);
+              this.sendLocationToBackendWebSocket(longitude, latitude);
             },
             (error) => {
               console.error("无法获取位置", error);
@@ -298,44 +266,34 @@ export default {
       }
     },
     // 发送位置信息到后端
-    sendLocationToBackend(longitude, latitude) {
+    async sendLocationToBackendWebSocket(longitude, latitude) {
       const userStore = useUserStore(); // 引入全局的 userStore
-      const driverID = userStore.userAccount; // 獲取全局變量中的 driver_id
-      fetch("http://localhost:8888/updateLocation", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          id: driverID,
-          role: "driver", // 用户角色
-          latitude,
-          longitude,
-          timestamp: new Date().toISOString(), // 时间戳
-        }),
-      })
-        .then((response) => response.text())
-        .then((data) => console.log("服务器响应:", data))
-        .catch((error) => console.error("请求错误:", error));
-    },
+      const driverID = userStore.userAccount; // 获取全局变量中的 driver_id
 
-    // 获取驾驶员数据
-    async fetchDrivers() {
+      // 验证输入参数
+      if (typeof longitude !== "number" || typeof latitude !== "number") {
+        console.error("无效的经纬度数据:", { longitude, latitude });
+        return;
+      }
+
+      // 检查 WebSocket 是否已连接
+      if (!this.webSocket || this.webSocket.readyState !== WebSocket.OPEN) {
+        console.error("WebSocket 未连接，无法发送数据");
+        return;
+      }
+
+      // 构造消息
+      const message = {
+        id: driverID,
+        latitude,
+        longitude,
+      };
+
       try {
-        const response = await fetch("http://localhost:8888/drivers");
-        if (!response.ok) {
-          throw new Error("网络请求失败");
-        }
-        this.drivers = await response.json();
-
-        // 验证驾驶员数据是否有效
-        this.drivers = this.drivers.filter(
-          driver => typeof driver.latitude === "number" && typeof driver.longitude === "number"
-        );
-
-        this.updateMarkers(); // 更新地图上的标记
+        this.webSocket.send(JSON.stringify(message));
+        console.log("位置信息已通过 WebSocket 发送:", message);
       } catch (error) {
-        console.error("获取驾驶员位置失败:", error);
+        console.error("通过 WebSocket 发送数据时出错:", error);
       }
     },
 
@@ -355,6 +313,36 @@ export default {
 
         this.markers.push(marker);
       });
+    },
+    // 初始化 WebSocket
+    initWebSocket (){
+      this.webSocket = new WebSocket("ws://localhost:8888/ws");
+
+      // WebSocket 打开事件
+      this.webSocket.onopen = () => {
+        console.log("WebSocket 已连接");
+      };
+
+      // WebSocket 收到消息事件
+      this.webSocket.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          this.drivers = data;
+          this.updateMarkers();
+        } catch (error) {
+          console.error("WebSocket 数据解析失败:", error);
+        }
+      };
+
+      // WebSocket 错误事件
+      this.webSocket.onerror = (error) => {
+        console.error("WebSocket 错误:", error);
+      };
+
+      // WebSocket 关闭事件
+      this.webSocket.onclose = () => {
+        console.log("WebSocket 已关闭");
+      };
     }
   },
   mounted() {
@@ -367,12 +355,8 @@ export default {
       plugins: ["AMap.Scale"],
     })
       .then(() => {
+        this.initWebSocket(); // 初始化 WebSocket 连接
         this.updateLocation();
-        this.fetchDrivers(); // 获取驾驶员数据
-        // 可选：设置定时器定期刷新位置
-        setInterval(() => {
-          this.fetchDrivers();
-        }, 1000); // 每 1 秒刷新一次
       })
       .catch((e) => {
         console.log(e);

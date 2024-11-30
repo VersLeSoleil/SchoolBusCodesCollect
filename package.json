@@ -16,8 +16,6 @@
     "my-first-vue": "file:",
     "pinia": "^2.2.6",
     "props": "^0.3.0",
-    "sass": "^1.81.0",
-    "sass-loader": "^16.0.3",
     "SchoolBusCodesCollect": "file:",
     "vue": "^3.2.13",
     "vue-router": "^4.4.5"
@@ -29,7 +27,9 @@
     "@vue/cli-plugin-eslint": "~5.0.0",
     "@vue/cli-service": "~5.0.0",
     "eslint": "^7.32.0",
-    "eslint-plugin-vue": "^8.0.3"
+    "eslint-plugin-vue": "^8.0.3",
+    "sass": "^1.81.0",
+    "sass-loader": "^16.0.3"
   },
   "eslintConfig": {
     "root": true,

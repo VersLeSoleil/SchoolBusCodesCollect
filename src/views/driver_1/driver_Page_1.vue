@@ -5,8 +5,6 @@ import SelfScanButton from '@/views/driver_1/components/SelfScanButton.vue';
 import PaymentCount from '@/views/driver_1/components/PaymentCount.vue';
 import CallCount from '@/views/driver_1/components/CallCount.vue';
 import ErrorBoundary from '@/views/driver_1/components/ErrorBoundary.vue'; // 通用错误边界组件
-import GenerateDriver from "@/views/driver_1/components/GenerateDriver.vue";
-
 
 
 </script>
@@ -50,12 +48,6 @@ import GenerateDriver from "@/views/driver_1/components/GenerateDriver.vue";
           <CallCount />
         </ErrorBoundary>
       </div>
-    </div>
-
-    <!-- 其他内容 -->
-    <div class="driver-section">
-      <h1>驾驶员生成系统</h1>
-      <GenerateDriver />
     </div>
   </div>
 </template>

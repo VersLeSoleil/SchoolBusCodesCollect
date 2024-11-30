@@ -1,5 +1,6 @@
 // src/services/loginService.js
 import axios from "axios";
+import { useUserStore } from "@/stores/user";
 
 export default {
     data() {
@@ -35,6 +36,8 @@ export default {
                 })
                 .then(response => {
                     if (response.data.code === 200) {
+                        const userStore = useUserStore(); // 引入全局的 userStore
+                        userStore.setUserAccount(this.username);
                         console.log("登陆成功：", response.data.data);
                         alert('登录成功');
 
