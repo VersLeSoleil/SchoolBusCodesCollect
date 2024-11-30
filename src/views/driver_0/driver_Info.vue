@@ -50,7 +50,7 @@ const toggleEditMode = () => {
 const cancelChanges = () => {
   // 取消时恢复原来的数据
   Object.assign(user, userBackup);
-  isEditingMode.value = false; 
+  isEditingMode.value = false;
 };
 
 
@@ -93,7 +93,7 @@ async function submitForm() {
 // 保存修改
 const saveChanges = () => {
   console.log("保存修改:", user);
-  isEditingMode.value = false; 
+  isEditingMode.value = false;
   submitForm();
 };
 
@@ -146,12 +146,12 @@ const saveChanges = () => {
                 <option value=2>休息</option>
               </select>
             </p>
-            
+
           </div>
 
           <button @click="closepopup" class="closebutton">X</button>
-          
-          
+
+
           <button v-if="!isEditingMode.value" @click="toggleEditMode" class="modifybutton">
             修改信息
           </button>
@@ -160,10 +160,10 @@ const saveChanges = () => {
             退出账号
           </button>
 
-          
+
           <div v-if="isEditingMode.value" class="action-buttons">
             <button @click="saveChanges" class="savebutton">保存</button>
-            
+
             <button @click="cancelChanges" class="cancelbutton">取消</button>
           </div>
         </div>

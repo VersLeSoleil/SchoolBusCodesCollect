@@ -1,0 +1,4 @@
+# 忽略登录注册界面的文件
+src/views/loginRegistry/loginRegistry.vue
+
+
