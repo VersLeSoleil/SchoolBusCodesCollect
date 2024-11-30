@@ -9,6 +9,7 @@ import User_main from '@/views/user/user_main.vue';
 import User_person from '@/views/user/user_person.vue';
 import Error404 from '@/views/404.vue';
 import Lay_out from '@/views/admin/Admin_layout.vue';
+import Registry from '@/views/deprecated/loginRegistry.vue';
 import { validateToken } from '@/auth.js'; // 导入验证函数
 import simulation from '@/views/schoolbus-simulation/schoolbus-simulation.vue';
 
@@ -26,6 +27,11 @@ const routes = [
         path: '/home',
         name: 'Home',
         component: HomePage,
+    },
+    {
+        path: '/register',
+        name: 'Register',
+        component: Registry,
     },
     {
         path: '/driver-0',
@@ -107,7 +113,7 @@ router.beforeEach(async (to, from, next) => {
             localStorage.removeItem("jwtToken"); // 清除无效令牌
             next();
         }
-    } else if (to.name !== 'Login') {
+    } else if (to.name !== 'Login' && to.name !== 'Register') {
         // 如果用户试图访问其他页面
         const validation = await validateToken(); // 验证令牌
         if (validation.valid) {
