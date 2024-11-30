@@ -39,6 +39,8 @@
   </template>
   
   <script>
+  import {useRouter} from 'vue-router'; // Vue Router 的组合式 API
+
   export default {
     data() {
       return {
@@ -49,6 +51,7 @@
           car_id: "",       // 车牌号
           car_isusing: "",
         },
+        router: useRouter(), // 获取路由实例
       };
     },
     methods: {
@@ -96,7 +99,8 @@
           if (response.ok) {
             // 信息提交成功
             alert("操作成功！");
-            window.location.href = "/driver-1"; // 替换为目标页面路径
+            this.router.push('/driver-1'); // 跳转到 `/driver-0`
+            // window.location.href = "/driver-1"; // 替换为目标页面路径
           } else {
             // 错误处理
             alert(result.message || "操作失败，请检查输入！");

@@ -2,7 +2,7 @@ import { defineStore } from 'pinia';
 
 export const useUserStore = defineStore('user', {
     state: () => ({
-        userAccount: null, // 用戶帳號
+        userAccount: "1", // 用戶帳號
     }),
     actions: {
         setUserAccount(account) {
