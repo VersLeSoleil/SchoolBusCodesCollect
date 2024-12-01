@@ -60,6 +60,7 @@ import RouteEditor from "@/views/driver_1/components/RouteEditor.vue";
 import VehicleForm from "@/views/driver_0/components/VehicleForm.vue";
 import driver_Info from '@/views/driver_0/driver_Info.vue';
 import { useUserStore } from "@/stores/user";
+import {useApiBaseStore} from "@/stores/network";
 
 /* global AMap */
 
@@ -301,7 +302,8 @@ export default {
         sendLocationToBackend(longitude, latitude) {
             const userStore = useUserStore(); // 引入全局的 userStore
             const driverID = userStore.userAccount; // 獲取全局變量中的 driver_id
-            fetch("http://localhost:8888/updateLocation", {
+          const apiBaseStore = useApiBaseStore();
+            fetch(apiBaseStore.baseUrl + "/updateLocation", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -322,7 +324,8 @@ export default {
         // 获取驾驶员数据
         async fetchDrivers() {
             try {
-                const response = await fetch("http://localhost:8888/drivers");
+              const apiBaseStore = useApiBaseStore();
+                const response = await fetch(apiBaseStore.baseUrl + "/drivers");
                 if (!response.ok) {
                     throw new Error("网络请求失败");
                 }

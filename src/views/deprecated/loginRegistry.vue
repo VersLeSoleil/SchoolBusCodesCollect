@@ -108,6 +108,7 @@ import { ref } from 'vue';
 import { useReCaptcha } from 'vue-recaptcha-v3';
 import axios from 'axios';
 import { useRouter } from 'vue-router';
+import {useApiBaseStore} from "@/stores/network";
 
 // 表单数据
 const form = ref({
@@ -220,7 +221,8 @@ const handleSubmit = async () => {
     let token = await recaptcha();
 
     // 表单数据提交
-    const response = await axios.post('http://localhost:8888/api/register', {
+    const apiBaseStore = useApiBaseStore();
+    const response = await axios.post(apiBaseStore.baseUrl + '/api/register', {
       ...form.value, // 用户的表单数据
       recaptchaToken: token, // Google reCAPTCHA Token
     });

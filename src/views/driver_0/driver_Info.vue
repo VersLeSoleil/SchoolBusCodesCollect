@@ -1,5 +1,6 @@
 <script setup>
 import { reactive, defineProps, defineEmits } from 'vue';
+import {useApiBaseStore} from "@/stores/network";
 
 const props = defineProps({
   visible: {
@@ -56,8 +57,8 @@ const cancelChanges = () => {
 
 async function submitForm() {
   try {
-
-    let endpoint = "http://localhost:8888/modifyDriverInfo";
+    const apiBaseStore = useApiBaseStore();
+    let endpoint = apiBaseStore + "/modifyDriverInfo";
     let method = "POST";
     let requestBody = {
       driver_id: user.id,

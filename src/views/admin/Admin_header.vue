@@ -10,6 +10,7 @@
 
 <script setup>
 import {ref, onMounted, onBeforeUnmount, computed} from 'vue';
+import {useApiBaseStore} from "@/stores/network";
 
 // 设置连接状态图标
 const connectionStatus = ref('green');  // 默认是绿色，表示正常
@@ -36,8 +37,9 @@ const checkConnection = async () => {
   const timeoutId = setTimeout(() => controller.abort(), 2000);  // 设置超时为 2 秒
 
   try {
+    const apiBaseStore = useApiBaseStore();
     // 向服务器发送心跳包（假设 API 路径是 /heartbeat）
-    const response = await fetch('http://localhost:8888/heartbeat', {signal: controller.signal});
+    const response = await fetch(apiBaseStore.baseUrl + '/heartbeat', {signal: controller.signal});
 
     if (response.ok) {
       connectionStatus.value = 'green';  // 服务器连接正常

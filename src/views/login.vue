@@ -125,6 +125,14 @@
         </div>
       </transition-group>
     </div>
+    <div class="server-switch">
+      <button
+          class="switch-button"
+          @click="toggleServerConnection"
+      >
+        {{ isUsingDeployed ? '当前：远程后端服务器' : '当前：本地后端服务器' }}
+      </button>
+    </div>
   </div>
 </template>
 
@@ -132,12 +140,14 @@
 <script>
 import { nextTick } from "vue";
 import axios from "axios";
-
+import { useApiBaseStore } from '@/stores/network';
 
 export default {
   name: "AuthPage",
   data() {
     return {
+      // baseUrl
+      isUsingDeployed: true,
       // 登录相关
       username: "",
       password: "",
@@ -197,7 +207,9 @@ export default {
 
       this.loading = true;
 
-      axios.post("http://localhost:8888/api/login", {
+      const apiBaseStore = useApiBaseStore();
+
+      axios.post(apiBaseStore.baseUrl + '/api/login', {
             username: this.username,
             password: this.password,
           },
@@ -247,6 +259,18 @@ export default {
             }
           });
     },
+    // 点击
+    toggleServerConnection() {
+      const apiBaseStore = useApiBaseStore(); // 引入 apiBaseStore
+      if (this.isUsingDeployed) {
+        apiBaseStore.switchToLocal();
+      } else {
+        apiBaseStore.switchToDeployed();
+      }
+      this.isUsingDeployed = !this.isUsingDeployed;
+    },
+
+
     // 注册处理
     async handleRegister() {
       if (!this.validateForm()) {
@@ -258,8 +282,10 @@ export default {
         // 触发验证码验证
         let token = await this.recaptcha();
 
+        const apiBaseStore = useApiBaseStore();
+
         // 表单数据提交
-        const response = await axios.post('http://localhost:8888/api/register', {
+        const response = await axios.post(apiBaseStore.baseUrl + '/api/register', {
           ...this.form, // 用户的表单数据
           recaptchaToken: token, // Google reCAPTCHA Token
         });
@@ -563,5 +589,26 @@ h2 {
 .registrationMethod{
   color: #ffffff;
 }
+
+.server-switch {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.switch-button {
+  padding: 10px 20px;
+  background-color: rgba(255, 255, 255, 0.2);
+  border: none;
+  border-radius: 20px;
+  color: #fff;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.switch-button:hover {
+  background-color: rgba(255, 255, 255, 0.5);
+}
+
 </style>
 

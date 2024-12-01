@@ -1,7 +1,7 @@
 <template>
     <div class="gps-system">
       <h1 class="header">🚗 GPS 管理系统</h1>
-  
+
       <!-- 驾驶员管理 -->
       <div class="card">
         <h2>驾驶员管理</h2>
@@ -11,7 +11,7 @@
           <button @click="deleteDriver" class="btn btn-danger">删除驾驶员</button>
         </div>
       </div>
-  
+
       <!-- 位置信息更新 -->
       <div class="card">
         <h2>位置信息更新</h2>
@@ -21,18 +21,18 @@
           <button @click="sendLocationUpdate" class="btn btn-success">更新驾驶员位置</button>
         </div>
       </div>
-  
+
       <!-- 响应信息 -->
       <div v-if="responseMessage" class="response-message">
         <p>响应消息: {{ responseMessage }}</p>
       </div>
-  
+
       <!-- 文件上传 -->
       <div class="card">
         <h2>上传 JSON 文件</h2>
         <input type="file" accept=".json" @change="handleFileUpload" class="file-input" />
       </div>
-  
+
       <!-- 驾驶员位置广播 -->
       <div class="card">
         <h2>实时驾驶员位置广播</h2>
@@ -43,7 +43,7 @@
         </ul>
         <p v-else>暂无驾驶员位置信息</p>
       </div>
-  
+
       <!-- 路线管理 -->
       <div class="card">
         <h2>已加载路线</h2>
@@ -62,12 +62,13 @@
       </div>
     </div>
   </template>
-  
-  
+
+
   <script setup>
   import { ref, onMounted, onBeforeUnmount } from "vue";
   import axios from "axios";
-  
+  import {useApiBaseStore} from "@/stores/network";
+
   const responseMessage = ref(""); // 响应消息
   const driverId = ref(""); // 驾驶员 ID
   const latitude = ref(0); // 纬度
@@ -79,7 +80,7 @@
   // let pathData = []; // JSON 文件中的路径数据
   let currentDriverId = 100; // 起始驾驶员 ID
   const routes = ref([]); // 存储所有上传的路径信息
-  
+
   // 创建驾驶员并传递位置信息
   const createDriver = async (id = driverId.value) => {
     if (!id) {
@@ -89,7 +90,8 @@
     }
     console.log("Creating driver with ID:", id);
     try {
-      const response = await axios.post("http://localhost:8888/create_driver", {
+      const apiBaseStore = useApiBaseStore();
+      const response = await axios.post(apiBaseStore.baseUrl + "/create_driver", {
         id: id.toString(), // 确保 id 是字符串
       });
       console.log("Driver created with ID:", id);
@@ -99,8 +101,8 @@
       console.error("Error creating driver:", error.response || error.message);
     }
   };
-  
-  
+
+
   // 删除驾驶员
   const deleteDriver = async () => {
     if (!driverId.value) {
@@ -108,7 +110,8 @@
       return;
     }
     try {
-      const response = await axios.delete("http://localhost:8888/delete_driver", {
+      const apiBaseStore = useApiBaseStore();
+      const response = await axios.delete(apiBaseStore.baseUrl + "/delete_driver", {
         data: { id: driverId.value },
       });
       responseMessage.value = response.data || "删除成功";
@@ -116,7 +119,7 @@
       responseMessage.value = `删除失败: ${error.response?.data || error.message}`;
     }
   };
-  
+
   // 初始化 WebSocket
   const initWebSocket = () => {
     webSocket = new WebSocket("ws://localhost:8888/ws");
@@ -134,7 +137,7 @@
     webSocket.onerror = (error) => console.error("WebSocket 错误:", error);
     webSocket.onclose = () => console.log("WebSocket 1已关闭");
   };
-  
+
   // 更新驾驶员位置
   const sendLocationUpdate = () => {
     if (!driverId.value) {
@@ -157,7 +160,7 @@
       responseMessage.value = `发送位置信息失败: ${error.message}`;
     }
   };
-  
+
   // 处理文件上传，将路径数据加入队列
   const handleFileUpload = (event) => {
       const file = event.target.files[0];
@@ -165,7 +168,7 @@
           responseMessage.value = "未选择文件";
           return;
       }
-  
+
       const reader = new FileReader();
       reader.onload = (e) => {
           try {
@@ -189,7 +192,7 @@
       };
       reader.readAsText(file);
   };
-  
+
   const startRoute = (route) => {
       if (route.path.length === 0) {
           responseMessage.value = "路径数据为空，无法发送";
@@ -199,10 +202,10 @@
           responseMessage.value = `路线 ${route.driverId} 已在运行`;
           return;
       }
-  
+
       // 创建驾驶员
       createDriver(route.driverId);
-  
+
       // 启动定时器
       route.isPaused = false;
       route.timer = setInterval(() => {
@@ -218,28 +221,28 @@
           route.pathIndex++;
       }, 3000);
   };
-  
+
   const pauseRoute = (route) => {
       if (route.isPaused) {
           responseMessage.value = `路线 ${route.driverId} 已暂停`;
           return;
       }
-  
+
       clearInterval(route.timer);
       route.timer = null;
       route.isPaused = true;
       responseMessage.value = `路线 ${route.driverId} 已暂停`;
   };
-  
+
   const resumeRoute = (route) => {
       if (!route.isPaused) {
           responseMessage.value = `路线 ${route.driverId} 已在运行`;
           return;
       }
-  
+
       startRoute(route);
   };
-  
+
   // 通过 WebSocket 向后端发送位置
   const sendLocationToBackend = (id, longitude, latitude) => {
     if (!webSocket || webSocket.readyState !== WebSocket.OPEN) {
@@ -258,12 +261,12 @@
       console.error("发送位置信息失败:", error);
     }
   };
-  
+
   // 生命周期钩子
   onMounted(() => {
     initWebSocket(); // 初始化 WebSocket 连接
   });
-  
+
   onBeforeUnmount(() => {
     if (webSocket) {
       webSocket.close();
@@ -273,21 +276,21 @@
     }
   });
   </script>
-  
+
   <style scoped>
   .gps-system {
     max-width: 800px;
     margin: 0 auto;
     font-family: Arial, sans-serif;
   }
-  
+
   .header {
     text-align: center;
     color: #4CAF50;
     font-size: 2rem;
     margin-bottom: 20px;
   }
-  
+
   .card {
     background: #fff;
     border-radius: 8px;
@@ -295,19 +298,19 @@
     padding: 20px;
     margin-bottom: 20px;
   }
-  
+
   .card h2 {
     margin: 0 0 15px;
     font-size: 1.5rem;
     color: #333;
   }
-  
+
   .form-group {
     display: flex;
     gap: 10px;
     flex-wrap: wrap;
   }
-  
+
   .input,
   .file-input {
     padding: 10px;
@@ -316,11 +319,11 @@
     flex: 1;
     min-width: 150px;
   }
-  
+
   .file-input {
     margin-top: 10px;
   }
-  
+
   .btn {
     padding: 10px 15px;
     border: none;
@@ -329,27 +332,27 @@
     cursor: pointer;
     min-width: 100px;
   }
-  
+
   .btn-primary {
     background-color: #007bff;
   }
-  
+
   .btn-success {
     background-color: #28a745;
   }
-  
+
   .btn-warning {
     background-color: #ffc107;
   }
-  
+
   .btn-danger {
     background-color: #dc3545;
   }
-  
+
   .btn:hover {
     opacity: 0.9;
   }
-  
+
   .response-message {
     margin: 15px 0;
     padding: 10px;
@@ -357,22 +360,21 @@
     border-left: 4px solid #17a2b8;
     color: #333;
   }
-  
+
   .list {
     list-style: none;
     padding: 0;
   }
-  
+
   .list-item {
     padding: 10px;
     border-bottom: 1px solid #ddd;
   }
-  
+
   .actions {
     display: flex;
     gap: 10px;
     margin-top: 10px;
   }
   </style>
-  
-  
+
