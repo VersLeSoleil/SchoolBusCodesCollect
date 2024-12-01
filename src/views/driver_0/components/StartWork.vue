@@ -27,7 +27,7 @@
                 <option value="试通行">试通行</option>
               </select>
             </div>
-            
+
             <div class="form-actions">
               <button type="submit"  class="submit-button">提交</button>
               <button type="button" @click="closeForm" class="cancel-button">取消</button>
@@ -37,9 +37,10 @@
       </div>
     </div>
   </template>
-  
+
   <script>
-  import {useRouter} from 'vue-router'; // Vue Router 的组合式 API
+  import {useRouter} from 'vue-router';
+  import {useApiBaseStore} from "@/stores/network"; // Vue Router 的组合式 API
 
   export default {
     data() {
@@ -76,8 +77,8 @@
       // 提交表单
       async submitForm() {
         try {
-
-          let endpoint = "http://localhost:8888/start";
+          const apiBaseStore = useApiBaseStore();
+          let endpoint = apiBaseStore.baseUrl + "/start";
           let method = "POST";
           let requestBody = {
               driver_id: this.formData.driver_id,
@@ -95,7 +96,7 @@
           });
           console.log(JSON.stringify(requestBody));
           const result = await response.json();
-  
+
           if (response.ok) {
             // 信息提交成功
             alert("操作成功！");
@@ -113,7 +114,7 @@
     },
   };
   </script>
-  
+
   <style scoped>
   .form-button {
     padding: 10px 20px;
@@ -176,4 +177,3 @@
     cursor: pointer;
   }
   </style>
-  

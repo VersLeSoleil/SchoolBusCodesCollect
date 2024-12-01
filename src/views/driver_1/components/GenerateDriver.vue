@@ -18,6 +18,7 @@
 <script>
 import { ref, reactive, onUnmounted } from "vue";
 import route1 from "@/assets/route1.json";
+import {useApiBaseStore} from "@/stores/network";
 
 export default {
   name: "GenerateDriver",
@@ -87,7 +88,8 @@ export default {
 
     // 发送位置信息到后端
     const sendLocationToBackend = (driverId, longitude, latitude) => {
-      fetch("http://localhost:8888/updateLocation", {
+      const apiBaseStore = useApiBaseStore();
+      fetch(apiBaseStore.baseUrl + "/updateLocation", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

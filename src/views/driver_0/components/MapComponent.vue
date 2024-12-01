@@ -33,9 +33,10 @@
   import busStationData from "@/assets/bus_station_data.json";
   import driver_Info from '@/views/driver_0/driver_Info.vue';
   import StartWork from "./StartWork.vue";
-  
+  import {useApiBaseStore} from "@/stores/network";
+
   /* global AMap */
-  
+
   export default {
     name: "MapComponent",
     components: {
@@ -74,7 +75,7 @@
           zoom: 15,
           center: [longitude, latitude],
         });
-  
+
         AMap.plugin(
           ["AMap.Geolocation", "AMap.Driving", "AMap.PolylineEditor"],
           () => {
@@ -96,7 +97,7 @@
             this.polylineEditor = new AMap.PolylineEditor(this.map, this.polyline);
           }
         );
-  
+
         this.addBusStationMarkers();
         this.loadAndDrawRoutes(); // 加载并绘制路线
         this.isMapInitialized = true;
@@ -104,9 +105,9 @@
       /** 自动定位到校区 */
       autoLocateCampus() {
         // 校区的经纬度
-        const campusCenter = [113.584845, 22.358088]; 
+        const campusCenter = [113.584845, 22.358088];
         if (!this.map) return;
-  
+
         this.map.setZoomAndCenter(15, campusCenter); // 设置缩放级别和中心点
         console.log("已定位到校区中心:", campusCenter);
       },
@@ -137,11 +138,11 @@
         const context = require.context('@/assets', false, /^\.\/route[0-9]+\.json$/); // 匹配以 route 开头的 JSON 文件
         const routes = [];
         console.log("匹配到的文件:", context.keys());
-  
+
         context.keys().forEach((fileName) => {
           const fileData = context(fileName);
           console.log("加载的文件内容:", fileName, fileData);
-  
+
           // 确保文件内容格式正确
           if (Array.isArray(fileData)) {
             fileData.forEach((route) => {
@@ -151,7 +152,7 @@
             });
           }
         });
-  
+
         // 绘制所有路径到地图
         routes.forEach((path, index) => {
           const polyline = new AMap.Polyline({
@@ -159,12 +160,12 @@
             strokeColor: this.getRouteColor(index), // 根据索引设置颜色
             strokeWeight: 6,
           });
-  
+
           this.map.add(polyline); // 添加到地图
           this.polylines.push(polyline); // 保存到 polylines 数组
           console.log(`绘制路径 ${index + 1} 成功`, path);
         });
-  
+
         console.log("所有符合条件的路线已加载并绘制");
       },
       /** 添加站点标记 */
@@ -233,7 +234,7 @@
           this.polylines.splice(index, 1); // 移除指定的路线
         }
       },
-  
+
       /** 更新位置 */
       updateLocation(driverId) {
         if (navigator.geolocation) {
@@ -241,7 +242,7 @@
             navigator.geolocation.getCurrentPosition(
               (position) => {
                 const { longitude, latitude } = position.coords;
-  
+
                 if (!this.isMapInitialized) {
                   this.initMap(longitude, latitude);
                 } else if (this.marker) {
@@ -279,33 +280,34 @@
           .then((data) => console.log("服务器响应:", data))
           .catch((error) => console.error("请求错误:", error));
       },
-  
+
       // 获取驾驶员数据
       async fetchDrivers() {
         try {
-          const response = await fetch("http://localhost:8888/drivers");
+          const apiBaseStore = useApiBaseStore();
+          const response = await fetch(apiBaseStore.baseUrl + "/drivers");
           if (!response.ok) {
             throw new Error("网络请求失败");
           }
           this.drivers = await response.json();
-  
+
           // 验证驾驶员数据是否有效
           this.drivers = this.drivers.filter(
             driver => typeof driver.latitude === "number" && typeof driver.longitude === "number"
           );
-  
+
           this.updateMarkers(); // 更新地图上的标记
         } catch (error) {
           console.error("获取驾驶员位置失败:", error);
         }
       },
-  
+
       // 在地图上显示驾驶员位置
       updateMarkers() {
         // 清除旧的标记
         this.markers.forEach(marker => this.map.remove(marker));
         this.markers = [];
-  
+
         // 根据新的驾驶员数据添加标记
         this.drivers.forEach(driver => {
           const marker = new AMap.Marker({
@@ -313,7 +315,7 @@
             map: this.map,
             // icon: require('@/assets/driver-icon.png') // 引用自定义图标
           });
-  
+
           this.markers.push(marker);
         });
       }
@@ -368,7 +370,7 @@
 
 .footer-controls-container {
   position: relative;
-  bottom: -50px; 
+  bottom: -50px;
   width: 100%;
   display: flex;
   justify-content: center;
@@ -428,4 +430,3 @@
     background-color: #ffc107;
 }
 </style>
-  

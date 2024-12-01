@@ -17,6 +17,7 @@
 <script>
 import AMapLoader from "@amap/amap-jsapi-loader";
 import busStationData from "@/assets/bus_station_data.json";
+import {useApiBaseStore} from "@/stores/network";
 
 /* global AMap */
 
@@ -198,7 +199,8 @@ export default {
         // 获取驾驶员数据
         async fetchDrivers() {
             try {
-                const response = await fetch("http://localhost:8888/drivers");
+              const apiBaseStore = useApiBaseStore();
+                const response = await fetch(apiBaseStore.baseUrl + "/drivers");
                 if (!response.ok) {
                     throw new Error("网络请求失败");
                 }

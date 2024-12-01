@@ -18,6 +18,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue';
+import {useApiBaseStore} from "@/stores/network";
 
 // 响应式变量
 const stats = ref([
@@ -31,7 +32,8 @@ const loading = ref(true); // 控制加载状态
 // 获取数据的方法
 const fetchStats = async () => {
   try {
-    const response = await fetch('http://localhost:8888/admin_home/dashboard');
+    const apiBaseStore = useApiBaseStore();
+    const response = await fetch(apiBaseStore.baseUrl + '/admin_home/dashboard');
     if (!response.ok) {
       throw new Error('Failed to fetch stats');
     }

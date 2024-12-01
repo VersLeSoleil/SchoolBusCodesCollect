@@ -2,7 +2,8 @@
 import {ref, onMounted} from 'vue'; // 引入 Vue Composition API
 import {useRouter} from 'vue-router'; // Vue Router 的组合式 API
 import axios from 'axios';
-import {validateToken} from '@/auth.js'; // 导入令牌验证函数
+import {validateToken} from '@/auth.js';
+import {useApiBaseStore} from "@/stores/network"; // 导入令牌验证函数
 
 const router = useRouter(); // 获取路由实例
 const message = ref(''); // 定义消息状态
@@ -26,7 +27,8 @@ async function handleLogout() {
   }
 
   try {
-    await axios.post('http://localhost:8888/api/logout', {}, {
+    const apiBaseStore = useApiBaseStore();
+    await axios.post(apiBaseStore.baseUrl + '/api/logout', {}, {
       headers: {
         Authorization: localStorage.getItem('jwtToken'),
       },
@@ -99,4 +101,3 @@ function toAdmin() {
   user-select: none;
 }
 </style>
-  
