@@ -37,36 +37,57 @@ const routes = [
         path: '/driver-0',
         name: 'Driver-0',
         component: Driver_Page_0,
+        meta: {
+            requiredRoles: [0, 2]  // admin 和 driver 都能访问        0是 Admin  1是 Passenger    2是 Driver    ！！！！！
+        },
     },
     {
         path: '/driverInfo',
         name: 'DriberInfo',
         component: Driver_Info,
+        meta: {
+            requiredRoles: [0, 2]  // admin 和 driver 都能访问
+        },
     },
     {
         path: '/driver-1',
         name: 'Driver-1',
         component: Driver_Page_1,
+        meta: {
+            requiredRoles: [0, 2]  // admin 和 driver 都能访问
+        },
     },
     {
         path: '/test-user',
         name: 'test-user',
         component: test_user_map,
+        meta: {
+            requiredRoles: [0, 2]  // admin 和 driver 都能访问
+        },
     },
     {
         path: '/user-main',
         name: 'user-main',
         component: User_main,
+        meta: {
+            requiredRoles: [0, 1]  // admin 和 Passenger 都能访问
+        },
     },
     {
         path: '/user-person',
         name: 'user-person',
         component: User_person,
+        meta: {
+            requiredRoles: [0, 1]  // admin 和 Passenger 都能访问
+        },
     },
     {
         path: '/admin_home',
         name: 'admin_home',
         component: Lay_out,
+        meta: {
+            requiredRoles: [0]  // admin能访问
+        },
         children: [{
             path: 'dashboard',
             name: 'Dashboard',
@@ -112,6 +133,7 @@ router.beforeEach(async (to, from, next) => {
         const validation = await validateToken(); // 验证令牌
         if (validation.valid) {
             // 如果令牌合法，重定向到主页
+
             next({ name: 'Home' });
         } else {
             // 如果令牌无效，允许用户停留在登录页
@@ -123,7 +145,16 @@ router.beforeEach(async (to, from, next) => {
         const validation = await validateToken(); // 验证令牌
         if (validation.valid) {
             // 如果令牌合法，继续导航
-            next();
+            const userRole = validation.role; // 获取角色
+            console.log(userRole);
+            // 检查目标路由是否有角色限制
+            const requiredRoles = to.meta.requiredRoles || [];
+            if (requiredRoles.length === 0 || requiredRoles.includes(userRole)){
+                next();
+            }else{
+                next('/404'); // 重定向到 404 页面
+            }
+            // next();
         } else {
             // 如果令牌无效，重定向到登录页面
             alert(validation.message || "登录已过期，请重新登录。");
