@@ -10,14 +10,16 @@ export async function validateToken() {
 
     try {
         const apiBaseStore = useApiBaseStore();
-      const response = await axios.post(apiBaseStore.baseUrl + "/api/validateToken", {}, {
+        const response = await axios.post(apiBaseStore.localBaseUrl + "/api/validateToken", {}, {
         headers: {
           Authorization: token
         }
       });
 
       if (response.status === 200) {
-        return { valid: true, message: "令牌合法" };
+        const role = parseInt(response.data.role);// 从后端响应中提取角色
+        console.log(role);
+        return { valid: true, message: "令牌合法" , role: role};
       } else {
         return { valid: false, message: "令牌无效，请重新登录。" };
       }

@@ -208,7 +208,6 @@ export default {
       this.loading = true;
 
       const apiBaseStore = useApiBaseStore();
-
       axios.post(apiBaseStore.baseUrl + '/api/login', {
             username: this.username,
             password: this.password,
@@ -230,7 +229,7 @@ export default {
                 });
               } else if (response.data.role === 1) {
                 this.$router.push({
-                  name: 'user-main',
+                  name: 'user-person',
                 });
               } else if (response.data.role === 2) {
                 this.$router.push({
