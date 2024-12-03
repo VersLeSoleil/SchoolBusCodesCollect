@@ -4,6 +4,8 @@
         <button @click="showBuyTickt" class="buyTicket">购票</button>
         <user_ticket :visible="buyTicketVisible"  @close="close" />
         <button @click="showCallBus" class="callBus">叫车</button>
+        <button @click="showTicket" class="ticket">上车凭证</button>
+        
     </div>
 </template>
 

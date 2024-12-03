@@ -88,7 +88,6 @@ function closePopup() {
   width: 100%;
   max-width: 500px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  position: relative; /* 确保 .closebutton 的绝对定位相对于弹窗内容 */
 }
 
 .closebutton {
@@ -96,16 +95,16 @@ function closePopup() {
   top: 10px;
   right: 10px;
   font-size: 24px;
-  color: #aaa; /* 使用红色主题 */
+  color: #aaa;
   cursor: pointer;
   background: none;
   border: none;
   outline: none;
   transition: color 0.3s ease;
-  padding: 5px; /* 增加一些内边距，使点击区域更大 */
 }
+
 .closebutton:hover {
-  color: #000; /* 悬停时加深颜色 */
+  color: #000;
 }
 
 .select1 {
@@ -206,11 +205,5 @@ function closePopup() {
     width: 100%;
     text-align: center;
   }
-  .closebutton {
-    font-size: 18px; /* 减小字体大小 */
-    top: 8px;
-    right: 8px;
-  }
 }
-
 </style>
