@@ -2,7 +2,7 @@
     <div>
         <button @click="toMycenter" class="myCenter">主页</button>
         <button @click="showBuyTickt" class="buyTicket">购票</button>
-        <user_ticket :visible="buyTicketVisible"  @close="closeBTicket" />
+        <user_ticket :visible="buyTicketVisible"  @close="close" />
         <button @click="showCallBus" class="callBus">叫车</button>
     </div>
 </template>
@@ -10,15 +10,13 @@
 <script setup>
 import user_ticket from './user_ticket.vue';
 import router from '@/router';
-import {reactive} from 'vue';
-    let buyTicketVisible=reactive(false);
+import {ref} from 'vue';
+    let buyTicketVisible=ref(false);
     function showBuyTickt(){
-        buyTicketVisible=true;
+        buyTicketVisible.value=true;
     }
-    function closeBTicket(){
-        console.log(buyTicketVisible);
-        buyTicketVisible=false;
-        console.log(buyTicketVisible);
+    function close(){
+        buyTicketVisible.value=false;
     }
     function toMycenter() {
     router.push('/user-person');
