@@ -10,23 +10,23 @@
           <p><strong>出发地：</strong>
             <select class="select1" v-model="select_from">
               <option value="" disabled selected>请选择...</option>
-              <option value="option1">榕园广场</option>
-              <option value="option2">荔园广场</option>
-              <option value="option3">教学楼</option></select></p>
+              <option value="榕园广场">榕园广场</option>
+              <option value="荔园广场">荔园广场</option>
+              <option value="教学楼">教学楼</option></select></p>
 
           <p><strong>目的地：</strong>
             <select class="select1" v-model="select_dest">
               <option value="" disabled selected>请选择...</option>
-              <option value="option1">榕园广场</option>
-              <option value="option2">荔园广场</option>
-              <option value="option3">教学楼</option></select></p>
+              <option value="榕园广场">榕园广场</option>
+              <option value="荔园广场">荔园广场</option>
+              <option value="教学楼">教学楼</option></select></p>
           <p>
             <strong>车牌号：</strong>
             <select class="select3" v-model="select_carID">
               <option value="" disabled selected>请选择...</option>
-              <option value="option1">粤C11111</option>
-              <option value="option2">粤C11112</option>
-              <option value="option3">粤C11113</option></select>
+              <option value="粤C11111">粤C11111</option>
+              <option value="粤C11112">粤C11112</option>
+              <option value="粤C11113">粤C11113</option></select>
           </p>
           <p>
               <button @click="buy" class="buy">付款</button>
@@ -41,9 +41,20 @@
 
 <script setup>
 import { defineProps, defineEmits } from 'vue';
+import {ref} from 'vue';
+let select_from=ref();
+let select_dest=ref();
+let select_carID=ref();
 // 定义 props
 const props = defineProps({
-  visible: Boolean
+  visible: {
+    type: Boolean,
+    required: true, 
+  },
+  getTicket: {
+    type: Function,
+    required: true, 
+  }
 });
 
 // 定义 emits
@@ -54,11 +65,10 @@ function buy() {
   console.log('付款功能触发');
   // 你可以在这里添加付款的具体逻辑
 }
-
 // 确定逻辑
 function confirm() {
   console.log('确定功能触发');
-  // 你可以在这里添加确定的具体逻辑
+  props.getTicket(select_from,select_dest,select_carID);
   closePopup(); // 关闭弹窗
 }
 
