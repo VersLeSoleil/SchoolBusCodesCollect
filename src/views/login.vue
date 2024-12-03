@@ -8,26 +8,36 @@
           <form @submit.prevent="isRegistering ? handleRegister() : handleLogin()">
             <!-- 登录表单 -->
             <div v-if="!isRegistering">
-              <div class="input-wrapper">
-                <input type="text" placeholder="用户名/邮箱/手机号" class="input" v-model="username"
-                       required
-                       @input="clearError('username')"
-                       :class="{ invalid: errors.username }"/>
-                <span class="error-msg">{{ errors.username }}</span>
+              <!-- 登录表单 -->
+              <div v-if="!isRegistering">
+                <div class="input-wrapper">
+                  <input type="text" placeholder="用户名/邮箱/手机号" class="input" v-model="username"
+                         required
+                         @input="clearError('username')"
+                         @focus="handleInputFocus"
+                         @blur="handleInputBlur"
+                         :class="{ invalid: errors.username }"/>
+                  <span class="error-msg">{{ errors.username }}</span>
+                </div>
+
+                <div class="input-wrapper">
+                  <input type="password" placeholder="密码" class="input" v-model="password"
+                         required
+                         @input="clearError('password')"
+                         @focus="handleInputFocus"
+                         @blur="handleInputBlur"
+                         :class="{ invalid: errors.password }"/>
+                  <span class="error-msg">{{ errors.password }}</span>
+                </div>
+
+
+                <button class="action-button" @click="handleLogin" :disabled="loading">
+                  <span v-if="!loading">登录</span>
+                  <span v-else class="spinner"></span>
+                </button>
               </div>
 
-              <div class="input-wrapper">
-                <input type="password" placeholder="密码" class="input" v-model="password"
-                       required
-                       @input="clearError('password')"
-                       :class="{ invalid: errors.password }"/>
-                <span class="error-msg">{{ errors.password }}</span>
-              </div>
 
-              <button class="action-button" @click="handleLogin" :disabled="loading">
-                <span v-if="!loading">登录</span>
-                <span v-else class="spinner"></span>
-              </button>
             </div>
 
             <!-- 注册表单 -->
@@ -129,6 +139,7 @@
       <button
           class="switch-button"
           @click="toggleServerConnection"
+          :class="{'blinking': isInputting}"
       >
         {{ isUsingDeployed ? '当前：远程后端服务器' : '当前：本地后端服务器' }}
       </button>
@@ -165,12 +176,19 @@ export default {
       },
       containerHeight: 0,
       formKey: 0, // 用于强制重新渲染
+      isInputting: false, // 用于控制是否正在输入
     };
   },
   mounted() {
     this.updateContainerHeight();
   },
   methods: {
+    handleInputFocus() {
+      this.isInputting = true;
+    },
+    handleInputBlur() {
+      this.isInputting = false;
+    },
     // 切换登录/注册状态
     toggleRegister() {
       this.isRegistering = !this.isRegistering;
@@ -279,7 +297,16 @@ export default {
       try {
         this.loading = true;
         // 触发验证码验证
-        let token = await this.recaptcha();
+
+        let token = ''
+        try {
+          token = await this.recaptcha();
+        }
+        catch (e) {
+          console.log(e);
+          // 不做继续处理
+        }
+
 
         const apiBaseStore = useApiBaseStore();
 
@@ -400,6 +427,7 @@ export default {
       // 获取验证码 token
       return await this.$recaptcha('register');
     },
+
   },
 };
 </script>
@@ -485,33 +513,48 @@ h2 {
   width: 100%;
   padding: 15px;
   margin: 10px 0;
-  border: none;
+  border: 2px solid rgba(255, 255, 255, 0.2);
   border-radius: 30px;
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.1); /* 原始背景色 */
   color: #fff;
   font-size: 16px;
   box-sizing: border-box;
   outline: none;
-  transition: background 0.3s, transform 0.3s;
+  transition: background 0.3s, border 0.3s, transform 0.3s, box-shadow 0.3s;
+  position: relative; /* 保证特效层正确定位 */
 }
 
+/* 输入框聚焦时的动画效果 */
 .input:focus {
-  background: rgba(255, 255, 255, 0.5);
-  transform: scale(1.02);
+  background: rgba(255, 255, 255, 0.2);
+  transform: scale(1.05); /* 放大一点 */
+  border-color: #23d5ab; /* 边框颜色变化 */
+  box-shadow: 0 0 10px rgba(35, 213, 171, 0.7); /* 发光效果 */
 }
 
+
+/* 错误的输入框边框和提示 */
 .input.invalid {
-  border: 1px solid red;
-}
-
-.input::placeholder {
-  color: rgba(255, 255, 255, 0.7);
+  border-color: #e74c3c;
 }
 
 .error-msg {
   color: #e74c3c;
   font-size: 12px;
   margin-top: 5px;
+}
+
+/* 动态渐变背景的动画 */
+@keyframes gradientMove {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
 }
 
 .action-button {
@@ -590,8 +633,13 @@ h2 {
 }
 
 .server-switch {
+  position: absolute;
+  bottom: 150px;
+  left: 50%;
+  transform: translateX(-50%);
   text-align: center;
   margin-bottom: 20px;
+  animation: fadeIn 1s;
 }
 
 .switch-button {
@@ -605,9 +653,39 @@ h2 {
   transition: background 0.3s;
 }
 
+@keyframes subtleBlink {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  25% {
+    opacity: 0.8;
+    transform: scale(1.1); /* 放大一点 */
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  75% {
+    opacity: 0.8;
+    transform: scale(1.1); /* 再放大一点 */
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+
+
 .switch-button:hover {
   background-color: rgba(255, 255, 255, 0.5);
 }
+
+.blinking {
+  animation: subtleBlink 1s ease-in-out infinite;
+}
+
 
 </style>
 

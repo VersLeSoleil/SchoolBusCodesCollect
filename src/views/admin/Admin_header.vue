@@ -2,7 +2,8 @@
   <div class="header">
     <div class="title">校园巴士管理员后台</div>
     <div class="user-info">
-      <i :class="connectionStatusIcon" class="status-icon"></i>
+      <i :class="[connectionStatusIcon, { 'subtleBlink': connectionStatusIcon === 'fas fa-circle' },
+      {'bigBlink': connectionStatusIcon === 'fas fa-times-circle' || connectionStatusIcon === 'fas fa-circle-notch'}]" class="status-icon" ></i>
       <span>用户名</span>
     </div>
   </div>
@@ -27,6 +28,8 @@ const connectionStatusIcon = computed(() => {
 
 // 定时器变量
 let heartbeatInterval;
+// 全局超时变量
+let times = 0;
 
 const checkConnection = async () => {
   if (isRequesting.value) return;  // 如果当前有请求在进行中，则不发送新的请求
@@ -36,19 +39,30 @@ const checkConnection = async () => {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 2000);  // 设置超时为 2 秒
 
+
+
   try {
     const apiBaseStore = useApiBaseStore();
     // 向服务器发送心跳包（假设 API 路径是 /heartbeat）
     const response = await fetch(apiBaseStore.baseUrl + '/heartbeat', {signal: controller.signal});
 
     if (response.ok) {
+      times = 0;
       connectionStatus.value = 'green';  // 服务器连接正常
     } else {
       connectionStatus.value = 'yellow'; // 其它回复则是网络不佳
     }
   } catch (error) {
     // 错误便是认为网络丢失
-    connectionStatus.value = 'red';
+    times++;
+    if (times === 3) {
+      // 如果连续 3 次检查都没有连接，则认为网络已经丢失
+      alert('网络连接已丢失，请检查网络设置');
+    } else if(times < 2) {
+      connectionStatus.value = 'yellow'; // 其它回复则是网络不佳
+    } else {
+      connectionStatus.value = 'red';
+    }
   } finally {
     clearTimeout(timeoutId); // 清除超时定时器
     isRequesting.value = false;  // 标记请求结束
@@ -141,4 +155,59 @@ onBeforeUnmount(() => {
 .status-icon:hover {
   transform: scale(1.2);
 }
+
+@keyframes subtleBlink {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  25% {
+    opacity: 0.8;
+    transform: scale(1.05); /* 放大一点 */
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  75% {
+    opacity: 0.8;
+    transform: scale(1.05); /* 再放大一点 */
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes bigBlink  {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  25% {
+    opacity: 0.8;
+    transform: scale(1.25); /* 放大一点 */
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  75% {
+    opacity: 0.8;
+    transform: scale(1.25); /* 再放大一点 */
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.subtleBlink {
+  animation: subtleBlink 2s ease-in-out infinite;
+}
+
+.bigBlink {
+  animation: bigBlink 1.5s ease-in-out infinite;
+}
+
 </style>
