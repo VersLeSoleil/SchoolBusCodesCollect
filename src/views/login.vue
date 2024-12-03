@@ -181,8 +181,22 @@ export default {
   },
   mounted() {
     this.updateContainerHeight();
+    this.setInitialLocalStorage();
   },
   methods: {
+    setInitialLocalStorage() {
+    const defaultValues = {
+      jwtToken: '', 
+      prefixURL: 'http://121.199.79.24:5793', // 默认的后端URL
+    };
+    for (const [key, value] of Object.entries(defaultValues)) {
+      // 如果localStorage中没有这个键，则设置初始值
+      if (!localStorage.getItem(key)) {
+        localStorage.setItem(key, value);
+      }
+    }
+    },
+
     handleInputFocus() {
       this.isInputting = true;
     },
@@ -281,8 +295,10 @@ export default {
       const apiBaseStore = useApiBaseStore(); // 引入 apiBaseStore
       if (this.isUsingDeployed) {
         apiBaseStore.switchToLocal();
+        localStorage.setItem('prefixURL', apiBaseStore.baseUrl);
       } else {
         apiBaseStore.switchToDeployed();
+        localStorage.setItem('prefixURL', apiBaseStore.baseUrl);
       }
       this.isUsingDeployed = !this.isUsingDeployed;
     },

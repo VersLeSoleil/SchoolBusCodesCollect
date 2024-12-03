@@ -1,5 +1,4 @@
 import axios from "axios";
-import {useApiBaseStore} from "@/stores/network";
 
 // 定义一个函数，用于验证 jwtToken 的合法性
 export async function validateToken() {
@@ -9,8 +8,9 @@ export async function validateToken() {
     }
 
     try {
-        const apiBaseStore = useApiBaseStore();
-        const response = await axios.post(apiBaseStore.localBaseUrl + "/api/validateToken", {}, {
+        const prefixURL = localStorage.getItem("prefixURL");
+        console.log(prefixURL);
+        const response = await axios.post(prefixURL + "/api/validateToken", {}, {
         headers: {
           Authorization: token
         }
@@ -18,7 +18,7 @@ export async function validateToken() {
 
       if (response.status === 200) {
         const role = parseInt(response.data.role);// 从后端响应中提取角色
-        console.log(role);
+        
         return { valid: true, message: "令牌合法" , role: role};
       } else {
         return { valid: false, message: "令牌无效，请重新登录。" };
