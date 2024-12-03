@@ -8,7 +8,7 @@ export async function validateToken() {
     }
 
     try {
-        const prefixURL = localStorage.getItem("prefixURL");
+        const prefixURL = localStorage.getItem("prefixURL"); // 使用本地存的url
         console.log(prefixURL);
         const response = await axios.post(prefixURL + "/api/validateToken", {}, {
         headers: {
