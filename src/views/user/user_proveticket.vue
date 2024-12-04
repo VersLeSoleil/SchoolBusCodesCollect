@@ -35,13 +35,13 @@ const props = defineProps({
 });
 
 // 定义 emits
-const emit = defineEmits(['close1']);
+const emit = defineEmits(['close1','confirmInCar']);
 
 
 // 确定逻辑
 function confirmIntoCar() {
   console.log('确定功能触发');
-  // 你可以在这里添加确定的具体逻辑
+  emit('confirmInCar');
   closePopup(); // 关闭弹窗
 }
 

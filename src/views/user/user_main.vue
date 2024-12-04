@@ -13,13 +13,15 @@
             </div>
         </header>
     <div class="app-container">
-        <button v-show="buyButtonVisible" @click="showBuyTickt" class="btn buyTicket">购票</button>
-        <button v-show="buyButtonVisible" @click="showCallBus" class="btn callBus">叫车</button>
+        <button v-show="buyButtonVisible&&!leaveButtonVisible" @click="showBuyTickt" class="btn buyTicket">购票</button>
+        <button v-show="buyButtonVisible&&!leaveButtonVisible" @click="showCallBus" class="btn callBus">叫车</button>
         <button v-show="!buyButtonVisible" @click="showTicket" class="btn ticket">上车凭证</button>
         <button v-show="!buyButtonVisible" @click="confirmTicket" class="btn confirmTicket">确认上车</button>
+        <button v-show="leaveButtonVisible" @click="leaveCar" class="btn leaveCar">确认下车</button>
     </div>
-    <user_ticket :visible="buyTicketVisible" @close="close" :getTicket="getTicket" />
-    <User_proveticket :visible="provideTicketVisible" @close1="close1" :from="from" :dest="dest" :carid="carid" :buyTime="buyTime"/>
+    <user_ticket :visible="buyTicketVisible" @close="close" @openPayment="openPayment" :getTicket="getTicket" />
+    <User_proveticket :visible="provideTicketVisible" @close1="close1" @confirmInCar="confirmInCar" :from="from" :dest="dest" :carid="carid" :buyTime="buyTime"/>
+    <User_payment :visible="paymentVisible" @confirmPay="confirmPay" @close2="close2" :from="from" :dest="dest"/>
 </template>
 
 <script setup>
@@ -40,6 +42,7 @@ import {
         useApiBaseStore
     } from "@/stores/network"; // 导入令牌验证函数
 import logo from "@/assets/logo.png";
+import User_payment from './user_payment.vue';
 const userInfo = ref({
         name: "Richard喵~~~~",
         avatar: logo,
@@ -52,6 +55,8 @@ let buyTime = ref();
 let buyButtonVisible = ref(true);
 let buyTicketVisible = ref(false);
 let provideTicketVisible = ref(false);
+let paymentVisible=ref(false);
+let leaveButtonVisible=ref(false);
 onMounted(async () => {
         const validation = await validateToken();
         if (!validation.valid) {
@@ -66,13 +71,19 @@ function showBuyTickt() {
 function close() {
     buyTicketVisible.value = false;
 }
-
+function openPayment(){
+    paymentVisible.value=true;
+}
 function getTicket(value1, value2, value3) {
     from.value = value1;
     dest.value = value2;
     carid.value = value3;
     buyTime.value = new Date().toLocaleString();
-    buyButtonVisible.value = false; // 购票后隐藏购票按钮
+    // 购票后隐藏购票按钮
+}
+function confirmPay(){
+    buyButtonVisible.value = false; 
+    buyTicketVisible.value=false;
 }
 
 function showTicket() {
@@ -82,16 +93,24 @@ function showTicket() {
 function close1() {
     provideTicketVisible.value = false;
 }
-
+function close2() {
+    paymentVisible.value = false;
+}
 function toMycenter() {
     router.push('/user-person');
 }
-
-// 新增的确认上车功能
 function confirmTicket() {
-    buyButtonVisible.value = !buyButtonVisible.value; // 取反buyButtonVisible
+    buyButtonVisible.value=true;
+    leaveButtonVisible.value=true;
     // 这里可以添加其他逻辑，例如确认上车后执行的操作
     console.log('确认上车按钮被点击，buyButtonVisible现在是:', buyButtonVisible.value);
+}
+function leaveCar(){
+    buyButtonVisible.value=true;
+    leaveButtonVisible.value=false;
+}
+function confirmInCar(){
+    buyButtonVisible.value = !buyButtonVisible.value;
 }
 async function handleLogout() {
         const validation = await validateToken();
