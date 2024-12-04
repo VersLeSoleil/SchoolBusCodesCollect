@@ -4,7 +4,8 @@
             <div class="nav-menu">
                 <ElButton @click="toMycenter" type="primary" size="large" class="nav-menu-btn" round>个人中心
                 </ElButton>
-
+                <ElButton @click="toSchduel" type="primary" size="large" class="nav-menu-btn1" round>行程计划
+                </ElButton>
             </div>
             <div class="user-info">
                 <ElAvatar :src="userInfo.avatar" size="medium" />
@@ -21,6 +22,7 @@
     </div>
     <user_ticket :visible="buyTicketVisible" @close="close" @openPayment="openPayment" :getTicket="getTicket" />
     <User_proveticket :visible="provideTicketVisible" @close1="close1" @confirmInCar="confirmInCar" :from="from" :dest="dest" :carid="carid" :buyTime="buyTime"/>
+    <User_callBus :visible="callBusVisible" @close3="close3" @openPayment="openPayment" :getTicket="getTicket"/>
     <User_payment :visible="paymentVisible" @confirmPay="confirmPay" @close2="close2" :from="from" :dest="dest"/>
 </template>
 
@@ -43,6 +45,7 @@ import {
     } from "@/stores/network"; // 导入令牌验证函数
 import logo from "@/assets/logo.png";
 import User_payment from './user_payment.vue';
+import User_callBus from './user_callBus.vue';
 const userInfo = ref({
         name: "Richard喵~~~~",
         avatar: logo,
@@ -57,6 +60,7 @@ let buyTicketVisible = ref(false);
 let provideTicketVisible = ref(false);
 let paymentVisible=ref(false);
 let leaveButtonVisible=ref(false);
+let callBusVisible=ref(false);
 onMounted(async () => {
         const validation = await validateToken();
         if (!validation.valid) {
@@ -66,6 +70,9 @@ onMounted(async () => {
     });
 function showBuyTickt() {
     buyTicketVisible.value = true;
+}
+function showCallBus(){
+    callBusVisible.value=true;
 }
 
 function close() {
@@ -84,6 +91,7 @@ function getTicket(value1, value2, value3) {
 function confirmPay(){
     buyButtonVisible.value = false; 
     buyTicketVisible.value=false;
+    callBusVisible.value=false;
 }
 
 function showTicket() {
@@ -95,6 +103,9 @@ function close1() {
 }
 function close2() {
     paymentVisible.value = false;
+}
+function close3() {
+    callBusVisible.value = false;
 }
 function toMycenter() {
     router.push('/user-person');
@@ -186,7 +197,11 @@ async function handleLogout() {
         font-size: 17px;
     }
 
-
+.nav-menu-btn1 {
+        margin-right: 20px;
+        padding: 25px 20px;
+        font-size: 17px;
+}
     .user-info {
         display: flex;
         align-items: center;
