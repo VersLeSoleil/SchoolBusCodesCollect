@@ -4,33 +4,17 @@
       <div class="profile-container">
         <div class="info">
           <h2 class="headline">
-              <strong>购票</strong>
+            <strong>上车凭证</strong>
           </h2>
-          
-          <p><strong>出发地：</strong>
-            <select class="select1" v-model="select_from">
-              <option value="" disabled selected>请选择...</option>
-              <option value="option1">榕园广场</option>
-              <option value="option2">荔园广场</option>
-              <option value="option3">教学楼</option></select></p>
-
-          <p><strong>目的地：</strong>
-            <select class="select1" v-model="select_dest">
-              <option value="" disabled selected>请选择...</option>
-              <option value="option1">榕园广场</option>
-              <option value="option2">荔园广场</option>
-              <option value="option3">教学楼</option></select></p>
+          <ul class="ticket-details">
+            <li><strong>购票人：</strong>张三</li>
+            <li><strong>出发地：</strong>{{ from }}</li>
+            <li><strong>目的地：</strong>{{ dest }}</li>
+            <li><strong>车牌号：</strong>{{ carid }}</li>
+            <li><strong>购票时间：</strong>{{ buyTime }}</li>
+          </ul>
           <p>
-            <strong>车牌号：</strong>
-            <select class="select3" v-model="select_carID">
-              <option value="" disabled selected>请选择...</option>
-              <option value="option1">粤C11111</option>
-              <option value="option2">粤C11112</option>
-              <option value="option3">粤C11113</option></select>
-          </p>
-          <p>
-              <button @click="buy" class="buy">付款</button>
-              <button @click="confirm" class="confirm">确定</button>
+            <button @click="confirmIntoCar" class="confirm-button">确认上车</button>
           </p>
         </div>
         <button @click="closePopup" class="closebutton">X</button>
@@ -43,28 +27,27 @@
 import { defineProps, defineEmits } from 'vue';
 // 定义 props
 const props = defineProps({
-  visible: Boolean
+  visible: Boolean,
+  from: String,
+  dest: String,
+  carid:String,
+  buyTime:String
 });
 
 // 定义 emits
-const emit = defineEmits(['close']);
+const emit = defineEmits(['close1','confirmInCar']);
 
-// 购票逻辑（这里暂时没有实现具体逻辑）
-function buy() {
-  console.log('付款功能触发');
-  // 你可以在这里添加付款的具体逻辑
-}
 
 // 确定逻辑
-function confirm() {
+function confirmIntoCar() {
   console.log('确定功能触发');
-  // 你可以在这里添加确定的具体逻辑
+  emit('confirmInCar');
   closePopup(); // 关闭弹窗
 }
 
 // 关闭弹窗
 function closePopup() {
-  emit('close');
+  emit('close1');
 }
 </script>
 
@@ -75,135 +58,124 @@ function closePopup() {
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.5); /* 半透明黑色背景 */
   display: flex;
   justify-content: center;
   align-items: center;
+  z-index: 1000; /* 确保弹窗在其他元素之上 */
 }
 
 .popup-content {
   background: #fff;
-  padding: 25px;
-  border-radius: 8px;
+  padding: 40px; /* 增加内边距 */
+  border-radius: 16px; /* 增大圆角 */
   width: 100%;
-  max-width: 500px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  max-width: 500px; /* 增大最大宽度 */
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1); /* 增大阴影效果 */
+  text-align: center;
+  position: relative;
 }
 
 .closebutton {
   position: absolute;
-  top: 10px;
-  right: 10px;
-  font-size: 24px;
-  color: #aaa;
+  top: 15px; /* 增大顶部间距 */
+  right: 15px; /* 增大右侧间距 */
+  font-size: 28px; /* 增大字体大小 */
+  color: #d73a49; /* 红色主题 */
   cursor: pointer;
   background: none;
   border: none;
   outline: none;
   transition: color 0.3s ease;
+  padding: 8px; /* 增加内边距 */
 }
 
 .closebutton:hover {
-  color: #000;
-}
-
-.select1 {
-  width: 100%;
-  font-size: 18px;
-  padding: 10px;
-  margin-bottom: 15px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  appearance: none;
-  background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="%236c757d" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>') no-repeat right 0.75rem center/8px 8px;
-}
-.select2 {
-  width: 100%;
-  font-size: 18px;
-  padding: 10px;
-  margin-bottom: 15px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  appearance: none;
-  background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="%236c757d" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>') no-repeat right 0.75rem center/8px 8px;
-}
-.select3 {
-  width: 100%;
-  font-size: 18px;
-  padding: 10px;
-  margin-bottom: 15px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  appearance: none;
-  background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="%236c757d" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>') no-repeat right 0.75rem center/8px 8px;
-}
-
-.buy,
-.confirm {
-  position: relative;
-  left: 35%;
-  display: inline-block;
-  padding: 10px 20px;
-  margin-top: 15px;
-  font-size: 18px;
-  color: #fff;
-  background-color: #05910e;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-}
-
-.buy:hover,
-.confirm:hover {
-  background-color: #047b0c;
-}
-
-.buy:active,
-.confirm:active {
-  transform: translateY(1px);
+  color: #b02a37; /* 悬停时加深颜色 */
 }
 
 .headline {
-  background: #05910e;
-  padding: 15px;
-  border-radius: 8px;
-  margin-bottom: 20px;
-  font-family: 'Arial', sans-serif;
-  font-size: 24px;
-  font-weight: bold;
+  background: #d73a49;
   color: #fff;
+  padding: 20px; /* 增加内边距 */
+  border-radius: 10px; /* 增大圆角 */
+  margin-bottom: 30px; /* 增大底部间距 */
+  font-family: 'Arial', sans-serif;
+  font-size: 32px; /* 增大字体大小 */
+  font-weight: bold;
   text-align: center;
 }
 
-.info p {
-  margin-bottom: 20px;
+.ticket-details {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  text-align: left;
+  margin-bottom: 30px; /* 增大底部间距 */
 }
 
-.info p strong {
-  display: block;
-  font-size: 20px;
-  margin-bottom: 5px;
+.ticket-details li {
+  margin-bottom: 15px; /* 增大列表项间距 */
+  font-size: 20px; /* 增大字体大小 */
+  color: #333;
 }
 
-.info p select {
-  width: calc(100% - 20px); /* Adjust for padding */
+.ticket-details strong {
+  display: inline-block;
+  width: 100px; /* 增大标签宽度 */
+  font-weight: bold;
+  color: #d73a49; /* 红色主题 */
 }
 
+.confirm-button {
+  display: inline-block;
+  padding: 16px 32px; /* 增加按钮内边距 */
+  font-size: 22px; /* 增大按钮字体大小 */
+  color: #fff;
+  background-color: #d73a49;
+  border: none;
+  border-radius: 8px; /* 增大圆角 */
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+  box-shadow: 0 6px 10px rgba(0, 0, 0, 0.1); /* 增大阴影效果 */
+  margin-top: 20px; /* 增加顶部间距 */
+}
+
+.confirm-button:hover {
+  background-color: #b02a37; /* 悬停时加深颜色 */
+  transform: translateY(-3px); /* 悬停时轻微提升 */
+}
+
+.confirm-button:active {
+  transform: translateY(2px); /* 按下时轻微下沉 */
+}
+
+/* 针对小屏幕的调整 */
 @media (max-width: 600px) {
   .popup-content {
-    padding: 15px;
+    padding: 30px; /* 减小内边距 */
+    max-width: 90%; /* 增大最大宽度 */
   }
 
   .headline {
-    font-size: 20px;
-    padding: 10px;
+    font-size: 28px; /* 减小字体大小 */
+    padding: 15px;
   }
 
-  .buy,
-  .confirm {
-    width: 100%;
-    text-align: center;
+  .ticket-details li {
+    font-size: 18px; /* 减小字体大小 */
+  }
+
+  .confirm-button {
+    width: 100%; /* 按钮全宽 */
+    font-size: 18px; /* 减小字体大小 */
+  }
+
+  .closebutton {
+    font-size: 24px; /* 减小字体大小 */
+    top: 10px;
+    right: 10px;
   }
 }
+
 </style>

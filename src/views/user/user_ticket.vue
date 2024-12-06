@@ -10,26 +10,26 @@
           <p><strong>出发地：</strong>
             <select class="select1" v-model="select_from">
               <option value="" disabled selected>请选择...</option>
-              <option value="option1">榕园广场</option>
-              <option value="option2">荔园广场</option>
-              <option value="option3">教学楼</option></select></p>
+              <option value="榕园广场">榕园广场</option>
+              <option value="荔园广场">荔园广场</option>
+              <option value="教学楼">教学楼</option></select></p>
 
           <p><strong>目的地：</strong>
             <select class="select1" v-model="select_dest">
               <option value="" disabled selected>请选择...</option>
-              <option value="option1">榕园广场</option>
-              <option value="option2">荔园广场</option>
-              <option value="option3">教学楼</option></select></p>
+              <option value="榕园广场">榕园广场</option>
+              <option value="荔园广场">荔园广场</option>
+              <option value="教学楼">教学楼</option></select></p>
           <p>
             <strong>车牌号：</strong>
             <select class="select3" v-model="select_carID">
               <option value="" disabled selected>请选择...</option>
-              <option value="option1">粤C11111</option>
-              <option value="option2">粤C11112</option>
-              <option value="option3">粤C11113</option></select>
+              <option value="粤C11111">粤C11111</option>
+              <option value="粤C11112">粤C11112</option>
+              <option value="粤C11113">粤C11113</option></select>
           </p>
           <p>
-              <button @click="buy" class="buy">付款</button>
+              <button @click="cancel" class="cancel">取消</button>
               <button @click="confirm" class="confirm">确定</button>
           </p>
         </div>
@@ -41,25 +41,34 @@
 
 <script setup>
 import { defineProps, defineEmits } from 'vue';
+import {ref} from 'vue';
+let select_from=ref();
+let select_dest=ref();
+let select_carID=ref();
 // 定义 props
 const props = defineProps({
-  visible: Boolean
+  visible: {
+    type: Boolean,
+    required: true, 
+  },
+  getTicket: {
+    type: Function,
+    required: true, 
+  }
 });
 
 // 定义 emits
-const emit = defineEmits(['close']);
-
+const emit = defineEmits(['close','openPayment']);
 // 购票逻辑（这里暂时没有实现具体逻辑）
-function buy() {
-  console.log('付款功能触发');
+function cancel() {
+  closePopup(); // 关闭弹窗
   // 你可以在这里添加付款的具体逻辑
 }
-
 // 确定逻辑
 function confirm() {
   console.log('确定功能触发');
-  // 你可以在这里添加确定的具体逻辑
-  closePopup(); // 关闭弹窗
+  emit('openPayment');
+  props.getTicket(select_from,select_dest,select_carID);
 }
 
 // 关闭弹窗
@@ -139,7 +148,7 @@ function closePopup() {
   background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="%236c757d" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>') no-repeat right 0.75rem center/8px 8px;
 }
 
-.buy,
+.cancel,
 .confirm {
   position: relative;
   left: 35%;
@@ -155,12 +164,12 @@ function closePopup() {
   transition: background-color 0.3s ease;
 }
 
-.buy:hover,
+.cancel:hover,
 .confirm:hover {
   background-color: #047b0c;
 }
 
-.buy:active,
+.cancel:active,
 .confirm:active {
   transform: translateY(1px);
 }
@@ -201,7 +210,7 @@ function closePopup() {
     padding: 10px;
   }
 
-  .buy,
+  .cancel,
   .confirm {
     width: 100%;
     text-align: center;
