@@ -24,10 +24,12 @@
     <User_proveticket :visible="provideTicketVisible" @close1="close1" @confirmInCar="confirmInCar" :from="from" :dest="dest" :carid="carid" :buyTime="buyTime"/>
     <User_callBus :visible="callBusVisible" @close3="close3" @openPayment="openPayment" :getTicket="getTicket"/>
     <User_payment :visible="paymentVisible" @confirmPay="confirmPay" @close2="close2" :from="from" :dest="dest"/>
+    <user_showjourney :visible="showjourneyVisible" @close_showjourney="close_showjourney"/>
 </template>
 
 <script setup>
 import user_ticket from './user_ticket.vue';
+import user_showjourney from './components/user_showjourney.vue';
 import router from '@/router';
 import { ref, onMounted } from 'vue';
 import User_proveticket from './user_proveticket.vue';
@@ -61,6 +63,7 @@ let provideTicketVisible = ref(false);
 let paymentVisible=ref(false);
 let leaveButtonVisible=ref(false);
 let callBusVisible=ref(false);
+let showjourneyVisible = ref(false);
 onMounted(async () => {
         const validation = await validateToken();
         if (!validation.valid) {
@@ -77,6 +80,9 @@ function showCallBus(){
 
 function close() {
     buyTicketVisible.value = false;
+}
+function close_showjourney(){
+    showjourneyVisible.value = false;
 }
 function openPayment(){
     paymentVisible.value=true;
@@ -109,6 +115,9 @@ function close3() {
 }
 function toMycenter() {
     router.push('/user-person');
+}
+function toSchduel(){
+    showjourneyVisible.value = true;
 }
 function confirmTicket() {
     buyButtonVisible.value=true;
