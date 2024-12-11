@@ -19,8 +19,8 @@
     "props": "^0.3.0",
     "SchoolBusCodesCollect": "file:",
     "vue": "^3.2.13",
-    "vue-router": "^4.4.5",
-    "vue-recaptcha-v3": "^2.0.1"
+    "vue-recaptcha-v3": "^2.0.1",
+    "vue-router": "^4.4.5"
   },
   "devDependencies": {
     "@babel/core": "^7.12.16",

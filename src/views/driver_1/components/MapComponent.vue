@@ -42,10 +42,22 @@ import ErrorBoundary from "@/views/driver_1/components/ErrorBoundary.vue";
 import VehicleForm from "@/views/driver_0/components/VehicleForm.vue";
 import driver_Info from '@/views/driver_0/driver_Info.vue';
 import { useUserStore } from "@/stores/user";
+import { useWebSocketStore } from '@/stores/webSocketStore';
+import { computed } from 'vue';
 
 /* global AMap */
 
 export default {
+  setup() {
+    const webSocketStore = useWebSocketStore();
+
+    // 通过 getter 或直接访问状态
+    const driverGpsMessages = computed(() => webSocketStore.driverGpsMessages);
+
+    return {
+      driverGpsMessages,
+    };
+  },
   name: "MapComponent",
   components: {
     VehicleStatusToggle,
@@ -72,7 +84,8 @@ export default {
       drivers: [], // 存储从后端获取的驾驶员位置数据
       markers: [], // 存储地图上的标记
       dInfoVisible: false,
-      webSocket: null
+      webSocket: null,
+      isConnected: false,
     };
   },
   methods: {
@@ -269,28 +282,24 @@ export default {
     async sendLocationToBackendWebSocket(longitude, latitude) {
       const userStore = useUserStore(); // 引入全局的 userStore
       const driverID = userStore.userAccount; // 获取全局变量中的 driver_id
-
+      const webSocketStore = useWebSocketStore(); // 引入全局的 WebSocket store
       // 验证输入参数
       if (typeof longitude !== "number" || typeof latitude !== "number") {
         console.error("无效的经纬度数据:", { longitude, latitude });
         return;
       }
 
-      // 检查 WebSocket 是否已连接
-      if (!this.webSocket || this.webSocket.readyState !== WebSocket.OPEN) {
-        console.error("WebSocket 未连接，无法发送数据");
-        return;
-      }
-
       // 构造消息
       const message = {
+        type: "driver_gps",
         id: driverID,
         latitude,
         longitude,
       };
 
       try {
-        this.webSocket.send(JSON.stringify(message));
+        // 通过 WebSocket store 发送消息
+        webSocketStore.sendMessage(JSON.stringify(message));
         console.log("位置信息已通过 WebSocket 发送:", message);
       } catch (error) {
         console.error("通过 WebSocket 发送数据时出错:", error);
@@ -299,51 +308,54 @@ export default {
 
     // 在地图上显示驾驶员位置
     updateMarkers() {
+      if (!this.map) {
+        console.warn("地图未初始化");
+        return;
+      }
       // 清除旧的标记
+      // this.markers.forEach((marker) => this.map.remove(marker));
       this.markers.forEach(marker => this.map.remove(marker));
       this.markers = [];
 
-      // 根据新的驾驶员数据添加标记
-      this.drivers.forEach(driver => {
+      // 从响应式的 driverGpsMessages 中读取数据
+      const messages = [...this.driverGpsMessages];
+      messages.forEach((message) => {
+        if (!message.location) return; // 确保 location 存在
+        const { location } = message;
         const marker = new AMap.Marker({
-          position: [driver.longitude, driver.latitude], // 使用驾驶员的经纬度
+          position: [location.longitude, location.latitude],
           map: this.map,
-          // icon: require('@/assets/driver-icon.png') // 引用自定义图标
+          
         });
-
         this.markers.push(marker);
       });
+
+      // 清空已处理的消息队列
+      this.driverGpsMessages.splice(0, this.driverGpsMessages.length); // 清空队列
     },
+
+    // 定时更新
+    startUpdatingMarkers() {
+      this.updateMarkers(); // 初始化时更新一次标记
+      this.updateInterval = setInterval(() => {
+        this.updateMarkers();
+      }, 3000); // 每隔三秒更新一次
+    },
+
     // 初始化 WebSocket
-    initWebSocket (){
-      this.webSocket = new WebSocket("ws://localhost:8888/ws");
-
-      // WebSocket 打开事件
-      this.webSocket.onopen = () => {
-        console.log("WebSocket 已连接");
-      };
-
-      // WebSocket 收到消息事件
-      this.webSocket.onmessage = (event) => {
-        try {
-          const data = JSON.parse(event.data);
-          this.drivers = data;
-          this.updateMarkers();
-        } catch (error) {
-          console.error("WebSocket 数据解析失败:", error);
-        }
-      };
-
-      // WebSocket 错误事件
-      this.webSocket.onerror = (error) => {
-        console.error("WebSocket 错误:", error);
-      };
-
-      // WebSocket 关闭事件
-      this.webSocket.onclose = () => {
-        console.log("WebSocket 已关闭");
-      };
-    }
+    initWebSocket (){        
+      const webSocketStore = useWebSocketStore();
+      webSocketStore.initWebSocket("ws://localhost:8888/ws");
+    },
+        // 可以添加其他处理方法，如发送消息
+    sendMessage(message) {
+      const webSocketStore = useWebSocketStore();
+      webSocketStore.sendMessage(message);
+    },
+  },
+  created() {
+    const webSocketStore = useWebSocketStore();
+    webSocketStore.initWebSocket(); // 初始化 WebSocket
   },
   mounted() {
     window._AMapSecurityConfig = {
@@ -355,8 +367,9 @@ export default {
       plugins: ["AMap.Scale"],
     })
       .then(() => {
-        this.initWebSocket(); // 初始化 WebSocket 连接
         this.updateLocation();
+        // 开始定时更新
+        this.startUpdatingMarkers();
       })
       .catch((e) => {
         console.log(e);
@@ -367,6 +380,8 @@ export default {
     if (this.intervalId) {
       clearInterval(this.intervalId);
     }
+    const webSocketStore = useWebSocketStore();
+    webSocketStore.closeWebSocket(); // 关闭 WebSocket 连接
   },
 };
 </script>

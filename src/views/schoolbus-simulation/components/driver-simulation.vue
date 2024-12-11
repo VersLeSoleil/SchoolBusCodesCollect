@@ -91,7 +91,7 @@
     console.log("Creating driver with ID:", id);
     try {
       const apiBaseStore = useApiBaseStore();
-      const response = await axios.post(apiBaseStore.baseUrl + "/create_driver", {
+      const response = await axios.post(apiBaseStore.localBaseUrl + "/create_driver", {
         id: id.toString(), // 确保 id 是字符串
       });
       console.log("Driver created with ID:", id);
@@ -111,7 +111,7 @@
     }
     try {
       const apiBaseStore = useApiBaseStore();
-      const response = await axios.delete(apiBaseStore.baseUrl + "/delete_driver", {
+      const response = await axios.delete(apiBaseStore.localBaseUrl + "/delete_driver", {
         data: { id: driverId.value },
       });
       responseMessage.value = response.data || "删除成功";

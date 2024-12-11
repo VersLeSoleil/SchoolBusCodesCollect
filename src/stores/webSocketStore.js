@@ -1,4 +1,3 @@
-// src/stores/webSocketStore.js
 import { defineStore } from 'pinia';
 
 let webSocket = null;
@@ -8,7 +7,9 @@ const reconnectInterval = 3000; // 重连间隔时间（毫秒）
 
 export const useWebSocketStore = defineStore('websocket', {
     state: () => ({
-        messages: [], // 存储接收到的 WebSocket 消息
+        driverGpsMessages: [], // 存储驾驶员GPS消息队列
+        paymentUserCountMessages: [], // 存储付款人数消息队列
+        vehicleCallMessages: [], // 存储车辆呼叫消息队列
         isConnected: false, // WebSocket 连接状态
     }),
 
@@ -31,9 +32,28 @@ export const useWebSocketStore = defineStore('websocket', {
 
             // 接收消息时
             webSocket.onmessage = (event) => {
-                console.log("收到消息:", event.data);
-                this.addMessage(event.data); // 将收到的消息添加到消息列表中
+                const messages = JSON.parse(event.data); // 假设数据是一个数组
+                messages.forEach((message) => {
+                    switch (message.type) {
+                        case 'driver_gps':
+                            console.log(`接收到驾驶员GPS定位：驾驶员ID：${message.id}，位置：${message.location.latitude}, ${message.location.longitude}`);
+                            this.addDriverGpsMessage(message);
+                            break;
+                        case 'payment_user_count':
+                            console.log(`当前付款人数：${message.count}`);
+                            this.addPaymentUserCountMessage(message);
+                            break;
+                        case 'vehicle_call':
+                            console.log(`接收到车辆呼叫：从 ${message.from.latitude}, ${message.from.longitude} 到 ${message.to.latitude}, ${message.to.longitude}`);
+                            this.addVehicleCallMessage(message);
+                            break;
+                        default:
+                            console.error('未知消息类型', message.type);
+                            break;
+                    }
+                });
             };
+
 
             // 连接错误时
             webSocket.onerror = (error) => {
@@ -69,14 +89,26 @@ export const useWebSocketStore = defineStore('websocket', {
             }
         },
 
-        // 将接收到的消息添加到消息列表
-        addMessage(message) {
-            this.messages.push(message);
+        // 将驾驶员 GPS 消息添加到消息队列
+        addDriverGpsMessage(message) {
+            this.driverGpsMessages.push(message);
         },
 
-        // 清空消息列表
-        clearMessages() {
-            this.messages = [];
+        // 将付款人数消息添加到消息队列
+        addPaymentUserCountMessage(message) {
+            this.paymentUserCountMessages.push(message);
+        },
+
+        // 将车辆呼叫消息添加到消息队列
+        addVehicleCallMessage(message) {
+            this.vehicleCallMessages.push(message);
+        },
+
+        // 清空所有消息队列
+        clearAllMessages() {
+            this.driverGpsMessages = [];
+            this.paymentUserCountMessages = [];
+            this.vehicleCallMessages = [];
         },
 
         // 关闭 WebSocket 连接
@@ -96,6 +128,21 @@ export const useWebSocketStore = defineStore('websocket', {
                 console.log("强制关闭 WebSocket 连接");
             }
             this.initWebSocket();  // 重新初始化连接
+        },
+    },
+
+    getters: {
+        // 获取所有消息队列
+        getDriverGpsMessages(state) {
+            return state.driverGpsMessages;
+        },
+
+        getPaymentUserCountMessages(state) {
+            return state.paymentUserCountMessages;
+        },
+
+        getVehicleCallMessages(state) {
+            return state.vehicleCallMessages;
         },
     },
 });
