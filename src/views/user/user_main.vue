@@ -32,7 +32,7 @@
 import user_ticket from './user_ticket.vue';
 import user_showjourney from './components/user_showjourney.vue';
 import router from '@/router';
-import { ref, onMounted } from 'vue';
+import { ref, onMounted} from 'vue';
 import User_proveticket from './user_proveticket.vue';
 import axios from "axios";
 import {validateToken} from "@/auth.js";
@@ -95,17 +95,23 @@ function getTicket(value1, value2, value3) {
     carid.value = value3;
     buyTime.value = new Date().toLocaleString();
     submitOrder();
+    submitPayment();
     // 购票后隐藏购票按钮
+}
+
+function confirmPay(){
+    buyButtonVisible.value = false; 
+    buyTicketVisible.value=false;
+    callBusVisible.value=false;
 }
 
 async function submitOrder() {
   try {
-    const apiBaseStore = useApiBaseStore();
-    let endpoint = apiBaseStore + "/submitUserOrder";
+    // const apiBaseStore = useApiBaseStore();
+    let endpoint = "http://localhost:8888" + "/submitUserOrder";
     let method = "POST";
     let requestBody = {
-      order_id: 111111,
-      //driver_avatar:user.avatar,
+      order_id: null, 
       student_id:21123,
       pickup_station_id:123123,
       dropoff_station_id:1231231,
@@ -135,11 +141,40 @@ async function submitOrder() {
     }
 }
 
-function confirmPay(){
-    buyButtonVisible.value = false; 
-    buyTicketVisible.value=false;
-    callBusVisible.value=false;
+async function submitPayment() {
+  try {
+    // const apiBaseStore = useApiBaseStore();
+    let endpoint = "http://localhost:8888" + "/submitUserPayment";
+    let method = "POST";
+    let requestBody = {
+      order_id: 111111, 
+      vehicle_id:21123,
+      payment_amount:123123,
+      payment_time:buyTime.value,
+      payment_status:"失败"
+    }
+    const response = await fetch(endpoint, {
+      method: method,
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(requestBody),
+    });
+    console.log(JSON.stringify(requestBody));
+    const result = await response.json();
+    if (response.ok) {
+      // 信息提交成功
+      alert("操作成功！");
+    } else {
+      // 错误处理
+      alert(result.message || "操作失败，请检查输入！");
+    }
+   }catch (error) {
+      console.error("提交失败:", error);
+      alert("提交失败，请稍后再试！");
+    }
 }
+
 
 function showTicket() {
     provideTicketVisible.value = true;
