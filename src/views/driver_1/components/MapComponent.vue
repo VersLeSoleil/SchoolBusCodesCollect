@@ -227,6 +227,30 @@ export default {
       const colors = ['#FF0000', '#00FF00', '#0000FF', '#FFFF00', '#FF00FF']; // 可扩展颜色列表
       return colors[index % colors.length];
     },
+    // handleStatusChange(status) {
+    //         console.log("状态已更新为：", status);
+    //         // 更新地图上显示的状态
+    //         this.updateMapStatus(status);
+    //     },
+    //     updateMapStatus(status) {
+    //         // 示例：动态在地图上显示当前状态
+    //         const statusDisplay = document.getElementById("map-status-display");
+    //         if (!statusDisplay) {
+    //             const newStatus = document.createElement("div");
+    //             newStatus.id = "map-status-display";
+    //             newStatus.style.position = "absolute";
+    //             newStatus.style.top = "10px";
+    //             newStatus.style.right = "10px";
+    //             newStatus.style.background = "rgba(0, 0, 0, 0.5)";
+    //             newStatus.style.color = "white";
+    //             newStatus.style.padding = "5px 10px";
+    //             newStatus.style.borderRadius = "5px";
+    //             document.body.appendChild(newStatus);
+    //             newStatus.innerText = `状态：${status === "normal" ? "正常运营" : "试通行"}`;
+    //         } else {
+    //             statusDisplay.innerText = `状态：${status === "normal" ? "正常运营" : "试通行"}`;
+    //         }
+    //     },
     handleStatusChange(status) {
       console.log("状态已更新为：", status);
       // 更新地图上显示的状态
@@ -273,7 +297,7 @@ export default {
             },
             { enableHighAccuracy: true, maximumAge: 0, timeout: 10000 }
           );
-        }, 1000);
+        }, 3000);
       } else {
         console.error("浏览器不支持地理定位");
       }
@@ -288,13 +312,14 @@ export default {
         console.error("无效的经纬度数据:", { longitude, latitude });
         return;
       }
-
-      // 构造消息
+      const location = {
+        latitude: latitude,
+        longitude: longitude,
+      }
       const message = {
         type: "driver_gps",
-        id: driverID,
-        latitude,
-        longitude,
+        driver_id: driverID,
+        location: location
       };
 
       try {
@@ -307,7 +332,7 @@ export default {
     },
 
     // 在地图上显示驾驶员位置
-    updateMarkers() {
+    async updateMarkers() {
       if (!this.map) {
         console.warn("地图未初始化");
         return;
