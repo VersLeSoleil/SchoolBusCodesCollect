@@ -7,6 +7,7 @@ import Driver_Info from '@/views/driver_0/driver_Info.vue';
 import test_user_map from '@/views/components/Map-user.vue';
 import User_main from '@/views/user/user_main.vue';
 import User_person from '@/views/user/user_person.vue';
+import User_platform from '@/views/user/user_platform.vue'
 import Error404 from '@/views/404.vue';
 import Lay_out from '@/views/admin/Admin_layout.vue';
 import Registry from '@/views/deprecated/loginRegistry.vue';
@@ -77,6 +78,14 @@ const routes = [
         path: '/user-person',
         name: 'user-person',
         component: User_person,
+        meta: {
+            requiredRoles: [0, 1]  // admin 和 Passenger 都能访问
+        },
+    },
+    {
+        path: '/user-platform',
+        name: 'user-platform',
+        component: User_platform,
         meta: {
             requiredRoles: [0, 1]  // admin 和 Passenger 都能访问
         },
