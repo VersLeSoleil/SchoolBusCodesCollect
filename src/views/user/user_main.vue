@@ -4,7 +4,9 @@
             <div class="nav-menu">
                 <ElButton @click="toMycenter" type="primary" size="large" class="nav-menu-btn" round>个人中心
                 </ElButton>
-                <ElButton @click="toSchduel" type="primary" size="large" class="nav-menu-btn1" round>行程计划
+                <ElButton @click="toSchduel" type="primary" size="large" class="nav-menu-btn" round>行程计划
+                </ElButton>
+                <ElButton @click="toPlatform" type="primary" size="large" class="nav-menu-btn" round>交流平台
                 </ElButton>
             </div>
             <div class="user-info">
@@ -13,7 +15,8 @@
                 <ElButton @click="handleLogout" type="danger" size="large" round>登出</ElButton>
             </div>
         </header>
-    <div class="app-container">
+    <div class="app-container">  
+        <user_map/> 
         <button v-show="buyButtonVisible&&!leaveButtonVisible" @click="showBuyTickt" class="btn buyTicket">购票</button>
         <button v-show="buyButtonVisible&&!leaveButtonVisible" @click="showCallBus" class="btn callBus">叫车</button>
         <button v-show="!buyButtonVisible" @click="showTicket" class="btn ticket">上车凭证</button>
@@ -24,7 +27,7 @@
     <User_proveticket :visible="provideTicketVisible" @close1="close1" @confirmInCar="confirmInCar" :from="from" :dest="dest" :carid="carid" :buyTime="buyTime"/>
     <User_callBus :visible="callBusVisible" @close3="close3" @openPayment="openPayment" :getTicket="getTicket"/>
     <User_payment :visible="paymentVisible" @confirmPay="confirmPay" @close2="close2" :from="from" :dest="dest"/>
-    <user_showjourney :visible="showjourneyVisible" @close_showjourney="close_showjourney"/>
+    <user_showjourney :visible="showjourneyVisible" @close_showjourney="close_showjourney" :getjourneyrecord="getjourneyrecord"/>
 </template>
 
 <script setup>
@@ -35,6 +38,7 @@ import { ref, onMounted } from 'vue';
 import User_proveticket from './user_proveticket.vue';
 import axios from "axios";
 import {validateToken} from "@/auth.js";
+import user_map from './user_map.vue';
 import {
         ElAvatar,
         ElButton,
@@ -53,6 +57,7 @@ const userInfo = ref({
         avatar: logo,
 });
 
+let journeydata = ref([])
 let from = ref("榕园广场");
 let dest = ref("教学楼");
 let carid = ref("粤C11111");
@@ -92,8 +97,47 @@ function getTicket(value1, value2, value3) {
     dest.value = value2;
     carid.value = value3;
     buyTime.value = new Date().toLocaleString();
+    submitOrder();
     // 购票后隐藏购票按钮
 }
+
+async function submitOrder() {
+  try {
+    const apiBaseStore = useApiBaseStore();
+    let endpoint = apiBaseStore + "/submitUserOrder";
+    let method = "POST";
+    let requestBody = {
+      order_id: 111111,
+      //driver_avatar:user.avatar,
+      student_id:21123,
+      pickup_station_id:123123,
+      dropoff_station_id:1231231,
+      pickup_time:buyTime.value,
+      status:"待付款",
+      payment_id:12321231
+    }
+    const response = await fetch(endpoint, {
+      method: method,
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(requestBody),
+    });
+    console.log(JSON.stringify(requestBody));
+    const result = await response.json();
+    if (response.ok) {
+      // 信息提交成功
+      alert("操作成功！");
+    } else {
+      // 错误处理
+      alert(result.message || "操作失败，请检查输入！");
+    }
+   }catch (error) {
+      console.error("提交失败:", error);
+      alert("提交失败，请稍后再试！");
+    }
+}
+
 function confirmPay(){
     buyButtonVisible.value = false; 
     buyTicketVisible.value=false;
@@ -119,11 +163,33 @@ function toMycenter() {
 function toSchduel(){
     showjourneyVisible.value = true;
 }
+function toPlatform(){
+    router.push('/user-platform');
+}
+async function getjourneyrecord(){
+    try{
+        const apiBaseStore = useApiBaseStore();
+        let endpoint = apiBaseStore.localBaseUrl + "/getjourneyrecord";
+        let method = 'GET';
+        const response = await fetch(endpoint, {
+            method: method,
+            headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+        const result = await response.json();
+        journeydata.value = result;
+        //console.log(journeydata.value);
+        return journeydata.value;
+    }catch (error) {
+    console.error('There was an error fetching the data!', error)
+    }
+}
+
 function confirmTicket() {
     buyButtonVisible.value=true;
     leaveButtonVisible.value=true;
     // 这里可以添加其他逻辑，例如确认上车后执行的操作
-    console.log('确认上车按钮被点击，buyButtonVisible现在是:', buyButtonVisible.value);
 }
 function leaveCar(){
     buyButtonVisible.value=true;
@@ -131,6 +197,7 @@ function leaveCar(){
 }
 function confirmInCar(){
     buyButtonVisible.value = !buyButtonVisible.value;
+    leaveButtonVisible.value=false;
 }
 async function handleLogout() {
         const validation = await validateToken();
@@ -206,11 +273,7 @@ async function handleLogout() {
         font-size: 17px;
     }
 
-.nav-menu-btn1 {
-        margin-right: 20px;
-        padding: 25px 20px;
-        font-size: 17px;
-}
+
     .user-info {
         display: flex;
         align-items: center;

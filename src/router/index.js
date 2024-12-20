@@ -8,6 +8,7 @@ import test_user_map from '@/views/components/Map-user.vue';
 import test_admin_map from '@/views/components/Map-admin.vue';
 import User_main from '@/views/user/user_main.vue';
 import User_person from '@/views/user/user_person.vue';
+import User_platform from '@/views/user/user_platform.vue'
 import Error404 from '@/views/404.vue';
 import Lay_out from '@/views/admin/Admin_layout.vue';
 import Registry from '@/views/deprecated/loginRegistry.vue';
@@ -93,6 +94,14 @@ const routes = [
         },
     },
     {
+        path: '/user-platform',
+        name: 'user-platform',
+        component: User_platform,
+        meta: {
+            requiredRoles: [0, 1]  // admin 和 Passenger 都能访问
+        },
+    },
+    {
         path: '/admin_home',
         name: 'admin_home',
         component: Lay_out,
@@ -104,7 +113,20 @@ const routes = [
             name: 'Dashboard',
             component: () => import('@/views/admin/Admin_dashboard.vue'),
             meta: { title: 'Dashboard', icon: 'dashboard' }
-        }]
+        },
+        {
+            path: 'userspass',
+            name: 'usersPass',
+            component: () => import('@/views/admin/Admin_userspass.vue'),
+            meta: { title: 'Usersspass', icon: 'userspass' }
+        },
+        {
+            path: 'variables',
+            name: 'variables',
+            component: () => import('@/views/admin/Admin_variables.vue'),
+            meta: { title: 'Variables', icon: 'variables' }
+        }
+        ]
     },
     {
         path: '/404',

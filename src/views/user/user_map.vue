@@ -1,53 +1,29 @@
 <template>
     <div class="page-container">
-      <div id="container" class="map-container"></div>
-      <div class="controls-container">
-        <button @click="showDriverInfo" class="showDriverInfoBtn">我的</button>
-        <driver_Info :visible="dInfoVisible" :content="dInfoContent" @close="closeDInfo" />
-        <button @click="toggleFooterControls" class="showMoreInfoBtn">
-          {{ footerVisible ? "收起" : "更多" }}
-        </button>
-      </div>
-      <transition name="slide-up">
-        <div
-          v-show="footerVisible"
-          class="footer-controls-container"
-        >
-          <button class="btn" @click="toggleRoutes">
-            {{ routesVisible ? "隐藏现有路线" : "显示现有路线" }}
+      <div id="container" class="map-container">
+        <div class="info-container">
+          <button class="btn" @click="toggleRoutes" style="margin-bottom: 5px">
+            {{ routesVisible ? '隐藏现有路线' : '显示现有路线' }}
           </button>
-          <button class="btn toggleButton" @click="toggleStations">
-            {{ stationsVisible ? "隐藏站点" : "显示站点" }}
+          <button class="btn" @click="toggleStations" style="margin-bottom: 5px">
+            {{ stationsVisible ? '隐藏站点' : '显示站点' }}
           </button>
-          <button class="btn autoLocateButton" @click="autoLocateCampus">
-            自动定位到校区
-          </button>
-
-          <RemarkPlane />
-          <StartWork />
-          
         </div>
-      </transition>
+      </div>
     </div>
   </template>
-
+  
+  
   <script>
   import AMapLoader from "@amap/amap-jsapi-loader";
   import busStationData from "@/assets/bus_station_data.json";
-  import driver_Info from '@/views/driver_0/driver_Info.vue';
-  import StartWork from "./StartWork.vue";
-  import RemarkPlane from "./RemarkPlane.vue";
-  import {useApiBaseStore} from "@/stores/network";
-
-
+  import { useUserStore } from "@/stores/user";
+  
   /* global AMap */
-
+  
   export default {
-    name: "MapComponent",
+    name: "user_map",
     components: {
-      StartWork,
-      driver_Info,
-      RemarkPlane,
       // ref,
     },
     data() {
@@ -56,43 +32,39 @@
         marker: null, // 当前用户位置的标记
         intervalId: null, // 定时器 ID，用于位置更新
         isMapInitialized: false, // 地图是否已经初始化，用于避免重复初始化
+        polylineEditor: null, // 折线编辑器实例，用于编辑路线
         polylines: [], // 路线的折线对象数组，存储所有绘制在地图上的路线
+        polyline: null, // 当前正在操作的折线对象
         stationMarkers: [], // 存储所有站点的标记对象，用于显示或隐藏站点
         routesVisible: true, // 是否显示当前绘制的路线，用于控制路线的可见性
         stationsVisible: true, // 是否显示站点，用于控制站点标记的可见性
+        editingNewRoute: false, // 是否正在新增路线，用于控制新增路线模式
+        newPolyline: null, // 新建的折线对象，用于新增路线时的存储
         onlineCount: 1, // 假设初始在线人数
         drivers: [], // 存储从后端获取的驾驶员位置数据
+        markers: [], // 存储地图上的标记
         dInfoVisible: false,
-        dInfoContent: '', 
-        footerVisible: false, // 控制 footer 是否可见
+        webSocket: null
       };
     },
     methods: {
-      toggleFooterControls() {
-        this.footerVisible = !this.footerVisible;
-      },
-      closeDInfo(){
-        this.dInfoVisible=false;
-      },
-      showDriverInfo(){
-        this.dInfoVisible=true;
-      },
       initMap(longitude, latitude) {
         this.map = new AMap.Map("container", {
-          zoom: 15,
+          zoom: 10,
           center: [longitude, latitude],
         });
-
+  
         AMap.plugin(
           ["AMap.Geolocation", "AMap.Driving", "AMap.PolylineEditor"],
           () => {
             const geolocation = new AMap.Geolocation({
               enableHighAccuracy: true,
               timeout: 10000,
-              buttonOffset: new AMap.Pixel(10, 20),
+              buttonOffset: new AMap.Pixel(10, 15),
               zoomToAccuracy: true,
             });
             this.map.addControl(geolocation);
+  
             geolocation.getCurrentPosition((status, result) => {
               if (status === "complete") {
                 console.log("定位成功:", result);
@@ -101,10 +73,11 @@
                 console.error("定位失败:", result);
               }
             });
+  
             this.polylineEditor = new AMap.PolylineEditor(this.map, this.polyline);
           }
         );
-
+  
         this.addBusStationMarkers();
         this.loadAndDrawRoutes(); // 加载并绘制路线
         this.isMapInitialized = true;
@@ -114,7 +87,7 @@
         // 校区的经纬度
         const campusCenter = [113.584845, 22.358088];
         if (!this.map) return;
-
+  
         this.map.setZoomAndCenter(15, campusCenter); // 设置缩放级别和中心点
         console.log("已定位到校区中心:", campusCenter);
       },
@@ -145,11 +118,11 @@
         const context = require.context('@/assets', false, /^\.\/route[0-9]+\.json$/); // 匹配以 route 开头的 JSON 文件
         const routes = [];
         console.log("匹配到的文件:", context.keys());
-
+  
         context.keys().forEach((fileName) => {
           const fileData = context(fileName);
           console.log("加载的文件内容:", fileName, fileData);
-
+  
           // 确保文件内容格式正确
           if (Array.isArray(fileData)) {
             fileData.forEach((route) => {
@@ -159,7 +132,7 @@
             });
           }
         });
-
+  
         // 绘制所有路径到地图
         routes.forEach((path, index) => {
           const polyline = new AMap.Polyline({
@@ -167,12 +140,12 @@
             strokeColor: this.getRouteColor(index), // 根据索引设置颜色
             strokeWeight: 6,
           });
-
+  
           this.map.add(polyline); // 添加到地图
           this.polylines.push(polyline); // 保存到 polylines 数组
           console.log(`绘制路径 ${index + 1} 成功`, path);
         });
-
+  
         console.log("所有符合条件的路线已加载并绘制");
       },
       /** 添加站点标记 */
@@ -231,32 +204,22 @@
           statusDisplay.innerText = `状态：${status === "normal" ? "正常运营" : "试通行"}`;
         }
       },
-      // 管理员的功能
-      addPolyline(newPolyline) {
-        this.polylines.push(newPolyline); // 添加新路线
-      },
-      removePolyline(polyline) {
-        const index = this.polylines.indexOf(polyline);
-        if (index > -1) {
-          this.polylines.splice(index, 1); // 移除指定的路线
-        }
-      },
-
+  
       /** 更新位置 */
-      updateLocation(driverId) {
+      updateLocation() {
         if (navigator.geolocation) {
           this.intervalId = setInterval(() => {
             navigator.geolocation.getCurrentPosition(
               (position) => {
                 const { longitude, latitude } = position.coords;
-
+  
                 if (!this.isMapInitialized) {
                   this.initMap(longitude, latitude);
                 } else if (this.marker) {
                   this.marker.setPosition([longitude, latitude]);
                 }
                 // 调用发送位置信息到后端的方法
-                this.sendLocationToBackend(driverId, longitude, latitude);
+                this.sendLocationToBackendWebSocket(longitude, latitude);
               },
               (error) => {
                 console.error("无法获取位置", error);
@@ -268,53 +231,44 @@
           console.error("浏览器不支持地理定位");
         }
       },
-        // 发送位置信息到后端
-      sendLocationToBackend(driverId, longitude, latitude) {
-        fetch("http://localhost:8888/updateLocation", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            id: driverId,
-            role: "driver", // 用户角色
-            latitude,
-            longitude,
-            timestamp: new Date().toISOString(), // 时间戳
-          }),
-        })
-          .then((response) => response.text())
-          .then((data) => console.log("服务器响应:", data))
-          .catch((error) => console.error("请求错误:", error));
-      },
-
-      // 获取驾驶员数据
-      async fetchDrivers() {
+      // 发送位置信息到后端
+      async sendLocationToBackendWebSocket(longitude, latitude) {
+        const userStore = useUserStore(); // 引入全局的 userStore
+        const driverID = userStore.userAccount; // 获取全局变量中的 driver_id
+  
+        // 验证输入参数
+        if (typeof longitude !== "number" || typeof latitude !== "number") {
+          console.error("无效的经纬度数据:", { longitude, latitude });
+          return;
+        }
+  
+        // 检查 WebSocket 是否已连接
+        if (!this.webSocket || this.webSocket.readyState !== WebSocket.OPEN) {
+          console.error("WebSocket 未连接，无法发送数据");
+          return;
+        }
+  
+        // 构造消息
+        const message = {
+          id: driverID,
+          latitude,
+          longitude,
+        };
+  
         try {
-          const apiBaseStore = useApiBaseStore();
-          const response = await fetch(apiBaseStore.baseUrl + "/drivers");
-          if (!response.ok) {
-            throw new Error("网络请求失败");
-          }
-          this.drivers = await response.json();
-
-          // 验证驾驶员数据是否有效
-          this.drivers = this.drivers.filter(
-            driver => typeof driver.latitude === "number" && typeof driver.longitude === "number"
-          );
-
-          this.updateMarkers(); // 更新地图上的标记
+          this.webSocket.send(JSON.stringify(message));
+          console.log("位置信息已通过 WebSocket 发送:", message);
         } catch (error) {
-          console.error("获取驾驶员位置失败:", error);
+          console.error("通过 WebSocket 发送数据时出错:", error);
         }
       },
-
+  
       // 在地图上显示驾驶员位置
       updateMarkers() {
         // 清除旧的标记
         this.markers.forEach(marker => this.map.remove(marker));
         this.markers = [];
-
+  
         // 根据新的驾驶员数据添加标记
         this.drivers.forEach(driver => {
           const marker = new AMap.Marker({
@@ -322,9 +276,39 @@
             map: this.map,
             // icon: require('@/assets/driver-icon.png') // 引用自定义图标
           });
-
+  
           this.markers.push(marker);
         });
+      },
+      // 初始化 WebSocket
+      initWebSocket (){
+        this.webSocket = new WebSocket("ws://localhost:8888/ws");
+  
+        // WebSocket 打开事件
+        this.webSocket.onopen = () => {
+          console.log("WebSocket 已连接");
+        };
+  
+        // WebSocket 收到消息事件
+        this.webSocket.onmessage = (event) => {
+          try {
+            const data = JSON.parse(event.data);
+            this.drivers = data;
+            this.updateMarkers();
+          } catch (error) {
+            console.error("WebSocket 数据解析失败:", error);
+          }
+        };
+  
+        // WebSocket 错误事件
+        this.webSocket.onerror = (error) => {
+          console.error("WebSocket 错误:", error);
+        };
+  
+        // WebSocket 关闭事件
+        this.webSocket.onclose = () => {
+          console.log("WebSocket 已关闭");
+        };
       }
     },
     mounted() {
@@ -337,12 +321,8 @@
         plugins: ["AMap.Scale"],
       })
         .then(() => {
-          this.updateLocation("driver1");
-          this.fetchDrivers(); // 获取驾驶员数据
-          // 可选：设置定时器定期刷新位置
-          setInterval(() => {
-            this.fetchDrivers();
-          }, 1000); // 每 1 秒刷新一次
+          this.initWebSocket(); // 初始化 WebSocket 连接
+          this.updateLocation();
         })
         .catch((e) => {
           console.log(e);
@@ -356,84 +336,87 @@
     },
   };
   </script>
-
 <style scoped>
-#container {
-  width: 100%;
-  height: 100%;
-  height: 1300px;
-  position: relative;
-}
+  /* 地图容器样式 */
+  #map-container {
+    width: 100%;
+    height: 80%;
+    z-index: 1;
+  }
+  
+  /* 输入卡片样式 */
+  .input-card {
+    margin-top: 20px;
+    padding: 10px;
+    background-color: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+  }
+  
+  /* 按钮样式 */
+  .btn {
+    display: block;
+    width: 100%;
+    padding: 8px;
+    background-color: #007bff;
+    color: white;
+    text-align: center;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  
+  .btn:hover {
+    background-color: #0056b3;
+  }
+  .page-container {
+    width: 95%;
+    height:70vx;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+    font-family: Arial, sans-serif;
+    background-color: #ffffff;
+  }
 
-.controls-container {
-  position: absolute;
-  top: 60px;
-  left: 20px;
-  z-index: 1000;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.footer-controls-container {
-  position: relative;
-  bottom: -50px;
-  width: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background: rgba(0, 0, 0, 0.6);
-  padding: 10px 0;
-  z-index: 1000;
-}
-
-.footer-controls-container-enter-active,
-.footer-controls-container-leave-active {
-  transition: transform 0.3s;
-}
-
-.footer-controls-container-enter {
-  transform: translateY(100%);
-}
-
-.footer-controls-container-leave-to {
-  transform: translateY(100%);
-}
-
-.showDriverInfoBtn,
-.showMoreInfoBtn {
-  width: 50px;
-  height: 50px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(113, 65, 168, 0.8);
-  color: floralwhite;
-  font-size: 14px;
-}
-
-.btn {
-  margin: 0 10px;
-  padding: 8px 12px;
-  background-color: #007bff;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  text-align: center;
-  font-size: 14px;
-  flex-shrink: 0;
-}
-
-.btn:hover {
-  background-color: #0056b3;
-}
-
-.autoLocateButton {
-  background-color: #28a745;
-}
-.toggleButton {
-    background-color: #ffc107;
-}
-</style>
+  .map-container {
+    position: relative;
+    height:100%;
+    width: 100%;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+  }
+  
+  .info-container {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 260px;
+    background-color: #ffffff;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    color: #333;
+    z-index: 10;
+  }
+  
+  .info-container h4 {
+    color: #008a6c;
+    font-weight: 600;
+  }
+  
+  .info-container p {
+    color: #666;
+    line-height: 1.6;
+  }
+  
+  @media (min-width: 1024px) {
+    .map-container {
+      height: 600px;
+    }
+  }
+  </style>
+  
