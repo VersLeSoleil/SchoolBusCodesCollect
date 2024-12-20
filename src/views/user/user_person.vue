@@ -3,14 +3,16 @@
         <!-- 顶部导航栏 -->
         <header class="header">
             <div class="nav-menu">
-                <ElButton @click="navigateTo('购票页面')" type="primary" size="large" class="nav-menu-btn" round>购票页面
+                <ElButton @click="navigateTo('购票页面')" type="primary" size="large" class="nav-menu-btn" round>
+                    购票页面
                 </ElButton>
-                <ElButton @click="navigateTo('乘车页面')" type="primary" size="large" class="nav-menu-btn2" round>乘车页面
+                <ElButton @click="navigateTo('乘车页面')" type="primary" size="large" class="nav-menu-btn2" round>
+                    乘车页面
                 </ElButton>
             </div>
             <div class="user-info">
-                <ElAvatar :src="userInfo.avatar" size="medium" />
-                <span class="user-name">{{ userInfo.name }}</span>
+                <ElAvatar :src="userStore.userInfo.avatar" size="medium" />
+                <span class="user-name">{{ userStore.userInfo.name }}</span>
                 <ElButton @click="handleLogout" type="danger" size="large" round>登出</ElButton>
             </div>
         </header>
@@ -39,108 +41,105 @@
 </template>
 
 <script setup>
-    import {
-        ref,
-        onMounted
-    } from "vue";
-    import {
-        useRouter
-    } from "vue-router";
-    import axios from "axios";
-    import {
-        validateToken
-    } from "@/auth.js";
-    import {
-        ElMenu,
-        ElMenuItem,
-        ElAvatar,
-        ElButton,
-        ElMessage,
-        ElMessageBox,
-    } from "element-plus";
-    import "element-plus/dist/index.css";
-    import UserProfile from "@/views/user/components/UserProfile.vue"; // 引入 UserProfile 组件
-    import UserNotice from "@/views/user/components/UserNotice.vue"; // 引入 UserProfile 组件
-    import UserCoupon from "@/views/user/components/UserCoupon.vue"; // 引入 UserCoupon 组件
-    import UserOrder from "@/views/user/components/UserOrder.vue"; // 引入 UserOrder 组件
-    import UserComment from "@/views/user/components/UserComment.vue"; // 引入 UserComment 组件
-    import {
-        useApiBaseStore
-    } from "@/stores/network"; // 导入令牌验证函数
-    import logo from "@/assets/logo.png";
+import { ref, onMounted } from "vue";
+import { useRouter } from "vue-router";
+import axios from "axios";
+import {
+    ElMenu,
+    ElMenuItem,
+    ElAvatar,
+    ElButton,
+    ElMessage,
+    ElMessageBox,
+} from "element-plus";
+import "element-plus/dist/index.css";
+import UserProfile from "@/views/user/components/UserProfile.vue"; // 引入 UserProfile 组件
+import UserNotice from "@/views/user/components/UserNotice.vue"; // 引入 UserNotice 组件
+import UserCoupon from "@/views/user/components/UserCoupon.vue"; // 引入 UserCoupon 组件
+import UserOrder from "@/views/user/components/UserOrder.vue"; // 引入 UserOrder 组件
+import UserComment from "@/views/user/components/UserComment.vue"; // 引入 UserComment 组件
+import { useUserStore } from "@/stores/userStore"; // 引入 User Store
 
-    const router = useRouter();
-    const userInfo = ref({
-        name: "Richard喵~~~~",
-        avatar: logo,
-    });
-    const selectedMenu = ref("个人资料"); // 当前选中的菜单项
-    const menuItems = [
-        "个人资料",
-        "查看个人订单",
-        "优惠券/乘车券",
-        "评价和反馈",
-        "乘客须知",
-    ];
+import { validateToken, getUserIDFromToken } from "@/auth.js";
 
-    // 验证令牌逻辑
-    onMounted(async () => {
-        const validation = await validateToken();
-        if (!validation.valid) {
-            ElMessage.error(validation.message);
-            router.push("/login");
+const router = useRouter();
+const userStore = useUserStore();
+
+const selectedMenu = ref("个人资料"); // 当前选中的菜单项
+const menuItems = [
+    "个人资料",
+    "查看个人订单",
+    "优惠券/乘车券",
+    "评价和反馈",
+    "乘客须知",
+];
+
+// 验证令牌逻辑
+onMounted(async () => {
+    const token = localStorage.getItem("jwtToken");
+    if (token) {
+        const userID = getUserIDFromToken(token); // 解析 token 获取 userID
+        if (userID) {
+            await userStore.fetchUserInfo(); // 向后端请求用户信息
+        } else {
+            ElMessage.error("无效的用户令牌");
+            router.push("/login"); // 返回登录页
         }
-    });
+    } else {
+        ElMessage.error("未找到用户令牌");
+        router.push("/login"); // 返回登录页
+    }
+});
 
-    // 切换功能菜单（不跳转，只更新右侧内容）
-    function handleMenuClick(item) {
-        selectedMenu.value = item;
+// 切换功能菜单（不跳转，只更新右侧内容）
+function handleMenuClick(item) {
+    selectedMenu.value = item;
+}
+
+// 页面跳转
+function navigateTo(page) {
+    if (page === "购票页面") {
+        router.push("/404"); // 跳转到购票页面
+    } else if (page === "乘车页面") {
+        router.push("user-main"); // 跳转到乘车页面
+    }
+}
+
+// 登出逻辑
+async function handleLogout() {
+    const validation = await validateToken();
+    if (!validation.valid) {
+        ElMessage.error(validation.message);
+        router.push("/login");
+        return;
     }
 
-    // 页面跳转
-    function navigateTo(page) {
-        if (page === "购票页面") {
-            router.push("/404"); // 跳转到购票页面
-        } else if (page === "乘车页面") {
-            router.push("user-main"); // 跳转到乘车页面
+    // 确认是否登出
+    try {
+        await ElMessageBox.confirm("确定要登出吗？", "提示", {
+            confirmButtonText: "确定",
+            cancelButtonText: "取消",
+            type: "warning",
+        });
+
+        // 调用后端 API 进行登出操作
+        const prefixURL = localStorage.getItem('prefixURL') || 'http://localhost:8888';
+        await axios.post(`${prefixURL}/api/logout`, {}, {
+            headers: {
+                Authorization: `Bearer ${localStorage.getItem('jwtToken')}`,
+            },
+        });
+        ElMessage.success("您已成功登出~");
+        localStorage.removeItem('jwtToken'); // 移除令牌
+        localStorage.setItem('prefixURL', 'http://121.199.79.24:5793');
+        router.push('/login'); // 跳转到登录页面
+    } catch (error) {
+        if (error !== "cancel") {
+            console.error("登出失败:", error);
+            ElMessage.error("登出失败，请稍后再试");
         }
     }
-
-    // 登出逻辑
-    async function handleLogout() {
-        const validation = await validateToken();
-        if (!validation.valid) {
-            ElMessage.error(validation.message);
-            router.push("/login");
-            return;
-        }
-
-        // 确认是否登出
-        try {
-            await ElMessageBox.confirm("确定要登出吗？", "提示", {
-                confirmButtonText: "确定",
-                cancelButtonText: "取消",
-                type: "warning",
-            });
-
-            // 调用后端 API 进行登出操作
-            const apiBaseStore = useApiBaseStore();
-            await axios.post(apiBaseStore.baseUrl + '/api/logout', {}, {
-                headers: {
-                    Authorization: localStorage.getItem('jwtToken'),
-                },
-            });
-            ElMessage.success("您已成功登出~");
-            localStorage.removeItem('jwtToken'); // 移除令牌
-            localStorage.setItem('prefixURL', 'http://121.199.79.24:5793');
-            router.push('/login'); // 跳转到登录页面
-        } catch (error) {
-            if (error !== "cancel") {
-                console.error("登出失败:", error);
-                ElMessage.error("登出失败，请稍后再试");
-            }
-        }
-    }
+}
 </script>
 
 <style scoped>
