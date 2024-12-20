@@ -93,7 +93,20 @@ const routes = [
             name: 'Dashboard',
             component: () => import('@/views/admin/Admin_dashboard.vue'),
             meta: { title: 'Dashboard', icon: 'dashboard' }
-        }]
+        },
+        {
+            path: 'userspass',
+            name: 'usersPass',
+            component: () => import('@/views/admin/Admin_userspass.vue'),
+            meta: { title: 'Usersspass', icon: 'userspass' }
+        },
+        {
+            path: 'variables',
+            name: 'variables',
+            component: () => import('@/views/admin/Admin_variables.vue'),
+            meta: { title: 'Variables', icon: 'variables' }
+        }
+        ]
     },
     {
         path: '/404',
