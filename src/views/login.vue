@@ -152,6 +152,7 @@
 import { nextTick } from "vue";
 import axios from "axios";
 import { useApiBaseStore } from '@/stores/network';
+// import { useUserStore } from "@/stores/user";
 
 export default {
   name: "AuthPage",
@@ -252,6 +253,9 @@ export default {
             if (response.data.code === 200) {
               console.log("登陆成功：", response.data.data);
               console.log("数据：", response.data.role);
+              // const userStore = useUserStore();
+              // userStore.setUserAccount(this.username);
+              // console.log(userStore.userAccount)
               localStorage.setItem('jwtToken', response.data.data);
 
               // 按照role跳转

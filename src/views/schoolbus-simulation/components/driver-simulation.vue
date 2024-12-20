@@ -8,7 +8,7 @@
         <div class="form-group">
           <input v-model="driverId" placeholder="请输入驾驶员 ID" class="input" />
           <button @click="createDriver(driverId)" class="btn btn-primary">创建驾驶员</button>
-          <button @click="deleteDriver" class="btn btn-danger">删除驾驶员</button>
+          <button @click="deleteDriver(driverId)" class="btn btn-danger">删除驾驶员</button>
         </div>
       </div>
 
@@ -68,6 +68,8 @@
   import { ref, onMounted, onBeforeUnmount } from "vue";
   import axios from "axios";
   import {useApiBaseStore} from "@/stores/network";
+  import { useWebSocketStore } from '@/stores/webSocketStore'; // 导入 WebSocket store
+
 
   const responseMessage = ref(""); // 响应消息
   const driverId = ref(""); // 驾驶员 ID
@@ -76,10 +78,10 @@
   const driverLocations = ref([]); // 存储驾驶员位置的数组
   let webSocket = null; // WebSocket 实例
   let timer = null; // 用于控制路径发送的定时器
-  // let pathIndex = 0; // 路径索引
-  // let pathData = []; // JSON 文件中的路径数据
   let currentDriverId = 100; // 起始驾驶员 ID
   const routes = ref([]); // 存储所有上传的路径信息
+  // 获取 WebSocket Store 实例  
+  const webSocketStore = useWebSocketStore();
 
   // 创建驾驶员并传递位置信息
   const createDriver = async (id = driverId.value) => {
@@ -91,7 +93,7 @@
     console.log("Creating driver with ID:", id);
     try {
       const apiBaseStore = useApiBaseStore();
-      const response = await axios.post(apiBaseStore.baseUrl + "/create_driver", {
+      const response = await axios.post(apiBaseStore.localBaseUrl + "/create_driver", {
         id: id.toString(), // 确保 id 是字符串
       });
       console.log("Driver created with ID:", id);
@@ -104,16 +106,18 @@
 
 
   // 删除驾驶员
-  const deleteDriver = async () => {
-    if (!driverId.value) {
+  const deleteDriver = async (id = driverId.value) => {
+    if (!id) {
       responseMessage.value = "请输入驾驶员 ID";
       return;
     }
+    console.log("Deleting driver with ID:", id);
     try {
       const apiBaseStore = useApiBaseStore();
-      const response = await axios.delete(apiBaseStore.baseUrl + "/delete_driver", {
-        data: { id: driverId.value },
+      const response = await axios.post(apiBaseStore.localBaseUrl + "/delete_driver", {
+        id: id.toString(), // 确保 id 是字符串
       });
+      console.log("Driver delete with ID:", id);
       responseMessage.value = response.data || "删除成功";
     } catch (error) {
       responseMessage.value = `删除失败: ${error.response?.data || error.message}`;
@@ -122,20 +126,8 @@
 
   // 初始化 WebSocket
   const initWebSocket = () => {
-    webSocket = new WebSocket("ws://localhost:8888/ws");
-    webSocket.onopen = () => console.log("WebSocket 已连接");
-    webSocket.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        if (Array.isArray(data)) {
-          driverLocations.value = data; // 更新驾驶员位置
-        }
-      } catch (error) {
-        console.error("WebSocket 数据解析失败:", error);
-      }
-    };
-    webSocket.onerror = (error) => console.error("WebSocket 错误:", error);
-    webSocket.onclose = () => console.log("WebSocket 1已关闭");
+    // 在组件挂载时初始化 WebSocket 连接
+    webSocketStore.initWebSocket("ws://localhost:8888/ws");
   };
 
   // 更新驾驶员位置
@@ -144,17 +136,22 @@
       responseMessage.value = "请输入驾驶员 ID";
       return;
     }
-    if (!webSocket || webSocket.readyState !== WebSocket.OPEN) {
+    // 检查 WebSocket 连接状态
+    if (!webSocketStore.isConnected) {
       responseMessage.value = "WebSocket 未连接";
       return;
     }
-    const message = {
-      id: driverId.value,
+    const location = {
       latitude: latitude.value,
       longitude: longitude.value,
+    }
+    const message = {
+      type: "driver_gps",
+      driver_id: driverId.value,
+      location: location
     };
     try {
-      webSocket.send(JSON.stringify(message));
+      webSocketStore.sendMessage(JSON.stringify(message)); // 使用 store 的方法发送消息
       responseMessage.value = "位置信息已发送";
     } catch (error) {
       responseMessage.value = `发送位置信息失败: ${error.message}`;
@@ -245,20 +242,27 @@
 
   // 通过 WebSocket 向后端发送位置
   const sendLocationToBackend = (id, longitude, latitude) => {
-    if (!webSocket || webSocket.readyState !== WebSocket.OPEN) {
-      console.error("WebSocket 未连接");
+    // 检查 WebSocket 连接状态
+    if (!webSocketStore.isConnected) {
+      responseMessage.value = "WebSocket 未连接";
       return;
     }
+
     id = id.toString()
-    let message = {
-      id,
-      latitude,
-      longitude,
+    const location = {
+      latitude: latitude,
+      longitude: longitude,
+    }
+    const message = {
+      type: "driver_gps",
+      driver_id: id,
+      location: location
     };
     try {
-      webSocket.send(JSON.stringify(message));
+      webSocketStore.sendMessage(JSON.stringify(message)); // 使用 store 的方法发送消息
+      responseMessage.value = "位置信息已发送";
     } catch (error) {
-      console.error("发送位置信息失败:", error);
+      responseMessage.value = `发送位置信息失败: ${error.message}`;
     }
   };
 
