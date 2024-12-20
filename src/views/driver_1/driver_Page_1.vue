@@ -6,6 +6,10 @@ import PaymentCount from '@/views/driver_1/components/PaymentCount.vue';
 import CallCount from '@/views/driver_1/components/CallCount.vue';
 import ErrorBoundary from '@/views/driver_1/components/ErrorBoundary.vue'; // 通用错误边界组件
 
+import callSim from '@/views/schoolbus-simulation/components/call-sim.vue';
+
+import QRCodeScanner from '@/views/driver_1/components/QRCodeScanner.vue'; // 通用错误边界组件
+
 
 </script>
 
@@ -46,6 +50,16 @@ import ErrorBoundary from '@/views/driver_1/components/ErrorBoundary.vue'; // �
       <div class="stats-container">
         <ErrorBoundary>
           <CallCount />
+        </ErrorBoundary>
+      </div>
+      <div class="stats-container">
+        <ErrorBoundary>
+          <callSim />
+        </ErrorBoundary>
+      </div>
+      <div class="stats-container">
+        <ErrorBoundary>
+          <QRCodeScanner />
         </ErrorBoundary>
       </div>
     </div>

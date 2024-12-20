@@ -1,6 +1,7 @@
 <script setup>
 import MapComponent from '@/views/driver_1/components/MapComponent.vue';
 import driverSimulation from '@/views/schoolbus-simulation/components/driver-simulation.vue';
+import callSim from '@/views/schoolbus-simulation/components/call-sim.vue';
 
 
 
@@ -17,6 +18,9 @@ import driverSimulation from '@/views/schoolbus-simulation/components/driver-sim
     <!-- 其他内容 -->
     <div class="driver-section">
       <driverSimulation />
+    </div>
+    <div class="driver-section">
+      <callSim />
     </div>
   </div>
 </template>

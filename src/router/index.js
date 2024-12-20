@@ -5,6 +5,7 @@ import Driver_Page_0 from '@/views/driver_0/driver_Page_0.vue';
 import Driver_Page_1 from '@/views/driver_1/driver_Page_1.vue';
 import Driver_Info from '@/views/driver_0/driver_Info.vue';
 import test_user_map from '@/views/components/Map-user.vue';
+import test_admin_map from '@/views/components/Map-admin.vue';
 import User_main from '@/views/user/user_main.vue';
 import User_person from '@/views/user/user_person.vue';
 import User_platform from '@/views/user/user_platform.vue'
@@ -13,6 +14,8 @@ import Lay_out from '@/views/admin/Admin_layout.vue';
 import Registry from '@/views/deprecated/loginRegistry.vue';
 import { validateToken } from '@/auth.js'; // 导入验证函数
 import simulation from '@/views/schoolbus-simulation/schoolbus-simulation.vue';
+
+import ScannedPage from '@/views/driver_1/components/ScannedPage.vue'; // 通用错误边界组件
 
 const routes = [
     {
@@ -62,6 +65,14 @@ const routes = [
         path: '/test-user',
         name: 'test-user',
         component: test_user_map,
+        meta: {
+            requiredRoles: [0, 2]  // admin 和 driver 都能访问
+        },
+    },
+    {
+        path: '/test-admin',
+        name: 'test-admin',
+        component: test_admin_map,
         meta: {
             requiredRoles: [0, 2]  // admin 和 driver 都能访问
         },
@@ -132,7 +143,12 @@ const routes = [
         path: '/empty_site',
         name: 'empty_site',
         component: () => import('@/views/empty_site.vue'),
-    }
+    },
+    {
+        path: '/scanned',  // 設置一個新的路由處理掃描
+        name: 'Scanned',
+        component: ScannedPage,  // 用來處理掃描後的頁面
+    },
 ];
 
 
@@ -171,9 +187,9 @@ router.beforeEach(async (to, from, next) => {
             console.log(userRole);
             // 检查目标路由是否有角色限制
             const requiredRoles = to.meta.requiredRoles || [];
-            if (requiredRoles.length === 0 || requiredRoles.includes(userRole)){
+            if (requiredRoles.length === 0 || requiredRoles.includes(userRole)) {
                 next();
-            }else{
+            } else {
                 next('/404'); // 重定向到 404 页面
             }
             // next();
