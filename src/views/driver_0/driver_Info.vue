@@ -1,16 +1,16 @@
 <script setup>
-import { reactive, defineProps, defineEmits } from 'vue';
-import {useApiBaseStore} from "@/stores/network";
+import { reactive, defineProps, defineEmits, onMounted } from 'vue';
+import { useApiBaseStore } from '@/stores/network';
 
 const props = defineProps({
   visible: {
     type: Boolean,
-    default: false
+    default: false,
   },
   content: {
     type: String,
-    default: ''
-  }
+    default: '',
+  },
 });
 
 const emit = defineEmits(['close']);
@@ -19,15 +19,15 @@ const closepopup = () => {
   emit('close');
 };
 
-// 用户信息
+// 用户信息（初始化为空）
 const user = reactive({
-  avatar: require('@/assets/logo.png'), // 头像图片链接
-  name: '张三',
+  avatar: '', // 头像图片链接
+  name: '',
   id: '223310',
-  password: '1',
-  sex: '男',
-  phone: '1234567890',
-  status:'在职'
+  password: '',
+  sex: '',
+  phone: '',
+  status: '',
 });
 
 // 用于备份用户数据
@@ -45,8 +45,6 @@ const toggleEditMode = () => {
   isEditingMode.value = !isEditingMode.value;
 };
 
-
-
 // 取消修改
 const cancelChanges = () => {
   // 取消时恢复原来的数据
@@ -54,51 +52,110 @@ const cancelChanges = () => {
   isEditingMode.value = false;
 };
 
+async function fetchDriverData() {
+  try {
+    //const apiBaseStore = useApiBaseStore();
+    //let endpoint = apiBaseStore.baseUrl + "/getDriverData"; 
+    let endpoint ="http://localhost:8888/getDriverData";
+    let method = 'POST';
+    let requestBody = {
+      driver_id: user.id,  // 假设 user.id 是前端存储的当前用户的 ID
+    };
+
+    // 发送请求到后端
+    const response = await fetch(endpoint, {
+      method: method,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(requestBody),  // 将请求体转为 JSON 格式
+    });
+
+    // 调试：打印响应状态码和响应内容
+    console.log('Response Status:', response.status);
+    console.log('Response Headers:', response.headers);
+    
+    // 如果响应状态不是200，返回错误信息
+    if (!response.ok) {
+      alert('请求失败，状态码：' + response.status);
+      const errorText = await response.text();
+      console.log('Error Response:', errorText);  // 打印返回的 HTML 或其他内容
+      return;
+    }
+
+    // 解析响应
+    const result = await response.json();
+    console.log('Response Data:', result);
+
+    // 处理成功与否
+    if (response.ok) {
+      // 司机数据成功返回，填充数据
+      const driverData = result;  // 假设后端返回的是完整的司机信息对象
+      user.avatar = driverData.driver_avatar || '';  // 确保数据不为空
+      user.name = driverData.driver_name;
+      user.id = driverData.driver_id;
+      user.sex = driverData.driver_sex;
+      user.phone = driverData.driver_phone;
+      user.status = driverData.driver_status;
+
+      alert('取得司机信息成功！');
+    } else {
+      // 错误处理
+      alert(result.error || '取得司机信息失败！');
+    }
+  } catch (error) {
+    console.error('提交司机ID失败:', error);
+    alert('提交司机ID失败，请稍后再试！');
+  }
+}
+
+
 
 async function submitForm() {
   try {
     const apiBaseStore = useApiBaseStore();
-    let endpoint = apiBaseStore + "/modifyDriverInfo";
-    let method = "POST";
+    let endpoint = `${apiBaseStore}/modifyDriverInfo`;
+    let method = 'POST';
     let requestBody = {
       driver_id: user.id,
-      //driver_avatar:user.avatar,
       driver_name: user.name,
-      driver_sex:user.sex,
-      driver_tel:user.phone,
-      driver_isworking:user.status,
-    }
+      driver_sex: user.sex,
+      driver_tel: user.phone,
+      driver_isworking: user.status,
+    };
     const response = await fetch(endpoint, {
       method: method,
       headers: {
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify(requestBody),
     });
-    console.log(JSON.stringify(requestBody));
     const result = await response.json();
 
     if (response.ok) {
       // 信息提交成功
-      alert("操作成功！");
+      alert('操作成功！');
     } else {
       // 错误处理
-      alert(result.message || "操作失败，请检查输入！");
+      alert(result.message || '操作失败，请检查输入！');
     }
-   }catch (error) {
-      console.error("提交失败:", error);
-      alert("提交失败，请稍后再试！");
-    }
+  } catch (error) {
+    console.error('提交失败:', error);
+    alert('提交失败，请稍后再试！');
+  }
 }
 
 // 保存修改
 const saveChanges = () => {
-  console.log("保存修改:", user);
+  console.log('保存修改:', user);
   isEditingMode.value = false;
   submitForm();
 };
 
-
+// 加载用户数据
+onMounted(() => {
+  fetchDriverData();
+});
 </script>
 
 <template>
@@ -107,7 +164,7 @@ const saveChanges = () => {
       <div class="popup-content">
         <div class="profile-container">
           <div class="avatar">
-            <img :src="user.avatar" alt="头像" />
+            <!-- <img :src="user.avatar || require('@/assets/default-avatar.png')" alt="头像" /> -->
           </div>
           <div class="info">
             <p>
@@ -142,29 +199,25 @@ const saveChanges = () => {
               <strong>工作状态:</strong>
               <select v-model="user.status" id="driver_isworking" required>
                 <option value="" disabled>请选择状态</option>
-                <option value=0>停职</option>
-                <option value=1>工作</option>
-                <option value=2>休息</option>
+                <option value="0">停职</option>
+                <option value="1">工作</option>
+                <option value="2">休息</option>
               </select>
             </p>
-
           </div>
 
           <button @click="closepopup" class="closebutton">X</button>
-
 
           <button v-if="!isEditingMode.value" @click="toggleEditMode" class="modifybutton">
             修改信息
           </button>
 
-          <button v-if="!isEditingMode.value" @click=" 1" class="logoutbutton">
+          <button v-if="!isEditingMode.value" @click="1" class="logoutbutton">
             退出账号
           </button>
 
-
           <div v-if="isEditingMode.value" class="action-buttons">
             <button @click="saveChanges" class="savebutton">保存</button>
-
             <button @click="cancelChanges" class="cancelbutton">取消</button>
           </div>
         </div>

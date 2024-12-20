@@ -22,7 +22,10 @@
           <button class="btn autoLocateButton" @click="autoLocateCampus">
             自动定位到校区
           </button>
+
+          <RemarkPlane />
           <StartWork />
+          
         </div>
       </transition>
     </div>
@@ -33,7 +36,9 @@
   import busStationData from "@/assets/bus_station_data.json";
   import driver_Info from '@/views/driver_0/driver_Info.vue';
   import StartWork from "./StartWork.vue";
+  import RemarkPlane from "./RemarkPlane.vue";
   import {useApiBaseStore} from "@/stores/network";
+
 
   /* global AMap */
 
@@ -42,6 +47,7 @@
     components: {
       StartWork,
       driver_Info,
+      RemarkPlane,
       // ref,
     },
     data() {
@@ -57,6 +63,7 @@
         onlineCount: 1, // 假设初始在线人数
         drivers: [], // 存储从后端获取的驾驶员位置数据
         dInfoVisible: false,
+        dInfoContent: '', 
         footerVisible: false, // 控制 footer 是否可见
       };
     },
@@ -263,7 +270,7 @@
       },
         // 发送位置信息到后端
       sendLocationToBackend(driverId, longitude, latitude) {
-        fetch("http://localhost:8080/updateLocation", {
+        fetch("http://localhost:8888/updateLocation", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
