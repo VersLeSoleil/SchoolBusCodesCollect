@@ -5,97 +5,131 @@
             <h2 class="myjourney">我的行程</h2>
             <el-table :data="tableData" class="showtable" stripe border height="350">
                 <el-table-column label="序号" type="index" width="100"></el-table-column>
-                <el-table-column prop="origin" label="起点" width="120"></el-table-column>
-                <el-table-column prop="destination" label="终点" width="120"></el-table-column>
-                <el-table-column prop="time_up" label="上车时间" width="180" ></el-table-column>
-                <el-table-column prop="time_down" label="下车时间" width="180" ></el-table-column>
-                <el-table-column prop="state" label="状态" width="100" ></el-table-column>
+                <el-table-column prop="originsite" label="起点" width="120"></el-table-column>
+                <el-table-column prop="destinationsite" label="终点" width="120"></el-table-column>
+                <el-table-column prop="uptime" label="上车时间" width="180" ></el-table-column>
+                <el-table-column prop="downtime" label="下车时间" width="180" ></el-table-column>
+                <el-table-column prop="status" label="状态" width="100" ></el-table-column>
             </el-table>
         </div>        
     </div>
 </template>
 
 <script setup>
-import { defineProps,defineEmits,ref } from 'vue';
+import { defineProps,defineEmits,ref,onMounted } from 'vue';
 import { ElTable, ElTableColumn } from 'element-plus';
+
 const props = defineProps({
   visible: {
     type: Boolean,
     required: true, 
+  },
+  getjourneyrecord: {
+    type: Function,
+    required: true,
   }
 });
 // 定义 emits
 const emit = defineEmits(['close_showjourney']);
 function handleclose(){
     emit('close_showjourney'); //调用user_main的close_showjourney函数
+    const kk = props.getjourneyrecord();
+    console.log(kk)
 }
-const tableData = ref([{
-        origin: '榕园广场',
-        destination: '教学楼',
-        time_up : '2024-1-2 08:01',
-        time_down : '---',
-        state: '进行中'
-      },{
-        origin: '荔园食堂',
-        destination: '教学楼',
-        time_up : '2024-5-2 08:01',
-        time_down : '2024-7-2 08:20',
-        state: '结束'
-      },{
-        origin: '榕11',
-        destination: '得一超市',
-        time_up : '2024-3-2 08:01',
-        time_down : '2024-2-2 08:20',
-        state: '结束'
-      },{
-        origin: '荔园食堂',
-        destination: '教学楼',
-        time_up : '2024-5-2 08:01',
-        time_down : '2024-7-2 08:20',
-        state: '结束'
-      },{
-        origin: '荔园食堂',
-        destination: '教学楼',
-        time_up : '2024-5-2 08:01',
-        time_down : '2024-7-2 08:20',
-        state: '结束'
-      },{
-        origin: '荔园食堂',
-        destination: '教学楼',
-        time_up : '2024-5-2 08:01',
-        time_down : '2024-7-2 08:20',
-        state: '结束'
-      },{
-        origin: '荔园食堂',
-        destination: '教学楼',
-        time_up : '2024-5-2 08:01',
-        time_down : '2024-7-2 08:20',
-        state: '结束'
-      },{
-        origin: '荔园食堂',
-        destination: '教学楼',
-        time_up : '2024-5-2 08:01',
-        time_down : '2024-7-2 08:20',
-        state: '结束'
-      },{
-        origin: '荔园食堂',
-        destination: '教学楼',
-        time_up : '2024-5-2 08:01',
-        time_down : '2024-7-2 08:20',
-        state: '结束'
-      },{
-        origin: '荔园食堂',
-        destination: '教学楼',
-        time_up : '2024-5-2 08:01',
-        time_down : '2024-7-2 08:20',
-        state: '结束'
-      },{
-        origin: '荔园食堂',
-        destination: '教学楼',
-        time_up : '2024-5-2 08:01',
-        time_down : '2024-7-2 08:20',
-        state: '结束'
-      }]);
+//const tableData = ref(props.getjourneyrecord());
+const tableData = ref([]);
+async function fetchtabledata(){
+  //getjourneyrecord返回的是一个promise，而不是数据，需要这样处理
+  try {
+    const data = await props.getjourneyrecord();
+    if (data) {
+      tableData.value = data;
+    }
+    console.log(tableData.value);
+    onMounted(() => {
+      tableData.value.forEach(item => {
+        if (!item.time_down) {
+          item.time_down = '空';
+        }
+      });
+    });
+  } catch (error) {
+    console.error('There was an error fetching the data!', error);
+  }
+}
+onMounted(()=> {
+  fetchtabledata();
+  // 启动定时器，每隔一段时间（例如5秒）重新获取数据
+  setInterval(fetchtabledata, 5000);
+});
+
+// const tableData = ref([{
+//         origin: '榕园广场',
+//         destination: '教学楼',
+//         time_up : '2024-1-2 08:01',
+//         time_down : '---',
+//         state: '进行中'
+//       },{
+//         origin: '荔园食堂',
+//         destination: '教学楼',
+//         time_up : '2024-5-2 08:01',
+//         time_down : '2024-7-2 08:20',
+//         state: '结束'
+//       },{
+//         origin: '榕11',
+//         destination: '得一超市',
+//         time_up : '2024-3-2 08:01',
+//         time_down : '2024-2-2 08:20',
+//         state: '结束'
+//       },{
+//         origin: '荔园食堂',
+//         destination: '教学楼',
+//         time_up : '2024-5-2 08:01',
+//         time_down : '2024-7-2 08:20',
+//         state: '结束'
+//       },{
+//         origin: '荔园食堂',
+//         destination: '教学楼',
+//         time_up : '2024-5-2 08:01',
+//         time_down : '2024-7-2 08:20',
+//         state: '结束'
+//       },{
+//         origin: '荔园食堂',
+//         destination: '教学楼',
+//         time_up : '2024-5-2 08:01',
+//         time_down : '2024-7-2 08:20',
+//         state: '结束'
+//       },{
+//         origin: '荔园食堂',
+//         destination: '教学楼',
+//         time_up : '2024-5-2 08:01',
+//         time_down : '2024-7-2 08:20',
+//         state: '结束'
+//       },{
+//         origin: '荔园食堂',
+//         destination: '教学楼',
+//         time_up : '2024-5-2 08:01',
+//         time_down : '2024-7-2 08:20',
+//         state: '结束'
+//       },{
+//         origin: '荔园食堂',
+//         destination: '教学楼',
+//         time_up : '2024-5-2 08:01',
+//         time_down : '2024-7-2 08:20',
+//         state: '结束'
+//       },{
+//         origin: '荔园食堂',
+//         destination: '教学楼',
+//         time_up : '2024-5-2 08:01',
+//         time_down : '2024-7-2 08:20',
+//         state: '结束'
+//       },{
+//         origin: '荔园食堂',
+//         destination: '教学楼',
+//         time_up : '2024-5-2 08:01',
+//         time_down : '2024-7-2 08:20',
+//         state: '结束'
+//       }]);
 
 </script>
 
