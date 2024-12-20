@@ -105,11 +105,9 @@
 
 <script setup>
 import {ref, onMounted} from 'vue';
-import {useApiBaseStore} from "@/stores/network";
 import VueApexCharts from 'vue3-apexcharts';
 
-// 原有数据与逻辑
-const apiBaseStore = useApiBaseStore();
+
 const stats = ref([
   {title: '用户人数', value: 'Loading...'},
   {title: '司机人数', value: 'Loading...'},
@@ -119,7 +117,8 @@ const stats = ref([
 const loading = ref(true);
 const fetchStats = async () => {
   try {
-    const response = await fetch(apiBaseStore.baseUrl + '/admin_home/dashboard');
+    const prefixURL = localStorage.getItem("prefixURL"); // 使用本地存的url
+    const response = await fetch(prefixURL + '/admin_home/dashboard');
     if (!response.ok) {
       throw new Error('Failed to fetch stats');
     }

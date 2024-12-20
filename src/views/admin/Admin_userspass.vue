@@ -170,7 +170,7 @@
 
 <script setup>
 import {ref} from 'vue';
-import {useApiBaseStore} from "@/stores/network";
+
 
 const tableData = ref([]);
 
@@ -202,9 +202,9 @@ const formLabelWidth = "120px";
 
 // 从后端获取表格数据
 const fetchTableData = async () => {
-  const apiBaseStore = useApiBaseStore();
+  const prefixURL = localStorage.getItem("prefixURL"); // 使用本地存的url
   const response = await fetch(
-      apiBaseStore.baseUrl +
+      prefixURL +
       `/admin/table?keyword=${filters.value.keyword}&accountType=${filters.value.accountType}&accountStatus=${filters.value.accountStatus}&page=${pagination.value.currentPage}&size=${pagination.value.pageSize}`
   );
   const result = await response.json();
@@ -254,13 +254,13 @@ const sendChanges = async (changeDataRequest, switching = 1) => {
     }
   }
 
-  const apiBaseStore = useApiBaseStore();
 
+  const prefixURL = localStorage.getItem("prefixURL"); // 使用本地存的url
   // 手动替换token
   changeDataRequest.token = localStorage.getItem('jwtToken')
 
   // 根据switching选择功能
-  let url = apiBaseStore.baseUrl;
+  let url = prefixURL;
   switch (switching) {
     case 1:
       url += "/admin/update";

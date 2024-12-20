@@ -11,7 +11,6 @@
 
 <script setup>
 import {ref, onMounted, onBeforeUnmount, computed} from 'vue';
-import {useApiBaseStore} from "@/stores/network";
 
 // 设置连接状态图标
 const connectionStatus = ref('green');  // 默认是绿色，表示正常
@@ -42,9 +41,10 @@ const checkConnection = async () => {
 
 
   try {
-    const apiBaseStore = useApiBaseStore();
+
     // 向服务器发送心跳包（假设 API 路径是 /heartbeat）
-    const response = await fetch(apiBaseStore.baseUrl + '/heartbeat', {signal: controller.signal});
+    const prefixURL = localStorage.getItem("prefixURL"); // 使用本地存的url
+    const response = await fetch(prefixURL + '/heartbeat', {signal: controller.signal});
 
     if (response.ok) {
       times = 0;
