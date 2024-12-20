@@ -24,28 +24,12 @@
         </button>
         <input type="file" @change="handleFileUpload" accept=".json" style="margin-top: 10px" />
     </div>
-    <div>
-        <h1>车辆信息管理</h1>
-        <VehicleForm />
-    </div>
     <div id="app">
-        <div id="container"></div>
-        <!-- 地图外层容器 -->
-        <div id="map-wrapper">
-            <!-- 顶部覆盖条 -->
-            <div class="map-top-bar">
-                <ErrorBoundary>
-                    <VehicleStatusToggle @status-change="handleStatusChange" />
-                    <span class="online-count">在线 {{ onlineCount }} 人</span>
-                </ErrorBoundary>
-            </div>
-
-            <!-- 地图容器 -->
-            <div id="map-container"></div>
-        </div>
         <!-- 管理员的功能 -->
         <RouteEditor :polylineEditor="polylineEditor" :polylines="polylines" @add-polyline="addPolyline"
             @remove-polyline="removePolyline" />
+
+            <mod />
     </div>
 </template>
 
@@ -53,11 +37,9 @@
 <script>
 import AMapLoader from "@amap/amap-jsapi-loader";
 import busStationData from "@/assets/bus_station_data.json";
-import VehicleStatusToggle from "@/views/driver_1/components/VehicleStatusToggle.vue";
-import ErrorBoundary from "@/views/driver_1/components/ErrorBoundary.vue";
 import RouteEditor from "@/views/driver_1/components/RouteEditor.vue";
-import VehicleForm from "@/views/driver_0/components/VehicleForm.vue";
 // import { useUserStore } from "@/stores/user";
+import mod from "@/views/components/ModifyStation.vue"
 import { useWebSocketStore } from '@/stores/webSocketStore';
 import { computed } from 'vue';
 
@@ -76,10 +58,8 @@ export default {
     },
     name: "MapComponent",
     components: {
-        VehicleStatusToggle,
-        ErrorBoundary,
-        VehicleForm,
         RouteEditor,
+        mod,
         // ref,
     },
     data() {
@@ -212,6 +192,10 @@ export default {
         addBusStationMarkers() {
             if (!this.map) return;
             busStationData.forEach((station) => {
+                      // 檢查 is_used 是否為 1
+            if (station.is_used !== 1) {
+                return; // 如果不是 1，則跳過這個站點
+            }
                 const labelMarker = new AMap.LabelMarker({
                     position: station.position,
                     text: {
@@ -494,14 +478,6 @@ export default {
 
 .page-container {
   width: 95%;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 20px;
-  font-family: Arial, sans-serif;
-  background-color: #f3f4f6;
-  min-height: 100vh;
 }
 
 .page-title {

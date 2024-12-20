@@ -102,6 +102,7 @@ export const useWebSocketStore = defineStore('websocket', {
         // 将车辆呼叫消息添加到消息队列
         addVehicleCallMessage(message) {
             this.vehicleCallMessages.push(message);
+            console.log("asfdsd", this.vehicleCallMessages);
         },
 
         // 清空所有消息队列

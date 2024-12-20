@@ -14,6 +14,8 @@ import Registry from '@/views/deprecated/loginRegistry.vue';
 import { validateToken } from '@/auth.js'; // 导入验证函数
 import simulation from '@/views/schoolbus-simulation/schoolbus-simulation.vue';
 
+import ScannedPage from '@/views/driver_1/components/ScannedPage.vue'; // 通用错误边界组件
+
 const routes = [
     {
         path: '/',
@@ -119,7 +121,12 @@ const routes = [
         path: '/empty_site',
         name: 'empty_site',
         component: () => import('@/views/empty_site.vue'),
-    }
+    },
+    {
+        path: '/scanned',  // 設置一個新的路由處理掃描
+        name: 'Scanned',
+        component: ScannedPage,  // 用來處理掃描後的頁面
+    },
 ];
 
 
