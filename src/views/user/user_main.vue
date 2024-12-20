@@ -19,12 +19,13 @@
         <button v-show="buyButtonVisible&&!leaveButtonVisible" @click="showCallBus" class="btn callBus">叫车</button>
         <button v-show="!buyButtonVisible" @click="showTicket" class="btn ticket">上车凭证</button>
         <button v-show="!buyButtonVisible" @click="confirmTicket" class="btn confirmTicket">确认上车</button>
+        <button v-show="!buyButtonVisible" @click="cancleTicket" class="btn cancelTicket">取消订单</button>
         <button v-show="leaveButtonVisible" @click="leaveCar" class="btn leaveCar">确认下车</button>
     </div>
     <user_ticket :visible="buyTicketVisible" @close="close" @openPayment="openPayment" :getTicket="getTicket" />
     <User_proveticket :visible="provideTicketVisible" @close1="close1" @confirmInCar="confirmInCar" :from="from" :dest="dest" :carid="carid" :buyTime="buyTime"/>
     <User_callBus :visible="callBusVisible" @close3="close3" @openPayment="openPayment" :getTicket="getTicket"/>
-    <User_payment :visible="paymentVisible" @confirmPay="confirmPay" @close2="close2" :from="from" :dest="dest"/>
+    <User_payment :visible="paymentVisible" :confirmPay="confirmPay" @close2="close2" :from="from" :dest="dest"/>
     <user_showjourney :visible="showjourneyVisible" @close_showjourney="close_showjourney"/>
 </template>
 
@@ -41,7 +42,7 @@ import {
         ElAvatar,
         ElButton,
         ElMessageBox,
-        ElMessage
+        ElMessage,
     } from "element-plus";
 import "element-plus/dist/index.css";
 import {
@@ -51,14 +52,15 @@ import logo from "@/assets/logo.png";
 import User_payment from './user_payment.vue';
 import User_callBus from './user_callBus.vue';
 const userInfo = ref({
+        id:123456,
         name: "Richard喵~~~~",
         avatar: logo,
 });
-
 let from = ref("榕园广场");
 let dest = ref("教学楼");
-let carid = ref("粤C11111");
+let carid = ref("粤C111111");
 let buyTime = ref();
+let leaveTime=ref();
 let buyButtonVisible = ref(true);
 let buyTicketVisible = ref(false);
 let provideTicketVisible = ref(false);
@@ -66,6 +68,9 @@ let paymentVisible=ref(false);
 let leaveButtonVisible=ref(false);
 let callBusVisible=ref(false);
 let showjourneyVisible = ref(false);
+let currentOrderID=ref(1);
+let currentPaymentID=ref(4);
+let currentPaymentMethod=ref("微信");
 onMounted(async () => {
         const validation = await validateToken();
         if (!validation.valid) {
@@ -79,7 +84,6 @@ function showBuyTickt() {
 function showCallBus(){
     callBusVisible.value=true;
 }
-
 function close() {
     buyTicketVisible.value = false;
 }
@@ -90,21 +94,32 @@ function openPayment(){
     paymentVisible.value=true;
 }
 function getTicket(value1, value2, value3) {
-    from.value = value1;
-    dest.value = value2;
-    carid.value = value3;
+    from.value = value1.value;
+    dest.value = value2.value;
+    carid.value = value3.value;
     buyTime.value = new Date().toLocaleString();
     submitOrder();
-    submitPayment();
-    // 购票后隐藏购票按钮
 }
-
-function confirmPay(){
+function confirmPay(value){
     buyButtonVisible.value = false; 
     buyTicketVisible.value=false;
     callBusVisible.value=false;
+    currentPaymentMethod=value;
+    console.log(currentPaymentMethod);
+    submitPayment();
+    ChangeOrder("待开始");
+    ChangePayment("成功");
 }
-
+function cancleTicket(){
+    ChangeOrder("已取消");
+    ChangePayment("已退款");
+    buyButtonVisible.value = true;
+    buyTicketVisible.value = false;
+    provideTicketVisible.value= false;
+    paymentVisible.value=false;
+    leaveButtonVisible.value=false;
+    callBusVisible.value=false;
+}
 async function submitOrder() {
   try {
     // const apiBaseStore = useApiBaseStore();
@@ -112,12 +127,16 @@ async function submitOrder() {
     let method = "POST";
     let requestBody = {
       order_id: null, 
-      student_id:21123,
+      student_id:userInfo.value.id,
+      car_id:carid.value,
       pickup_station_id:123123,
       dropoff_station_id:1231231,
+      pickup_station_name:from.value,
+      dropoff_station_name:dest.value,
       pickup_time:buyTime.value,
+      dropoff_time:null,  
       status:"待付款",
-      payment_id:12321231
+      payment_id:currentOrderID.value
     }
     const response = await fetch(endpoint, {
       method: method,
@@ -140,16 +159,95 @@ async function submitOrder() {
       alert("提交失败，请稍后再试！");
     }
 }
-
+async function ChangeOrder(value) {
+  try {
+    // const apiBaseStore = useApiBaseStore();
+    let endpoint = "http://localhost:8888" + "/changeOrder";
+    let method = "POST";
+    let requestBody = {
+      order_id: currentOrderID.value, 
+      student_id:userInfo.value.id,
+      car_id:carid.value,
+      pickup_station_id:123123,
+      dropoff_station_id:1231231,
+      pickup_time:buyTime.value,
+      pickup_station_name:from.value,
+      dropoff_station_name:dest.value,
+      dropoff_time:null,
+      status:value,
+      payment_id:currentOrderID.value
+    }
+    const response = await fetch(endpoint, {
+      method: method,
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(requestBody),
+    });
+    console.log(JSON.stringify(requestBody));
+    const result = await response.json();
+    if (response.ok) {
+      // 信息提交成功
+      alert("操作成功！");
+    } else {
+      // 错误处理
+      alert(result.message || "操作失败，请检查输入！");
+    }
+   }catch (error) {
+      console.error("提交失败:", error);
+      alert("提交失败，请稍后再试！");
+    }
+}
+async function ChangeLeaveTime(value) {
+  try {
+    // const apiBaseStore = useApiBaseStore();
+    let endpoint = "http://localhost:8888" + "/changeLeaveTime";
+    let method = "POST";
+    let requestBody = {
+      order_id: currentOrderID.value, 
+      student_id:userInfo.value.id,
+      car_id:carid.value,
+      pickup_station_id:123123,
+      dropoff_station_id:1231231,
+      pickup_time:buyTime.value,
+      pickup_station_name:from.value,
+      dropoff_station_name:dest.value,
+      dropoff_time:value,
+      status:value,
+      payment_id:currentOrderID.value
+    }
+    const response = await fetch(endpoint, {
+      method: method,
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(requestBody),
+    });
+    console.log(JSON.stringify(requestBody));
+    const result = await response.json();
+    if (response.ok) {
+      // 信息提交成功
+      alert("操作成功！");
+    } else {
+      // 错误处理
+      alert(result.message || "操作失败，请检查输入！");
+    }
+   }catch (error) {
+      console.error("提交失败:", error);
+      alert("提交失败，请稍后再试！");
+    }
+}
 async function submitPayment() {
   try {
     // const apiBaseStore = useApiBaseStore();
     let endpoint = "http://localhost:8888" + "/submitUserPayment";
     let method = "POST";
     let requestBody = {
-      order_id: 111111, 
-      vehicle_id:21123,
-      payment_amount:123123,
+      payment_id:null,
+      order_id: currentOrderID.value, 
+      vehicle_id:carid.value,
+      payment_amount:123,
+      payment_method:currentPaymentMethod.value,
       payment_time:buyTime.value,
       payment_status:"失败"
     }
@@ -174,12 +272,44 @@ async function submitPayment() {
       alert("提交失败，请稍后再试！");
     }
 }
-
-
+async function ChangePayment(value) {
+  try {
+    // const apiBaseStore = useApiBaseStore();
+    let endpoint = "http://localhost:8888" + "/changePayment";
+    let method = "POST";
+    let requestBody = {
+      payment_id:currentPaymentID.value,
+      order_id: currentOrderID.value, 
+      vehicle_id:carid.value,
+      payment_amount:111,
+      payment_method:currentPaymentMethod.value,
+      payment_time:buyTime.value,
+      payment_status:value
+    }
+    const response = await fetch(endpoint, {
+      method: method,
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(requestBody),
+    });
+    console.log(JSON.stringify(requestBody));
+    const result = await response.json();
+    if (response.ok) {
+      // 信息提交成功
+      alert("操作成功！");
+    } else {
+      // 错误处理
+      alert(result.message || "操作失败，请检查输入！");
+    }
+   }catch (error) {
+      console.error("提交失败:", error);
+      alert("提交失败，请稍后再试！");
+    }
+}
 function showTicket() {
     provideTicketVisible.value = true;
 }
-
 function close1() {
     provideTicketVisible.value = false;
 }
@@ -198,15 +328,21 @@ function toSchduel(){
 function confirmTicket() {
     buyButtonVisible.value=true;
     leaveButtonVisible.value=true;
+    ChangeOrder("行程中");
     // 这里可以添加其他逻辑，例如确认上车后执行的操作
+    
 }
 function leaveCar(){
     buyButtonVisible.value=true;
     leaveButtonVisible.value=false;
+    leaveTime.value = new Date().toLocaleString();
+    ChangeOrder("已结束");
+    ChangeLeaveTime(leaveTime.value);
 }
 function confirmInCar(){
-    buyButtonVisible.value = !buyButtonVisible.value;
-    leaveButtonVisible.value=false;
+    buyButtonVisible.value = true;
+    leaveButtonVisible.value=true;
+    ChangeOrder("行程中");
 }
 async function handleLogout() {
         const validation = await validateToken();
@@ -396,4 +532,4 @@ async function handleLogout() {
         margin-top: 0;
     }
 }
-</style>
+</style>z
