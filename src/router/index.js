@@ -123,10 +123,10 @@ const router = createRouter({
 // 添加导航守卫，确保用户只有在登录后才能访问主页
 router.beforeEach(async (to, from, next) => {
     // 先检查是否是非法URL，如果是则访问404界面
-    const routeExists = router.hasRoute(to.name);
-    if (!routeExists) {
-        next('/404'); // 重定向到 404 页面
-    }
+    // const routeExists = router.hasRoute(to.name);
+    // if (!routeExists) {
+    //     next('/404'); // 重定向到 404 页面
+    // }
     // URL正常
     if (to.name === 'Login') {
         // 如果用户试图访问登录页面
@@ -146,7 +146,10 @@ router.beforeEach(async (to, from, next) => {
         if (validation.valid) {
             // 如果令牌合法，继续导航
             const userRole = validation.role; // 获取角色
-            console.log(userRole);
+            console.log(userRole); 
+            const userData = validation.data; // 获取角色
+            console.log(userData);
+
             // 检查目标路由是否有角色限制
             const requiredRoles = to.meta.requiredRoles || [];
             if (requiredRoles.length === 0 || requiredRoles.includes(userRole)){
