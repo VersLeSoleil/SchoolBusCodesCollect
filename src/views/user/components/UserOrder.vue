@@ -10,8 +10,8 @@
           <el-table-column label="订单ID" prop="order_id" width="150" sortable></el-table-column>
           <el-table-column label="学生账号" prop="student_account" width="150"></el-table-column>
           <!-- 这里之后会改成站点名称的，不过现在是硬编码就随便了嗷 -->
-          <el-table-column label="上车站点ID" prop="pickup_station_id" width="150"></el-table-column>
-          <el-table-column label="下车站点ID" prop="dropoff_station_id" width="150"></el-table-column>
+          <el-table-column label="上车站点" prop="pickup_station_name" width="150"></el-table-column>
+          <el-table-column label="下车站点" prop="dropoff_station_name" width="150"></el-table-column>
           <el-table-column label="上车时间" prop="pickup_time" width="395"></el-table-column>
           <el-table-column label="状态" prop="status" width="150"></el-table-column>
           <el-table-column label="操作" width="150">
@@ -142,6 +142,7 @@
       feedback_content: '',
       feedback_time: null,
     };
+    console.log("fbv",newFeedback.value);
     feedbackDialogVisible.value = true;
   };
 
@@ -152,19 +153,18 @@
 const chinaTime = new Date(now.getTime() + (8 * 60 * 60 * 1000)); // 将当前时间加上 8 小时，转为中国时区时间
 newFeedback.value.feedback_time = chinaTime.toISOString().slice(0, 16).replace('T', ' ');
 
-    console.log(newFeedback.value.feedback_time);
   const prefixURL = localStorage.getItem("prefixURL") || 'http://localhost:8888';
 
   try {
     // 将评价数据发送到后端
     const response = await axios.post(`${prefixURL}/api/addFeedback`, {
       order_id: newFeedback.value.order_id, // 当前行的 order_id
-      student_number: newFeedback.value.student_id, // 当前行的 student_id
+      student_number: newFeedback.value.student_id,
       rating: newFeedback.value.rating, // 用户评分
       feedback_content: newFeedback.value.feedback_content, // 用户评价内容
       feedback_time: newFeedback.value.feedback_time, // 时间
     });
-
+    console.log("feedback is" +  response)
     if (response.status === 200) {
       // 将订单的 isRated 字段标记为 true
       const order = orderData.value.find((o) => o.order_id === newFeedback.value.order_id);

@@ -79,6 +79,7 @@ onMounted(async () => {
     const token = localStorage.getItem("jwtToken");
     if (token) {
         const userID = getUserIDFromToken(token); // 解析 token 获取 userID
+        console.log("userID: " + userID);
         if (userID) {
             await userStore.fetchUserInfo(); // 向后端请求用户信息
         } else {

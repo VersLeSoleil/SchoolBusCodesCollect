@@ -53,6 +53,7 @@ export function getUserIDFromToken(token) {
       const payload = token.split(".")[1]; // 获取 JWT 的 payload 部分
       const decoded = atob(payload.replace(/-/g, "+").replace(/_/g, "/")); // Base64URL 解码
       const payloadObj = JSON.parse(decoded);
+      console.log(payloadObj.sub)
       return payloadObj.sub; // 返回 userID
   } catch (error) {
       console.error("解析 JWT 失败:", error);

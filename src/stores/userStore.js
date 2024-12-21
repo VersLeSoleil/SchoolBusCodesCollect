@@ -4,6 +4,12 @@ import axios from 'axios';
 import { ElMessage } from 'element-plus';
 import { getUserIDFromToken } from '@/auth.js';
 
+const token = localStorage.getItem("jwtToken");
+if (!token) {
+    ElMessage.error("未找到用户令牌");
+}
+
+const userID = getUserIDFromToken(token);
 export const useUserStore = defineStore('user', {
     state: () => ({
         userInfo: {
@@ -14,6 +20,7 @@ export const useUserStore = defineStore('user', {
             grade: '',
             major: '',
             phone: '',
+            user_id: userID,
         },
     }),
     actions: {
@@ -26,6 +33,7 @@ export const useUserStore = defineStore('user', {
                     return;
                 }
                 const userID = getUserIDFromToken(token);
+                console.log("store.uid = ",userID);
                 if (!userID) {
                     ElMessage.error("无效的用户令牌");
                     return;
@@ -45,6 +53,7 @@ export const useUserStore = defineStore('user', {
                     this.userInfo.studentId = response.data.student_number;
                     this.userInfo.phone = response.data.phone;
                     this.userInfo.avatar = response.data.avatar ? `${prefixURL}${response.data.avatar}` : '';
+                    this.userInfo.user_id = userID;
                 } else {
                     ElMessage.error("未找到用户信息");
                 }
@@ -57,6 +66,7 @@ export const useUserStore = defineStore('user', {
             try {
                 const prefixURL = localStorage.getItem("prefixURL") || 'http://localhost:8888';
                 const token = localStorage.getItem("jwtToken");
+                
                 if (!token) {
                     ElMessage.error("未找到用户令牌");
                     return;
