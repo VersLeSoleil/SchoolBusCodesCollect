@@ -2,7 +2,6 @@
     <div class="page-container">
         <div id="container" class="map-container">
             <div class="info-container">
-                <button @click="showDriverInfo" class="showDriverInfoButton">我的</button>
                 <driver_Info :visible="dInfoVisible" :content="dInfoContent" @close="closeDInfo" />
                 <button class="btn" @click="toggleRoutes" style="margin-bottom: 5px">
                     {{ routesVisible ? '隐藏现有路线' : '显示现有路线' }}
@@ -25,28 +24,12 @@
         </button>
         <input type="file" @change="handleFileUpload" accept=".json" style="margin-top: 10px" />
     </div>
-    <div>
-        <h1>车辆信息管理</h1>
-        <VehicleForm />
-    </div>
     <div id="app">
-        <div id="container"></div>
-        <!-- 地图外层容器 -->
-        <div id="map-wrapper">
-            <!-- 顶部覆盖条 -->
-            <div class="map-top-bar">
-                <ErrorBoundary>
-                    <VehicleStatusToggle @status-change="handleStatusChange" />
-                    <span class="online-count">在线 {{ onlineCount }} 人</span>
-                </ErrorBoundary>
-            </div>
-
-            <!-- 地图容器 -->
-            <div id="map-container"></div>
-        </div>
         <!-- 管理员的功能 -->
         <RouteEditor :polylineEditor="polylineEditor" :polylines="polylines" @add-polyline="addPolyline"
             @remove-polyline="removePolyline" />
+
+            <mod />
     </div>
 </template>
 
@@ -54,24 +37,29 @@
 <script>
 import AMapLoader from "@amap/amap-jsapi-loader";
 import busStationData from "@/assets/bus_station_data.json";
-import VehicleStatusToggle from "@/views/driver_1/components/VehicleStatusToggle.vue";
-import ErrorBoundary from "@/views/driver_1/components/ErrorBoundary.vue";
 import RouteEditor from "@/views/driver_1/components/RouteEditor.vue";
-import VehicleForm from "@/views/driver_0/components/VehicleForm.vue";
-import driver_Info from '@/views/driver_0/driver_Info.vue';
-import { useUserStore } from "@/stores/user";
-import {useApiBaseStore} from "@/stores/network";
+// import { useUserStore } from "@/stores/user";
+import mod from "@/views/components/ModifyStation.vue"
+import { useWebSocketStore } from '@/stores/webSocketStore';
+import { computed } from 'vue';
 
 /* global AMap */
 
 export default {
+    setup() {
+        const webSocketStore = useWebSocketStore();
+
+        // 通过 getter 或直接访问状态
+        const driverGpsMessages = computed(() => webSocketStore.driverGpsMessages);
+
+        return {
+        driverGpsMessages,
+        };
+    },
     name: "MapComponent",
     components: {
-        VehicleStatusToggle,
-        ErrorBoundary,
-        VehicleForm,
         RouteEditor,
-        driver_Info,
+        mod,
         // ref,
     },
     data() {
@@ -92,16 +80,11 @@ export default {
             onlineCount: 1, // 假设初始在线人数
             drivers: [], // 存储从后端获取的驾驶员位置数据
             markers: [], // 存储地图上的标记
-            dInfoVisible: false
+            webSocket: null,
+            isConnected: false,
         };
     },
     methods: {
-        closeDInfo() {
-            this.dInfoVisible = false;
-        },
-        showDriverInfo() {
-            this.dInfoVisible = true;
-        },
         initMap(longitude, latitude) {
             this.map = new AMap.Map("container", {
                 zoom: 15,
@@ -209,6 +192,10 @@ export default {
         addBusStationMarkers() {
             if (!this.map) return;
             busStationData.forEach((station) => {
+                      // 檢查 is_used 是否為 1
+            if (station.is_used !== 1) {
+                return; // 如果不是 1，則跳過這個站點
+            }
                 const labelMarker = new AMap.LabelMarker({
                     position: station.position,
                     text: {
@@ -237,30 +224,6 @@ export default {
             const colors = ['#FF0000', '#00FF00', '#0000FF', '#FFFF00', '#FF00FF']; // 可扩展颜色列表
             return colors[index % colors.length];
         },
-        handleStatusChange(status) {
-            console.log("状态已更新为：", status);
-            // 更新地图上显示的状态
-            this.updateMapStatus(status);
-        },
-        updateMapStatus(status) {
-            // 示例：动态在地图上显示当前状态
-            const statusDisplay = document.getElementById("map-status-display");
-            if (!statusDisplay) {
-                const newStatus = document.createElement("div");
-                newStatus.id = "map-status-display";
-                newStatus.style.position = "absolute";
-                newStatus.style.top = "10px";
-                newStatus.style.right = "10px";
-                newStatus.style.background = "rgba(0, 0, 0, 0.5)";
-                newStatus.style.color = "white";
-                newStatus.style.padding = "5px 10px";
-                newStatus.style.borderRadius = "5px";
-                document.body.appendChild(newStatus);
-                newStatus.innerText = `状态：${status === "normal" ? "正常运营" : "试通行"}`;
-            } else {
-                statusDisplay.innerText = `状态：${status === "normal" ? "正常运营" : "试通行"}`;
-            }
-        },
         // 管理员的功能
         addPolyline(newPolyline) {
             this.polylines.push(newPolyline); // 添加新路线
@@ -272,94 +235,81 @@ export default {
             }
         },
 
-        /** 更新位置 */
-        updateLocation() {
-            if (navigator.geolocation) {
-                this.intervalId = setInterval(() => {
-                    navigator.geolocation.getCurrentPosition(
-                        (position) => {
-                            const { longitude, latitude } = position.coords;
+    /** 更新位置 */
+    updateLocation() {
+      if (navigator.geolocation) {
+        this.intervalId = setInterval(() => {
+          navigator.geolocation.getCurrentPosition(
+            (position) => {
+              const { longitude, latitude } = position.coords;
 
-                            if (!this.isMapInitialized) {
-                                this.initMap(longitude, latitude);
-                            } else if (this.marker) {
-                                this.marker.setPosition([longitude, latitude]);
-                            }
-                            // 调用发送位置信息到后端的方法
-                            this.sendLocationToBackend(longitude, latitude);
-                        },
-                        (error) => {
-                            console.error("无法获取位置", error);
-                        },
-                        { enableHighAccuracy: true, maximumAge: 0, timeout: 10000 }
-                    );
-                }, 1000);
-            } else {
-                console.error("浏览器不支持地理定位");
-            }
-        },
-        // 发送位置信息到后端
-        sendLocationToBackend(longitude, latitude) {
-            const userStore = useUserStore(); // 引入全局的 userStore
-            const driverID = userStore.userAccount; // 獲取全局變量中的 driver_id
-          const apiBaseStore = useApiBaseStore();
-            fetch(apiBaseStore.baseUrl + "/updateLocation", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    id: driverID,
-                    role: "driver", // 用户角色
-                    latitude,
-                    longitude,
-                    timestamp: new Date().toISOString(), // 时间戳
-                }),
-            })
-                .then((response) => response.text())
-                .then((data) => console.log("服务器响应:", data))
-                .catch((error) => console.error("请求错误:", error));
-        },
-
-        // 获取驾驶员数据
-        async fetchDrivers() {
-            try {
-              const apiBaseStore = useApiBaseStore();
-                const response = await fetch(apiBaseStore.baseUrl + "/drivers");
-                if (!response.ok) {
-                    throw new Error("网络请求失败");
-                }
-                this.drivers = await response.json();
-
-                // 验证驾驶员数据是否有效
-                this.drivers = this.drivers.filter(
-                    driver => typeof driver.latitude === "number" && typeof driver.longitude === "number"
-                );
-
-                this.updateMarkers(); // 更新地图上的标记
-            } catch (error) {
-                console.error("获取驾驶员位置失败:", error);
-            }
-        },
-
-        // 在地图上显示驾驶员位置
-        updateMarkers() {
-            // 清除旧的标记
-            this.markers.forEach(marker => this.map.remove(marker));
-            this.markers = [];
-
-            // 根据新的驾驶员数据添加标记
-            this.drivers.forEach(driver => {
-                const marker = new AMap.Marker({
-                    position: [driver.longitude, driver.latitude], // 使用驾驶员的经纬度
-                    map: this.map,
-                    // icon: require('@/assets/driver-icon.png') // 引用自定义图标
-                });
-
-                this.markers.push(marker);
-            });
-        }
+              if (!this.isMapInitialized) {
+                this.initMap(longitude, latitude);
+              } else if (this.marker) {
+                this.marker.setPosition([longitude, latitude]);
+              }
+            },
+            (error) => {
+              console.error("无法获取位置", error);
+            },
+            { enableHighAccuracy: true, maximumAge: 0, timeout: 10000 }
+          );
+        }, 1000);
+      } else {
+        console.error("浏览器不支持地理定位");
+      }
     },
+    // 在地图上显示驾驶员位置
+    async updateMarkers() {
+      if (!this.map) {
+        console.warn("地图未初始化");
+        return;
+      }
+      // 清除旧的标记
+      // this.markers.forEach((marker) => this.map.remove(marker));
+      this.markers.forEach(marker => this.map.remove(marker));
+      this.markers = [];
+
+      // 从响应式的 driverGpsMessages 中读取数据
+      const messages = [...this.driverGpsMessages];
+      messages.forEach((message) => {
+        if (!message.location) return; // 确保 location 存在
+        const { location } = message;
+        const marker = new AMap.Marker({
+          position: [location.longitude, location.latitude],
+          map: this.map,
+          
+        });
+        this.markers.push(marker);
+      });
+
+      // 清空已处理的消息队列
+      this.driverGpsMessages.splice(0, this.driverGpsMessages.length); // 清空队列
+    },
+
+    // 定时更新
+    startUpdatingMarkers() {
+      this.updateMarkers(); // 初始化时更新一次标记
+      this.updateInterval = setInterval(() => {
+        this.updateMarkers();
+      }, 3000); // 每隔三秒更新一次
+    },
+
+    // 初始化 WebSocket
+    initWebSocket (){        
+      const webSocketStore = useWebSocketStore();
+      webSocketStore.initWebSocket("ws://localhost:8888/ws");
+    },
+        // 可以添加其他处理方法，如发送消息
+    sendMessage(message) {
+      const webSocketStore = useWebSocketStore();
+      webSocketStore.sendMessage(message);
+    },
+  },
+  created() {
+    const webSocketStore = useWebSocketStore();
+    webSocketStore.initWebSocket(); // 初始化 WebSocket
+  },
     mounted() {
         window._AMapSecurityConfig = {
             securityJsCode: "bc6f966d4758af8f40837aa7560ada04", // 安全密钥
@@ -371,11 +321,8 @@ export default {
         })
             .then(() => {
                 this.updateLocation();
-                this.fetchDrivers(); // 获取驾驶员数据
-                // 可选：设置定时器定期刷新位置
-                setInterval(() => {
-                    this.fetchDrivers();
-                }, 1000); // 每 1 秒刷新一次
+                // 开始定时更新
+                this.startUpdatingMarkers();
             })
             .catch((e) => {
                 console.log(e);
@@ -386,202 +333,196 @@ export default {
         if (this.intervalId) {
             clearInterval(this.intervalId);
         }
+        const webSocketStore = useWebSocketStore();
+        webSocketStore.closeWebSocket(); // 关闭 WebSocket 连接
     },
 };
 </script>
 
 <style scoped>
 #container {
-    width: 100%;
-    height: 500px;
+  width: 100%;
+  height: 500px;
 }
 
 #map-wrapper {
-    position: relative;
-    width: 60%;
-    height: 60%;
+  position: relative;
+  width: 60%;
+  height: 60%;
 }
 
 /* 输入卡片样式 */
 .input-card {
-    margin-top: 20px;
-    padding: 10px;
-    background-color: #f9f9f9;
-    border: 1px solid #ddd;
-    border-radius: 5px;
+  margin-top: 20px;
+  padding: 10px;
+  background-color: #f9f9f9;
+  border: 1px solid #ddd;
+  border-radius: 5px;
 }
 
 /* 地图顶部状态栏样式 */
 .map-top-bar {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    background-color: rgba(255, 255, 255, 0.9);
-    /* 半透明背景 */
-    padding: 10px;
-    z-index: 1000;
-    /* 确保覆盖在地图之上 */
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  background-color: rgba(255, 255, 255, 0.9);
+  /* 半透明背景 */
+  padding: 10px;
+  z-index: 1000;
+  /* 确保覆盖在地图之上 */
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
 .map-status-bar {
-    position: absolute;
-    top: 10px;
-    left: 10px;
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    background: rgba(255, 255, 255, 0.8);
-    padding: 5px 15px;
-    border-radius: 5px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  background: rgba(255, 255, 255, 0.8);
+  padding: 5px 15px;
+  border-radius: 5px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
 }
 
 .online-count {
-    font-size: 14px;
-    color: #007bff;
+  font-size: 14px;
+  color: #007bff;
 }
 
 /* 地图容器样式 */
 #map-container {
-    width: 100%;
-    height: 60%;
+  width: 100%;
+  height: 60%;
 }
 </style>
 <style scoped>
 /* 地图容器样式 */
 #map-wrapper {
-    position: relative;
-    width: 100%;
-    height: 100px;
+  position: relative;
+  width: 100%;
+  height: 100px;
 }
 
 /* 地图顶部覆盖条 */
 .map-top-bar {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    background-color: rgba(255, 255, 255, 0.9);
-    /* 半透明背景 */
-    padding: 10px;
-    z-index: 1000;
-    /* 确保覆盖在地图之上 */
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  background-color: rgba(255, 255, 255, 0.9);
+  /* 半透明背景 */
+  padding: 10px;
+  z-index: 1000;
+  /* 确保覆盖在地图之上 */
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
 /* 地图容器样式 */
 #map-container {
-    width: 100%;
-    height: 100%;
-    z-index: 1;
-    /* 底层组件 */
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  /* 底层组件 */
 }
 
 /* 输入卡片样式 */
 .input-card {
-    margin-top: 20px;
-    padding: 10px;
-    background-color: #f9f9f9;
-    border: 1px solid #ddd;
-    border-radius: 5px;
+  margin-top: 20px;
+  padding: 10px;
+  background-color: #f9f9f9;
+  border: 1px solid #ddd;
+  border-radius: 5px;
 }
 
 /* 按钮样式 */
 .btn {
-    display: block;
-    width: 100%;
-    padding: 8px;
-    background-color: #007bff;
-    color: white;
-    text-align: center;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
+  display: block;
+  width: 100%;
+  padding: 8px;
+  background-color: #007bff;
+  color: white;
+  text-align: center;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
 }
 
 .btn:hover {
-    background-color: #0056b3;
+  background-color: #0056b3;
 }
 
 .showDriverInfoButton {
-    position: absolute;
-    top: 20%;
-    left: 85%;
-    width: 52px;
-    height: 52px;
-    border-radius: 50%;
+  position: absolute;
+  top: 20%;
+  left: 85%;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
 
-    text-align: center;
-    background: rgba(113, 65, 168, 0.5);
-    color: floralwhite;
-    line-height: 52px;
-    cursor: pointer;
-    font-size: 14px;
-    user-select: none;
-    transform: translate(-50%, -50%);
+  text-align: center;
+  background: rgba(113, 65, 168, 0.5);
+  color: floralwhite;
+  line-height: 52px;
+  cursor: pointer;
+  font-size: 14px;
+  user-select: none;
+  transform: translate(-50%, -50%);
 }
 
 .page-container {
-    width: 95%;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 20px;
-    font-family: Arial, sans-serif;
-    background-color: #f3f4f6;
-    min-height: 100vh;
+  width: 95%;
 }
 
 .page-title {
-    color: #4a4a4a;
-    font-size: 24px;
-    margin-bottom: 20px;
-    text-align: center;
+  color: #4a4a4a;
+  font-size: 24px;
+  margin-bottom: 20px;
+  text-align: center;
 }
 
 .map-container {
-    position: relative;
-    height: 700px;
-    width: 100%;
-    border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    overflow: hidden;
-    margin-bottom: 20px;
+  position: relative;
+  height: 700px;
+  width: 100%;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  margin-bottom: 20px;
 }
 
 .info-container {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    width: 260px;
-    background-color: #ffffff;
-    padding: 15px;
-    border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    color: #333;
-    z-index: 10;
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 260px;
+  background-color: #ffffff;
+  padding: 15px;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  color: #333;
+  z-index: 10;
 }
 
 .info-container h4 {
-    color: #008a6c;
-    font-weight: 600;
+  color: #008a6c;
+  font-weight: 600;
 }
 
 .info-container p {
-    color: #666;
-    line-height: 1.6;
+  color: #666;
+  line-height: 1.6;
 }
 
 @media (min-width: 1024px) {
-    .map-container {
-        height: 600px;
-    }
+  .map-container {
+    height: 600px;
+  }
 }
 </style>

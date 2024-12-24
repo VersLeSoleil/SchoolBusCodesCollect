@@ -4,7 +4,9 @@
             <div class="nav-menu">
                 <ElButton @click="toMycenter" type="primary" size="large" class="nav-menu-btn" round>个人中心
                 </ElButton>
-                <ElButton @click="toSchduel" type="primary" size="large" class="nav-menu-btn1" round>行程计划
+                <ElButton @click="toSchduel" type="primary" size="large" class="nav-menu-btn" round>行程计划
+                </ElButton>
+                <ElButton @click="toPlatform" type="primary" size="large" class="nav-menu-btn" round>交流平台
                 </ElButton>
             </div>
             <div class="user-info">
@@ -25,8 +27,8 @@
     <user_ticket :visible="buyTicketVisible" @close="close" @openPayment="openPayment" :getTicket="getTicket" />
     <User_proveticket :visible="provideTicketVisible" @close1="close1" @confirmInCar="confirmInCar" :from="from" :dest="dest" :carid="carid" :buyTime="buyTime"/>
     <User_callBus :visible="callBusVisible" @close3="close3" @openPayment="openPayment" :getTicket="getTicket"/>
-    <User_payment :visible="paymentVisible" :confirmPay="confirmPay" @close2="close2" :from="from" :dest="dest"/>
-    <user_showjourney :visible="showjourneyVisible" @close_showjourney="close_showjourney"/>
+    <User_payment :visible="paymentVisible" @confirmPay="confirmPay" @close2="close2" :from="from" :dest="dest"/>
+    <user_showjourney :visible="showjourneyVisible" @close_showjourney="close_showjourney" :getjourneyrecord="getjourneyrecord"/>
 </template>
 
 <script setup>
@@ -56,6 +58,8 @@ const userInfo = ref({
         name: "Richard喵~~~~",
         avatar: logo,
 });
+
+let journeydata = ref([])
 let from = ref("榕园广场");
 let dest = ref("教学楼");
 let carid = ref("粤C111111");
@@ -325,6 +329,29 @@ function toMycenter() {
 function toSchduel(){
     showjourneyVisible.value = true;
 }
+function toPlatform(){
+    router.push('/user-platform');
+}
+async function getjourneyrecord(){
+    try{
+        const apiBaseStore = useApiBaseStore();
+        let endpoint = apiBaseStore.localBaseUrl + "/getjourneyrecord";
+        let method = 'GET';
+        const response = await fetch(endpoint, {
+            method: method,
+            headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+        const result = await response.json();
+        journeydata.value = result;
+        //console.log(journeydata.value);
+        return journeydata.value;
+    }catch (error) {
+    console.error('There was an error fetching the data!', error)
+    }
+}
+
 function confirmTicket() {
     buyButtonVisible.value=true;
     leaveButtonVisible.value=true;
@@ -418,11 +445,7 @@ async function handleLogout() {
         font-size: 17px;
     }
 
-.nav-menu-btn1 {
-        margin-right: 20px;
-        padding: 25px 20px;
-        font-size: 17px;
-}
+
     .user-info {
         display: flex;
         align-items: center;
