@@ -161,10 +161,10 @@ const router = createRouter({
 // 添加导航守卫，确保用户只有在登录后才能访问主页
 router.beforeEach(async (to, from, next) => {
     // 先检查是否是非法URL，如果是则访问404界面
-    // const routeExists = router.hasRoute(to.name);
-    // if (!routeExists) {
-    //     next('/404'); // 重定向到 404 页面
-    // }
+    const routeExists = router.hasRoute(to.name);
+    if (!routeExists) {
+        next('/404'); // 重定向到 404 页面
+    }
     // URL正常
     if (to.name === 'Login') {
         // 如果用户试图访问登录页面
