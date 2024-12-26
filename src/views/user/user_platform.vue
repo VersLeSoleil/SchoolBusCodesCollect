@@ -15,16 +15,25 @@
         <div class="announcement-header-container">
           <h2 class="announcement-title">公告栏</h2>
         </div>
-        <div v-for="announcement in announcements" :key="announcement.id" class="announcement-card">
-          <!-- <div class = "comment_font">{{ announcement.content }}</div> -->
-          <ElCard style="width: 230px" shadow="hover">{{ announcement.content }}</ElCard>
+        <div v-for="notice in notices" :key="notice.notice_id" class="comment-card">
+          <div class = "comment_font">{{ notice.content }}</div>
+          <!-- <ElCard style="width: 230px" shadow="hover">{{ announcement.content }}</ElCard> -->
         </div>
       </ElAside>
         <ElMain>
-          <div v-for="comment in paginatedComments" :key="comment.comment_id" class="comment-card">
-            <div class="comment-header">用户{{ comment.studentaccount }}</div>
-            <div class="comment-time">评论时间：{{ comment.commenttime }}</div>
-            <div class="comment-content">{{ comment.commentcontent }}</div>
+          <div v-for="comment in paginatedComments" :key="comment.comment_id" class="announcement-card">
+            <ElCard shadow="hover">
+              
+              <div class="comment-header">
+                <el-avatar :size="48" :src="comment.avatar"></el-avatar>
+                <div class="comment-name">{{ comment.studentname }}</div>
+              </div>
+              <div class="comment-time">评论时间：{{ comment.commenttime }}</div>
+              <div class="comment-content">{{ comment.commentcontent }}</div>
+            </ElCard>
+            <!-- <ElCard shadow="hover">{{ comment.studentname }}</ElCard>
+            <ElCard shadow="hover">{{ comment.commenttime }}</ElCard>
+            <ElCard shadow="hover">{{ comment.commentcontent }}</ElCard> -->
           </div>
         </ElMain>
     </ElContainer>
@@ -43,52 +52,40 @@
     <el-pagination layout="prev, pager, next" :total="1000" />
   </div> -->
   </ElContainer>
-    
+  <user_comment @close_WriteComment="close_WriteComment" :visible="CreateCommentVisible" />
 </template>
 
 <script setup>
 import router from '@/router';
+import user_comment from './components/user_comment.vue'
 import {
         useApiBaseStore
     } from "@/stores/network"; // 导入令牌验证函数
-import { ElButton ,ElContainer, ElHeader, ElMain, ElAside, ElPagination,ElCard } from "element-plus";
+import { ElButton ,ElContainer, ElHeader, ElMain, ElAside, ElPagination,ElCard, ElAvatar } from "element-plus";
 import { computed,ref } from 'vue';
 const comments = ref([]);
 let currentpage = ref(1); // 当前页码
 const pageSize = 4; //每页显示的评论数
+let CreateCommentVisible = ref(false);
 // 示例公告数据
-const announcements = [
-  {
-    id: 1,
-    content: '请发表友善的评论，营造良好的交流氛围。'
-  },
-  {
-    id: 2,
-    content: '保护个人隐私，不要分享敏感信息。'
-  },
-  {
-    id: 3,
-    content: '感谢您的支持与理解，让我们共同维护社区秩序。'
-  }
-];
-// const comments = ref([{
-//     comment_id : 10000001,
-//     student_account: '1000000001',
-//     comment_content: '司机服务态度非常好',
-//     comment_time: '2023-10-01 09:45:00'
-// },
-// {
-//     comment_id : 10000002,
-//     student_account: '1000000002',
-//     comment_content: '乘车体验不错',
-//     comment_time: '2023-10-02 10:45:00'
-// },
-// {
-//     comment_id : 10000003,
-//     student_account: '1000000003',
-//     comment_content: '有一点小问题',
-//     comment_time: '2023-10-03 11:45:00'
-// }]);
+const notices = ref([]);
+// const announcements = [
+//   {
+//     id: 1,
+//     content: '请发表友善的评论，营造良好的交流氛围。'
+//   },
+//   {
+//     id: 2,
+//     content: '保护个人隐私，不要分享敏感信息。'
+//   },
+//   {
+//     id: 3,
+//     content: '感谢您的支持与理解，让我们共同维护社区秩序。'
+//   }
+// ];
+function close_WriteComment(){
+  CreateCommentVisible.value = false;
+}
 async function getComments(){
   //获取评论内容
   try{
@@ -105,6 +102,22 @@ async function getComments(){
     }
 }
 getComments();
+async function getNotices(){
+  //获取公告内容
+  try{
+    const apiBaseStore = useApiBaseStore();
+      let endpoint = apiBaseStore.localBaseUrl + "/getnotices";
+      const response = await fetch(endpoint,{
+        method: 'GET',
+        headers:{'Content-Type':'application/json',},
+      });
+      const result = await response.json();
+      notices.value = result;
+    }catch(error){
+      console.error('There was an error fetching the data!', error)
+    }
+}
+getNotices();
 let paginatedComments = computed(()=>{
   const start = (currentpage.value-1)*pageSize;
   const end =start+pageSize;// Math.min(start+pageSize, comments.value.length-1);
@@ -114,7 +127,7 @@ function tomain(){
     router.push('/user-main');
 }
 function make_comment(){
-
+  CreateCommentVisible.value = true;
 }
 function changecurrent(page){
   currentpage.value = page;
@@ -148,8 +161,11 @@ function changecurrent(page){
   border-radius: 4px;
 }
 .comment-header {
+  display: flex;
+  align-items: center; /* 垂直居中 */
   font-weight: bold;
   margin-bottom: 8px;
+  
 }
 .comment-time {
   color: #999;
@@ -214,7 +230,7 @@ function changecurrent(page){
 
 .announcement-card {
   border: 1px solid #f5f8f8;
-  padding: 10px;
+  padding: 2px;
   margin-bottom: 10px;
   border-radius: 5px;
   background-color: #f5f8f8;
@@ -222,4 +238,8 @@ function changecurrent(page){
 .comment_font{
   font-size: 20px;
 }
+.comment-name{
+  margin-left: 12px;
+}
+
 </style>
