@@ -2,82 +2,77 @@
   <div class="header">
     <div class="title">校园巴士管理员后台</div>
     <div class="user-info">
-      <i :class="[connectionStatusIcon, { 'subtleBlink': connectionStatusIcon === 'fas fa-circle' },
-      {'bigBlink': connectionStatusIcon === 'fas fa-times-circle' || connectionStatusIcon === 'fas fa-circle-notch'}]" class="status-icon" ></i>
+      <i
+          :class="[
+          connectionStatusIcon,
+          { 'subtleBlink': connectionStatusIcon === 'fas fa-circle' },
+          { 'bigBlink': connectionStatusIcon === 'fas fa-times-circle' || connectionStatusIcon === 'fas fa-circle-notch' }
+        ]"
+          class="status-icon"
+      ></i>
       <span>用户名</span>
     </div>
   </div>
 </template>
 
 <script setup>
-import {ref, onMounted, onBeforeUnmount, computed} from 'vue';
+import { ref, onMounted, onBeforeUnmount, computed } from 'vue';
 
-// 设置连接状态图标
-const connectionStatus = ref('green');  // 默认是绿色，表示正常
-const isRequesting = ref(false);  // 用来标记请求是否正在进行
+const connectionStatus = ref('green');
+const isRequesting = ref(false);
 const connectionStatusIcon = computed(() => {
   if (connectionStatus.value === 'green') {
-    return 'fas fa-circle';  // 绿色圆点
+    return 'fas fa-circle';
   } else if (connectionStatus.value === 'yellow') {
-    return 'fas fa-circle-notch';  // 黄色圆点
+    return 'fas fa-circle-notch';
   } else {
-    return 'fas fa-times-circle';  // 红色圆点
+    return 'fas fa-times-circle';
   }
 });
 
-// 定时器变量
+// 模拟心跳包逻辑
 let heartbeatInterval;
-// 全局超时变量
 let times = 0;
 
 const checkConnection = async () => {
-  if (isRequesting.value) return;  // 如果当前有请求在进行中，则不发送新的请求
-
-  isRequesting.value = true;  // 标记请求开始
+  if (isRequesting.value) return;
+  isRequesting.value = true;
 
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 2000);  // 设置超时为 2 秒
-
-
+  const timeoutId = setTimeout(() => controller.abort(), 2000);
 
   try {
-
-    // 向服务器发送心跳包（假设 API 路径是 /heartbeat）
-    const prefixURL = localStorage.getItem("prefixURL"); // 使用本地存的url
+    const prefixURL = localStorage.getItem("prefixURL");
     const response = await fetch(prefixURL + '/heartbeat', {signal: controller.signal});
 
     if (response.ok) {
       times = 0;
-      connectionStatus.value = 'green';  // 服务器连接正常
+      connectionStatus.value = 'green';
     } else {
-      connectionStatus.value = 'yellow'; // 其它回复则是网络不佳
+      connectionStatus.value = 'yellow';
     }
   } catch (error) {
-    // 错误便是认为网络丢失
     times++;
     if (times === 3) {
-      // 如果连续 3 次检查都没有连接，则认为网络已经丢失
       alert('网络连接已丢失，请检查网络设置');
-    } else if(times < 2) {
-      connectionStatus.value = 'yellow'; // 其它回复则是网络不佳
+    } else if (times < 2) {
+      connectionStatus.value = 'yellow';
     } else {
       connectionStatus.value = 'red';
     }
   } finally {
-    clearTimeout(timeoutId); // 清除超时定时器
-    isRequesting.value = false;  // 标记请求结束
+    clearTimeout(timeoutId);
+    isRequesting.value = false;
   }
 };
 
 onMounted(() => {
-  // 页面加载后，开始每隔 1 秒发送一次心跳包
-  connectionStatus.value = 'red'
+  connectionStatus.value = 'red';
   heartbeatInterval = setInterval(checkConnection, 3000);
-  checkConnection();  // 初始化时立即检查连接状态
+  checkConnection();
 });
 
 onBeforeUnmount(() => {
-  // 组件销毁时，清除定时器
   clearInterval(heartbeatInterval);
 });
 </script>
@@ -87,8 +82,9 @@ onBeforeUnmount(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0 30px; /* 适当的 padding 使右侧不那么紧凑 */
-  background-color: #34495e;
+  padding: 0 30px;
+  /* 让头部颜色与侧边栏更加呼应 */
+  background-color: #3b4c5a;
   color: #fff;
   height: 60px;
   line-height: 60px;
@@ -96,24 +92,25 @@ onBeforeUnmount(() => {
   top: 0;
   left: 240px;
   width: calc(100% - 240px);
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
   z-index: 10;
   transition: background-color 0.3s ease;
 }
 
 .header:hover {
-  background-color: #2c3e50;
+  background-color: #354553;
 }
 
 .title {
-  font-size: 20px;
-  font-weight: bold;
-  letter-spacing: 1px;
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
   transition: transform 0.3s ease;
+  user-select: none;
 }
 
 .title:hover {
-  transform: scale(1.05);
+  transform: scale(1.03);
 }
 
 .user-info {
@@ -121,80 +118,60 @@ onBeforeUnmount(() => {
   align-items: center;
   cursor: pointer;
   transition: transform 0.3s ease;
-  padding-right: 65px; /* 给用户名和图标之间适当的间距 */
+  padding-right: 20px;
+  margin-right: 20px;
 }
 
 .user-info:hover {
-  transform: scale(1.1);
+  transform: scale(1.05);
 }
 
 .user-info span {
-  margin-left: 10px;
-  font-weight: 600;
+  margin-left: 8px;
+  font-weight: 500;
 }
 
 .status-icon {
-  font-size: 18px;
-  margin-right: 10px;
-  transition: transform 0.3s ease, color 0.3s ease, font-size 0.3s ease; /* 动画效果 */
+  font-size: 16px;
+  margin-right: 6px;
+  transition: transform 0.3s ease, color 0.3s ease;
 }
 
+/* 不同状态的颜色 */
 .status-icon.fas.fa-circle {
-  color: #2ecc71; /* 绿色 */
+  color: #2ecc71; /* green */
 }
 
 .status-icon.fas.fa-circle-notch {
-  color: #f39c12; /* 黄色 */
+  color: #f39c12; /* yellow */
 }
 
 .status-icon.fas.fa-times-circle {
-  color: #e74c3c; /* 红色 */
+  color: #e74c3c; /* red */
 }
 
 /* 更平滑的放大效果 */
 .status-icon:hover {
-  transform: scale(1.2);
+  transform: scale(1.15);
 }
 
+/* subtleBlink 动画 */
 @keyframes subtleBlink {
   0% {
     opacity: 1;
     transform: scale(1);
   }
   25% {
-    opacity: 0.8;
-    transform: scale(1.05); /* 放大一点 */
+    opacity: 0.85;
+    transform: scale(1.05);
   }
   50% {
     opacity: 1;
     transform: scale(1);
   }
   75% {
-    opacity: 0.8;
-    transform: scale(1.05); /* 再放大一点 */
-  }
-  100% {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-@keyframes bigBlink  {
-  0% {
-    opacity: 1;
-    transform: scale(1);
-  }
-  25% {
-    opacity: 0.8;
-    transform: scale(1.25); /* 放大一点 */
-  }
-  50% {
-    opacity: 1;
-    transform: scale(1);
-  }
-  75% {
-    opacity: 0.8;
-    transform: scale(1.25); /* 再放大一点 */
+    opacity: 0.85;
+    transform: scale(1.05);
   }
   100% {
     opacity: 1;
@@ -206,8 +183,31 @@ onBeforeUnmount(() => {
   animation: subtleBlink 2s ease-in-out infinite;
 }
 
+/* bigBlink 动画 */
+@keyframes bigBlink {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  25% {
+    opacity: 0.8;
+    transform: scale(1.2);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  75% {
+    opacity: 0.8;
+    transform: scale(1.2);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
 .bigBlink {
   animation: bigBlink 1.5s ease-in-out infinite;
 }
-
 </style>
