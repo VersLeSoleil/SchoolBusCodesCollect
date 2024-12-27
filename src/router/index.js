@@ -74,7 +74,7 @@ const routes = [
         name: 'test-admin',
         component: test_admin_map,
         meta: {
-            requiredRoles: [0, 2]  // admin 和 driver 都能访问
+            requiredRoles: [0, 1, 2]  // admin 和 driver 都能访问
         },
     },
     {
@@ -125,6 +125,42 @@ const routes = [
             name: 'variables',
             component: () => import('@/views/admin/Admin_variables.vue'),
             meta: { title: 'Variables', icon: 'variables' }
+        },
+        {
+            path: 'test',
+            name: 'test',
+            component: () => import('@/views/admin/Admin_test.vue'),
+            meta: { title: 'Test', icon: 'test' }
+        },
+        {
+            path: 'feedback',
+            name: 'feedback',
+            component: () => import('@/views/admin/Admin_feedback.vue'),
+            meta: { title: 'Feedback', icon: 'feedback' }
+        },
+        {
+            path: 'drivers',
+            name: 'drivers',
+            component: () => import('@/views/admin/Admin_drivers.vue'),
+            meta: { title: 'Drivers', icon: 'drivers' }
+        },
+        {
+            path: 'car_table',
+            name: 'car_table',
+            component: () => import('@/views/admin/Admin_car_table.vue'),
+            meta: { title: 'Car_table', icon: 'car_table' }
+        },
+        {
+            path: 'manage_routes',
+            name: 'manage_routes',
+            component: () => import('@/views/components/Map-admin.vue'),
+            meta: { title: 'Manage_routes', icon: 'manage_routes' }
+        },
+        {
+            path: 'work_table',
+            name: 'work_table',
+            component: () => import('@/views/admin/Admin_work_table.vue'),
+            meta: { title: 'Work_table', icon: 'work_table' }
         }
         ]
     },
@@ -161,10 +197,10 @@ const router = createRouter({
 // 添加导航守卫，确保用户只有在登录后才能访问主页
 router.beforeEach(async (to, from, next) => {
     // 先检查是否是非法URL，如果是则访问404界面
-    // const routeExists = router.hasRoute(to.name);
-    // if (!routeExists) {
-    //     next('/404'); // 重定向到 404 页面
-    // }
+    const routeExists = router.hasRoute(to.name);
+    if (!routeExists) {
+        next('/404'); // 重定向到 404 页面
+    }
     // URL正常
     if (to.name === 'Login') {
         // 如果用户试图访问登录页面
@@ -184,7 +220,7 @@ router.beforeEach(async (to, from, next) => {
         if (validation.valid) {
             // 如果令牌合法，继续导航
             const userRole = validation.role; // 获取角色
-            console.log(userRole); 
+            console.log(userRole);
             const userData = validation.data; // 获取角色
             console.log(userData);
 

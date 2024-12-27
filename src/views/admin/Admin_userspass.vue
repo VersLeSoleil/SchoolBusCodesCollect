@@ -476,8 +476,9 @@ fetchTableData();
 <style>
 .table-container {
   padding: 16px;
-  margin-left: 225px;
-  margin-top: 50px;
+  margin-left: 225px; /* 可根据实际布局进行调整 */
+  margin-top: -10px;   /* 可根据实际布局进行调整 */
+  margin-right: -10px;
 }
 
 .table-controls {

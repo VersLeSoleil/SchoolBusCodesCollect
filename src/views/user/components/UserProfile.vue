@@ -124,6 +124,7 @@ async function saveField(field) {
                 major: tempUserInfo.value.major,
                 phone: tempUserInfo.value.phone,
                 avatar: userStore.userInfo.avatar.replace('http://localhost:8888', ''), // 移除基础 URL
+                user_id: parseInt(userStore.userInfo.user_id),
             };
 
             console.log("Payload to send:", payload);

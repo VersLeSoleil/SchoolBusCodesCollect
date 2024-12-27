@@ -17,6 +17,27 @@
                 <button @click="cancel" class="cancel">取消</button>
                 <button @click="confirm" class="confirm">确定</button>
             </p>
+            <div class="form-group">
+        <label for="fromLocation">选择出发地点：</label>
+        <select v-model="fromLocation" id="fromLocation" class="location-select">
+          <option v-for="station in busStationsData" :key="station.name + station.position" :value="station">
+            {{ station.name }}
+          </option>
+        </select>
+      </div>
+  
+      <!-- 目標地點選擇 -->
+      <div class="form-group">
+        <label for="toLocation">选择目标地点：</label>
+        <select v-model="toLocation" id="toLocation" class="location-select">
+          <option v-for="station in busStationsData" :key="station.name + station.position" :value="station">
+            {{ station.name }}
+          </option>
+        </select>
+      </div>
+
+            <!-- 發送呼叫請求 -->
+            <button @click="sendCallRequest" class="call-btn">发送呼叫请求</button>
           </div>
           <button @click="closePopup" class="closebutton">X</button>
         </div>
@@ -26,7 +47,41 @@
   
   <script setup>
   import { defineProps, defineEmits } from 'vue';
-  import {ref} from 'vue';
+  import { ref, onMounted } from 'vue';
+  import { useWebSocketStore } from '@/stores/webSocketStore';
+    // 讀取 bus station 數據
+    import busStationsData from '@/assets/bus_station_data.json';
+    // 設置出發地點和目標地點
+    const fromLocation = ref(null);
+    const toLocation = ref(null);
+
+    // 載入站點數據
+    // let busStations = null;
+    const webSocketStore = useWebSocketStore();
+  
+        // 使用 computed 來確保 Message 是響應式的
+  // const Message = computed(() => webSocketStore.messages);
+// 初始化时处理消息队列
+// function processMessages() {
+//   // 遍历现有的消息队列
+//   for (let i = 0; i < Message.value.length; i++) {
+//     const message = Message.value[i];
+
+//     // 判断消息类型
+//     if (message.type === 'site') {
+//       // 处理站点数据
+//       busStations = message.Sites;
+//       console.log('Processing site message:', message);
+//       break; // 如果只需要处理一条符合条件的消息，可以跳出循环
+//     } 
+//   }
+// }
+
+// 在组件初始化时调用
+onMounted(() => {
+  // processMessages(); // 处理当前的消息队列
+});
+
 //   let select_from=ref();
   let select_dest=ref();
 //   let select_carID=ref();
@@ -60,6 +115,46 @@
   function closePopup() {
     emit('close3');
   }
+
+    // 發送呼叫請求
+    const sendCallRequest = () => {
+
+        if (!fromLocation.value || !toLocation.value) {
+            alert('請選擇出發地和目標地！');
+            return;
+        }
+        const from_location = {
+        latitude: fromLocation.value.position[0],
+        longitude: fromLocation.value.position[1],
+      }
+      const to_location = {
+        latitude: toLocation.value.position[0],
+        longitude: toLocation.value.position[1],
+      }
+        // 創建呼叫訊息對象
+        const callMessage = {
+          type: 'vehicle_call',
+          passenger_id: localStorage.getItem("id"),
+            from_str: fromLocation.value.name,
+            from: from_location,
+            to_str: toLocation.value.name,
+            to: to_location,
+            status: '待接收', // 初始狀態為待接收
+            time: new Date().toLocaleString(), // 呼叫時間
+        };
+
+        // 将新的呼叫信息添加到 store 中
+        webSocketStore.sendMessage(JSON.stringify(callMessage));
+        emit('openPayment');
+        props.getTicket(fromLocation.value.name, toLocation.value.name, "暂未有车辆接收呼叫");
+        // 清空選擇
+        fromLocation.value = null;
+        toLocation.value = null;
+        console.log('确定功能触发');
+
+    };
+
+
   </script>
   
   <style scoped>

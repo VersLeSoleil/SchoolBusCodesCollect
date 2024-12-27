@@ -1,110 +1,150 @@
 <template>
-  <div class="dashboard-container">
-    <div class="dashboard-header">
-      <h2>Welcome to the Admin Dashboard</h2>
-      <p>这里是后台管理的主控制面板</p>
-    </div>
+  <div class="dashboard-page">
 
-    <!-- 原有异步加载卡片 -->
-    <div class="original-stats" v-if="loading">
-      <div class="loading-spinner">Loading...</div>
-    </div>
-    <div class="original-stats" v-else>
-      <div class="stats-cards">
-        <div class="stat-card" v-for="(item, index) in stats" :key="index">
-          <h3>{{ item.title }}</h3>
-          <p>{{ item.value }}</p>
+    <!-- 顶部标题，可替代原先的 dashboard-header -->
+    <header class="dashboard-topbar">
+      <h1>管理后台首页</h1>
+      <p>欢迎来到管理面板</p>
+    </header>
+
+    <!-- 主内容区域 -->
+    <main class="dashboard-content">
+
+      <!-- 1. 统计概览卡片（用户数、司机数、管理员数等） -->
+      <section class="overview-section">
+        <div class="loading" v-if="loading">Loading stats...</div>
+        <div class="stats-cards" v-else>
+          <div class="stat-card" v-for="(item, index) in stats" :key="index">
+            <h3>{{ item.title }}</h3>
+            <p>{{ item.value }}</p>
+          </div>
         </div>
-      </div>
-    </div>
+      </section>
 
-    <!-- 新增：健康度指数区域（整合系统稳健性数据） -->
-    <div class="health-index-section animate-fade-in">
-      <h3>系统服务健康度指数</h3>
-      <p class="health-desc">综合用户满意度、司机准点率、车次完成率、系统错误率等指标计算得出</p>
-      <div class="health-index-content">
-        <!-- 左侧：环形图 -->
-        <div class="health-index-left">
-          <vue-apex-charts type="radialBar" height="250" :options="healthIndexOptions" :series="healthIndexSeries" />
-        </div>
-        <!-- 中间：评分说明与扣分原因 -->
-        <div class="health-index-middle">
-          <p class="explanation-title">评分说明</p>
-          <ul class="deduction-reasons">
-            <p>            用户满意度较上周下降 <span class="highlight">3%</span></p>
-            <p>            本周出现 <span class="highlight">2次致命错误</span> 影响得分</p>
-            <p>            司机准点率略有下降</p>
-
-
-
-          </ul>
-        </div>
-        <!-- 右侧：综合分数与系统稳健性数据 -->
-        <div class="health-index-right">
-          <p class="health-score">{{ healthIndexScore }}<span class="score-unit">/100</span></p>
-          <p class="health-status">{{ healthIndexStatus }}</p>
-          <div class="system-stability-wrapper">
-            <h4>系统稳健性(24小时)</h4>
-            <div class="stability-cards">
-              <div class="stability-card error" v-if="systemErrors > 0">
-                <h4>致命错误次数</h4>
-                <p>{{ systemErrors }}</p>
-                <p class="stability-note">请尽快查看日志！</p>
+      <!-- 2. 健康度指数 + 系统稳健性(整合到一个卡片) -->
+      <section class="health-system-section" v-if="!loading">
+        <article class="health-card">
+          <header>
+            <h2>系统服务健康度</h2>
+          </header>
+          <div class="health-content">
+            <!-- 环形图 -->
+            <div class="health-chart">
+              <vue-apex-charts
+                  type="radialBar"
+                  height="200"
+                  :options="healthIndexOptions"
+                  :series="healthIndexSeries"
+              />
+            </div>
+            <!-- 分数与状态 -->
+            <div class="health-score-block">
+              <div class="score-display">
+                <span class="big-score">{{ healthIndexScore }}</span>
+                <span class="score-text">/100</span>
               </div>
-              <div class="stability-card warning">
-                <h4>警告次数</h4>
-                <p>{{ systemWarnings }}</p>
-                <p class="stability-note" v-if="systemWarnings > 10">警告过多，请关注。</p>
-              </div>
-              <div class="stability-card ok" v-if="systemErrors === 0 && systemWarnings <= 5">
-                <h4>系统状态</h4>
-                <p>稳定✔</p>
+              <div class="health-status">
+                {{ healthIndexStatus }}
               </div>
             </div>
           </div>
-        </div>
-      </div>
-    </div>
 
-    <!-- 用户满意度展示 -->
-    <div class="satisfaction-section">
-      <h3>用户满意度</h3>
-      <div class="satisfaction-indicator">
-        <div class="satisfaction-icon" :style="{ color: satisfactionColor }">
-          <span v-html="satisfactionIcon"></span>
-        </div>
-        <div class="satisfaction-value">{{ userSatisfaction }}%</div>
-      </div>
-      <p class="satisfaction-desc">最近用户满意度趋势（纯模拟数据）</p>
-      <vue-apex-charts type="line" height="200" :options="satisfactionChartOptions" :series="satisfactionSeries"/>
-    </div>
+          <!-- 扣分原因 + 系统稳健性 -->
+          <div class="health-extra">
+            <div class="deduction-reasons-card">
+              <h4>扣分原因</h4>
+              <ul>
+                <li v-for="(reason, idx) in deductionReasons" :key="idx">
+                  {{ reason.description }}
+                  <span v-if="reason.highlight" class="highlight">{{ reason.highlight }}</span>
+                </li>
+              </ul>
+            </div>
+            <div class="system-stability-card">
+              <h4>系统稳健性 (24h)</h4>
+              <div class="stability-items">
+                <div class="stability-item error" v-if="systemErrors > 0">
+                  <h5>致命错误</h5>
+                  <p>{{ systemErrors }}</p>
+                </div>
+                <div class="stability-item warning">
+                  <h5>警告次数</h5>
+                  <p>{{ systemWarnings }}</p>
+                </div>
+                <div class="stability-item ok" v-if="systemErrors === 0 && systemWarnings <= 5">
+                  <h5>状态</h5>
+                  <p>稳定✔</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </article>
+      </section>
 
-    <!-- 活跃用户展示（日报、周报） -->
-    <div class="active-users-section">
-      <h3>最近活跃用户统计</h3>
-      <div class="active-charts">
-        <div class="chart-container">
-          <h4>日活用户 (DAU)</h4>
-          <vue-apex-charts type="area" height="200" :options="dailyActiveOptions" :series="dailyActiveSeries"/>
-        </div>
-        <div class="chart-container">
-          <h4>周活用户 (WAU)</h4>
-          <vue-apex-charts type="bar" height="200" :options="weeklyActiveOptions" :series="weeklyActiveSeries"/>
-        </div>
-      </div>
-    </div>
+      <!-- 3. 用户满意度与活跃用户两个图表并排展示 -->
+      <section class="charts-row" v-if="!loading">
+        <!-- 左侧：用户满意度 -->
+        <article class="chart-card satisfaction-card">
+          <h3>用户满意度</h3>
+          <div class="satisfaction-indicator">
+            <span class="icon" :style="{ color: satisfactionColor }" v-html="satisfactionIcon"></span>
+            <span class="value">{{ userSatisfaction }}%</span>
+          </div>
+          <vue-apex-charts
+              type="line"
+              height="200"
+              :options="satisfactionChartOptions"
+              :series="satisfactionSeries"
+          />
+        </article>
 
-    <!-- 平台收入统计 -->
-    <div class="revenue-section">
-      <h3>平台收入 (模拟数据)</h3>
-      <vue-apex-charts type="bar" height="200" :options="revenueOptions" :series="revenueSeries"/>
-      <p class="revenue-desc">最近一周的日收入情况（纯模拟）</p>
-    </div>
+        <!-- 右侧：活跃用户 -->
+        <article class="chart-card activeusers-card">
+          <h3>活跃用户统计</h3>
+          <div class="active-charts-group">
+            <div class="chart-box">
+              <h4>最近七日(Daily)</h4>
+              <vue-apex-charts
+                  type="area"
+                  height="150"
+                  :options="dailyActiveOptions"
+                  :series="dailyActiveSeries"
+              />
+            </div>
+            <div class="chart-box">
+              <h4>最近12小时(Hourly)</h4>
+              <vue-apex-charts
+                  type="bar"
+                  height="150"
+                  :options="weeklyActiveOptions"
+                  :series="weeklyActiveSeries"
+              />
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <!-- 4. 平台收入统计 -->
+      <section class="revenue-section" v-if="!loading">
+        <div class="revenue-card">
+          <h3>平台收入</h3>
+          <vue-apex-charts
+              type="bar"
+              height="200"
+              :options="revenueOptions"
+              :series="revenueSeries"
+          />
+          <p class="desc">最近一周的日收入情况</p>
+        </div>
+      </section>
+
+    </main>
+
   </div>
 </template>
 
 <script setup>
-import {ref, onMounted} from 'vue';
+import {ref, onMounted, onBeforeUnmount} from 'vue';
 import VueApexCharts from 'vue3-apexcharts';
 
 
@@ -113,6 +153,8 @@ const stats = ref([
   {title: '司机人数', value: 'Loading...'},
   {title: '管理员人数', value: 'Loading...'},
 ]);
+
+const deductionReasons = ref([]);
 
 const loading = ref(true);
 const fetchStats = async () => {
@@ -131,6 +173,84 @@ const fetchStats = async () => {
     systemErrors = data.system_errors;
     systemWarnings = data.system_warnings;
 
+    healthIndexSeries.value = [data.health_index_score];
+
+    healthIndexScore = data.health_index_score;
+
+    lastSevenDays = data.last_seven_days;
+    lastTwentyFourHours = data.last_twenty_four_hours;
+    lastSevenDays[6] = '今天';
+
+    const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+    // 1
+    userSatisfaction = data.user_satisfaction;
+    satisfactionColor = userSatisfaction > 80 ? '#2ecc71' : (userSatisfaction > 50 ? '#f1c40f' : '#e74c3c');
+    satisfactionIcon = userSatisfaction > 80 ? '😊' : (userSatisfaction > 50 ? '😐' : '😢');
+    await wait(100);
+    satisfactionSeries.value = [{name: '满意度', data: data.user_satisfaction_series}]
+    satisfactionChartOptions.value = {
+      chart: {type: 'line', toolbar: {show: false}},
+      colors: [satisfactionColor],
+      stroke: {width: 3, curve: 'smooth'},
+      xaxis: {categories: lastSevenDays},
+      yaxis: {max: 100, tickAmount: 5},
+      dataLabels: {enabled: false},
+      grid: {show: true}
+    };
+
+    deductionReasons.value = data.deduction_reasons;
+
+    healthIndexStatus = '非常良好';
+    if (healthIndexScore < 60) healthIndexStatus = '有待改善';
+    else if (healthIndexScore < 80) healthIndexStatus = '良好';
+
+    // 2
+    dailyActiveSeries.value =  [{name: 'DAU', data: data.daily_active_series}];
+    // 我知道你很急但你先别急
+
+    await wait(100);
+
+    dailyActiveOptions = ref({
+      chart: {type: 'area', toolbar: {show: false}},
+      colors: ['#3498db'],
+      xaxis: {categories: lastSevenDays},
+      dataLabels: {enabled: false},
+      stroke: {curve: 'smooth', width: 2},
+      fill: {
+        type: 'gradient',
+        gradient: {shadeIntensity: 1, opacityFrom: 0.6, opacityTo: 0.1, stops: [20, 100]}
+      },
+    })
+
+
+    // // 3
+    weeklyActiveSeries.value = [{name: 'WAU', data: data.weekly_active_series}];
+    // 我知道你很急但你先别急
+    await wait(100);
+    weeklyActiveOptions.value = {
+      chart: {type: 'bar', toolbar: {show: false}},
+      colors: ['#9b59b6'],
+      xaxis: {categories: lastTwentyFourHours},
+      dataLabels: {enabled: false},
+      plotOptions: {bar: {borderRadius: 4, horizontal: false}}
+    };
+
+
+    // // 4
+    revenueSeries.value = [{name: '收入(元)', data: data.revenue_series}];
+    // 我知道你很急但你先别急
+    await wait(100);
+    revenueOptions.value = {
+      chart: {type: 'bar', toolbar: {show: false}},
+      colors: ['#e67e22'],
+      xaxis: {categories: lastSevenDays},
+      dataLabels: {enabled: false},
+      plotOptions: {bar: {borderRadius: 4, columnWidth: '45%'}}
+    };
+
+
+
   } catch (error) {
     console.error('Error fetching data:', error);
   } finally {
@@ -139,26 +259,30 @@ const fetchStats = async () => {
 };
 
 // 用户满意度数据
-const userSatisfaction = 72;
-const satisfactionColor = userSatisfaction > 80 ? '#2ecc71' : (userSatisfaction > 50 ? '#f1c40f' : '#e74c3c');
-const satisfactionIcon = userSatisfaction > 80 ? '😊' : (userSatisfaction > 50 ? '😐' : '😢');
-const satisfactionSeries = ref([{name: '满意度', data: [65, 70, 72, 68, 75, 78, 72]}]);
-const satisfactionChartOptions = ref({
+let userSatisfaction = 100;
+let lastSevenDays = ['六天前', '五天前', '四天前', '三天前', '两天前', '一天前', '当天'];
+let lastTwentyFourHours = ['00:00', '01:00', '02:00', '03:00', '04:00', '05:00', '06:00', '07:00', '08:00', '09:00', '10:00',  '11:00'];
+
+
+let satisfactionColor = userSatisfaction > 80 ? '#2ecc71' : (userSatisfaction > 50 ? '#f1c40f' : '#e74c3c');
+let satisfactionIcon = userSatisfaction > 80 ? '😊' : (userSatisfaction > 50 ? '😐' : '😢');
+let satisfactionSeries = ref([{name: '满意度', data: [65, 70, 72, 68, 75, 78, 72]}]);
+let satisfactionChartOptions = ref({
   chart: {type: 'line', toolbar: {show: false}},
   colors: [satisfactionColor],
   stroke: {width: 3, curve: 'smooth'},
-  xaxis: {categories: ['周一', '周二', '周三', '周四', '周五', '周六', '周日']},
+  xaxis: {categories: lastSevenDays},
   yaxis: {max: 100, tickAmount: 5},
   dataLabels: {enabled: false},
   grid: {show: true}
 });
 
 // 活跃用户数据
-const dailyActiveSeries = ref([{name: 'DAU', data: [120, 130, 150, 140, 160, 180, 175]}]);
-const dailyActiveOptions = ref({
+let dailyActiveSeries = ref([{name: 'DAU', data: [120, 130, 150, 140, 160, 180, 175]}]);
+let dailyActiveOptions = ref({
   chart: {type: 'area', toolbar: {show: false}},
   colors: ['#3498db'],
-  xaxis: {categories: ['周一', '周二', '周三', '周四', '周五', '周六', '周日']},
+  xaxis: {categories: lastSevenDays},
   dataLabels: {enabled: false},
   stroke: {curve: 'smooth', width: 2},
   fill: {
@@ -167,21 +291,21 @@ const dailyActiveOptions = ref({
   },
 });
 
-const weeklyActiveSeries = ref([{name: 'WAU', data: [800, 850, 820, 900, 950, 1000, 980]}]);
-const weeklyActiveOptions = ref({
+let weeklyActiveSeries = ref([{name: 'WAU', data: [800, 850, 820, 900, 950, 1000, 980, 1, 2, 3, 44, 1]}]);
+let weeklyActiveOptions = ref({
   chart: {type: 'bar', toolbar: {show: false}},
   colors: ['#9b59b6'],
-  xaxis: {categories: ['Week1', 'Week2', 'Week3', 'Week4', 'Week5', 'Week6', 'Week7']},
+  xaxis: {categories: lastTwentyFourHours},
   dataLabels: {enabled: false},
   plotOptions: {bar: {borderRadius: 4, horizontal: false}}
 });
 
 // 收入数据
-const revenueSeries = ref([{name: '收入(元)', data: [2000, 2500, 2700, 3000, 2800, 3200, 3500]}]);
-const revenueOptions = ref({
+let revenueSeries = ref([{name: '收入(元)', data: [2000, 2500, 2700, 3000, 2800, 3200, 3500]}]);
+let revenueOptions = ref({
   chart: {type: 'bar', toolbar: {show: false}},
   colors: ['#e67e22'],
-  xaxis: {categories: ['周一', '周二', '周三', '周四', '周五', '周六', '周日']},
+  xaxis: {categories: lastSevenDays},
   dataLabels: {enabled: false},
   plotOptions: {bar: {borderRadius: 4, columnWidth: '45%'}}
 });
@@ -191,10 +315,12 @@ let systemErrors = 0;
 let systemWarnings = 0;
 
 // 健康度指数
-const healthIndexScore = 85;
+let healthIndexScore = 100;
 let healthIndexStatus = '非常良好';
 if (healthIndexScore < 60) healthIndexStatus = '有待改善';
 else if (healthIndexScore < 80) healthIndexStatus = '良好';
+
+
 
 const healthIndexSeries = ref([healthIndexScore]);
 const healthIndexOptions = ref({
@@ -223,385 +349,322 @@ const healthIndexOptions = ref({
   labels: ['Health Index']
 });
 
+const saveScrollPosition = () => {
+  localStorage.setItem('scrollPosition', window.scrollY);
+};
 
-onMounted(() => {
-  fetchStats();
+
+
+onMounted(async () => {
+  await fetchStats();
+  // 页面加载后恢复滚动位置
+  const savedPosition = localStorage.getItem('scrollPosition');
+  if (savedPosition) {
+    const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+    await wait(50);
+    window.scrollTo(0, parseInt(savedPosition, 10));
+  }
+
+  window.addEventListener('beforeunload', saveScrollPosition);
+});
+
+// 路由钩子代替 onUnmounted
+onBeforeUnmount(() => {
+  saveScrollPosition();
+  window.removeEventListener('beforeunload', saveScrollPosition);
 });
 </script>
 
+
 <style scoped>
-.dashboard-container {
-  margin-left: 220px;
-  margin-top: 80px;
-  padding: 20px;
+/* 页面根容器 */
+.dashboard-page {
   background: #f5f7fa;
-  font-family: 'Microsoft Yahei', sans-serif;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  margin-left: 200px;
+  margin-top: -20px;
+  margin-right: -10px;
 }
 
-.dashboard-header {
+/* 顶部标题 */
+.dashboard-topbar {
+  padding: 20px;
+  background: #fff;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
   text-align: center;
-  margin-bottom: 30px;
+  margin-left: 550px;
+  margin-right: 550px;
+  margin-top: 10px;
 }
-
-.dashboard-header h2 {
+.dashboard-topbar h1 {
   font-size: 24px;
   font-weight: 700;
-  color: #2c3e50;
   margin-bottom: 5px;
+  color: #2c3e50;
 }
-
-.dashboard-header p {
+.dashboard-topbar p {
   font-size: 14px;
   color: #7f8c8d;
 }
 
-/* loading样式 */
-.loading-spinner {
-  text-align: center;
-  font-size: 18px;
-  color: #999;
+/* 主内容区域 */
+.dashboard-content {
+  flex: 1;
   padding: 20px;
 }
 
-/* 数据统计卡片 */
+/* Loading 状态 */
+.loading {
+  text-align: center;
+  font-size: 16px;
+  color: #999;
+  margin: 20px 0;
+}
+
+/* 1. 统计概览卡片 */
+.overview-section {
+  margin-bottom: 20px;
+}
 .stats-cards {
   display: flex;
   flex-wrap: wrap;
   gap: 20px;
-  justify-content: center; /* 将统计卡片在水平方向居中 */
+  justify-content: center;
 }
-
 .stat-card {
   background: #fff;
   padding: 20px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-  border-radius: 8px;
-  text-align: center; /* 卡片内部文字居中 */
-  flex: 0 0 240px;
+  width: 220px;
+  border-radius: 10px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+  text-align: center;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
-
 .stat-card:hover {
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
   transform: translateY(-5px);
+  box-shadow: 0 8px 30px rgba(0,0,0,0.1);
 }
-
 .stat-card h3 {
   font-size: 16px;
-  margin-bottom: 10px;
-  font-weight: 600;
   color: #34495e;
+  margin-bottom: 10px;
 }
-
 .stat-card p {
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 700;
   color: #2c3e50;
 }
 
-/* 健康度指数区域 */
-.health-index-section {
-  background: linear-gradient(135deg, #ffffff 0%, #f0f9ff 100%);
-  padding: 30px;
-  margin-top: 50px;
-  margin-bottom: 30px;
-  border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-  text-align: center;
-  opacity: 0;
+/* 2. 健康度 + 系统稳健性 */
+.health-system-section {
+  margin-bottom: 20px;
+  margin-left: 250px;
+  margin-right: 250px;
 }
-
-.health-index-section h3 {
-  font-size: 22px;
-  font-weight: 700;
+.health-card {
+  background: #fff;
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+.health-card header h2 {
+  font-size: 18px;
   color: #2c3e50;
   margin-bottom: 10px;
 }
-
-.health-desc {
-  font-size: 14px;
-  color: #7f8c8d;
-  margin-bottom: 30px;
-}
-
-.health-index-content {
+.health-content {
   display: flex;
-  justify-content: center;
-  align-items: flex-start;
-  gap: 30px;
   flex-wrap: wrap;
+  gap: 20px;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
 }
-
-/* 左侧图表区域 */
-.health-index-left {
-
+.health-chart {
+  flex: 0 0 200px;
+  text-align: center;
 }
-
-.health-index-left:hover {
-  transform: scale(1.05);
+.health-score-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
-
-/* 中间说明区域 */
-.health-index-middle {
-  margin-right: 60px; /* 中间与右侧之间更大的空隙 */
+.score-display {
+  display: flex;
+  align-items: baseline;
+  margin-bottom: 10px;
 }
-
-.explanation-title {
-  font-size: 18px;
-  font-weight: 600;
-  color: #2c3e50;
-  margin-bottom: 15px;
-}
-
-.deduction-reasons {
-  list-style: none;
-  padding: 0;
-  font-size: 14px;
-  color: #2c3e50;
-  line-height: 1.8;
-}
-
-.deduction-reasons li {
-  position: relative;
-  padding-left: 10px;
-}
-
-.deduction-reasons li::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 9px;
-  width: 4px;
-  height: 4px;
-  background: #2c3e50;
-  border-radius: 50%;
-}
-
-.highlight {
-  color: #e74c3c;
-  font-weight: 600;
-}
-
-/* 右侧分数与稳健性 */
-.health-index-right {
-
-}
-
-.health-score {
+.big-score {
   font-size: 40px;
   font-weight: 700;
   color: #2c3e50;
-  line-height: 1;
-  margin-bottom: 10px;
-  position: relative;
+  margin-right: 5px;
 }
-
-.score-unit {
+.score-text {
   font-size: 16px;
-  font-weight: 400;
   color: #7f8c8d;
-  margin-left: 5px;
 }
-
 .health-status {
   font-size: 14px;
-  font-weight: 500;
+  background: rgba(46,204,113,0.1);
+  padding: 4px 10px;
+  border-radius: 16px;
   color: #2c3e50;
-  padding: 5px 10px;
-  border-radius: 20px;
-  background: rgba(46, 204, 113, 0.1);
-  display: inline-block;
-  margin-bottom: 20px;
 }
-
-/* 系统稳健性（已整合至右侧） */
-.system-stability-wrapper {
-  text-align: center;
-}
-
-.system-stability-wrapper h4 {
-  font-size: 16px;
-  font-weight: 600;
-  color: #2c3e50;
-  margin-bottom: 10px;
-}
-
-.stability-cards {
+/* 扣分原因 + 稳健性 */
+.health-extra {
   display: flex;
+  flex-wrap: wrap;
   gap: 20px;
   justify-content: center;
 }
-
-.stability-card {
-  flex: 0 0 100px;
-  background: #fff;
+.deduction-reasons-card,
+.system-stability-card {
+  background: #fafafa;
+  padding: 15px;
   border-radius: 8px;
-  padding: 10px;
-  text-align: center;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-  transition: transform 0.3s ease;
-  font-size: 12px;
+  flex: 0 0 280px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
 }
-
-.stability-card:hover {
-  transform: translateY(-3px);
+.deduction-reasons-card h4,
+.system-stability-card h4 {
+  font-size: 16px;
+  margin-bottom: 10px;
+  color: #34495e;
 }
-
-.stability-card h4 {
-  margin-bottom: 5px;
-  font-size: 12px;
+.deduction-reasons-card ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  line-height: 1.8;
+}
+.deduction-reasons-card li {
+  font-size: 14px;
   color: #2c3e50;
+  margin-bottom: 6px;
 }
-
-.stability-card p {
+.highlight {
+  color: #e74c3c;
+  margin-left: 5px;
+}
+.system-stability-card .stability-items {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.stability-item {
+  background: #fff;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+  border-radius: 6px;
+  padding: 10px;
+  flex: 0 0 80px;
+  text-align: center;
+}
+.stability-item.error {
+  border-left: 4px solid #e74c3c;
+}
+.stability-item.warning {
+  border-left: 4px solid #f1c40f;
+}
+.stability-item.ok {
+  border-left: 4px solid #2ecc71;
+}
+.stability-item h5 {
+  font-size: 12px;
+  color: #34495e;
+  margin-bottom: 5px;
+}
+.stability-item p {
   font-size: 14px;
   color: #2c3e50;
   font-weight: 600;
-  margin-bottom: 5px;
 }
 
-.stability-note {
-  font-size: 10px;
-  color: #7f8c8d;
+/* 3. 用户满意度 & 活跃用户图表并排 */
+.charts-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  margin-bottom: 20px;
 }
-
-.stability-card.error {
-  border-left: 3px solid #e74c3c;
-}
-
-.stability-card.warning {
-  border-left: 3px solid #f1c40f;
-}
-
-.stability-card.ok {
-  border-left: 3px solid #2ecc71;
-}
-
-/* 用户满意度 */
-.satisfaction-section {
+.chart-card {
+  flex: 1;
   background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
   padding: 20px;
-  margin-bottom: 30px;
-  border-radius: 8px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
 }
-
-.satisfaction-section h3 {
+.chart-card h3 {
   margin-bottom: 10px;
-  font-size: 18px;
-  font-weight: 600;
-  color: #2c3e50;
+  font-size: 16px;
+  color: #34495e;
 }
-
-.satisfaction-indicator {
+.satisfaction-card .satisfaction-indicator {
   display: flex;
   align-items: center;
   margin-bottom: 10px;
 }
-
-.satisfaction-icon {
+.satisfaction-indicator .icon {
   font-size: 24px;
   margin-right: 10px;
 }
-
-.satisfaction-value {
+.satisfaction-indicator .value {
   font-size: 24px;
   font-weight: 700;
-}
-
-.satisfaction-desc {
-  font-size: 12px;
-  color: #7f8c8d;
-  margin-bottom: 10px;
-}
-
-/* 活跃用户统计 */
-.active-users-section {
-  background: #fff;
-  padding: 20px;
-  margin-bottom: 30px;
-  border-radius: 8px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
-}
-
-.active-users-section h3 {
-  font-size: 18px;
-  font-weight: 600;
-  margin-bottom: 20px;
   color: #2c3e50;
 }
-
-.active-charts {
+.active-charts-group {
   display: flex;
   flex-wrap: wrap;
   gap: 20px;
+  justify-content: space-between;
 }
-
-.chart-container {
-  min-width: 240px;
+.chart-box {
   flex: 1;
 }
-
-.chart-container h4 {
-  margin-bottom: 10px;
-  color: #2c3e50;
+.chart-box h4 {
   font-size: 14px;
-  font-weight: 500;
+  margin-bottom: 5px;
+  color: #7f8c8d;
 }
 
-/* 平台收入 */
+/* 4. 收入统计 */
 .revenue-section {
-  background: #fff;
-  padding: 20px;
-  margin-bottom: 30px;
-  border-radius: 8px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
-}
-
-.revenue-section h3 {
-  font-size: 18px;
-  font-weight: 600;
   margin-bottom: 20px;
-  color: #2c3e50;
 }
-
-.revenue-desc {
+.revenue-card {
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+  padding: 20px;
+}
+.revenue-card h3 {
+  margin-bottom: 10px;
+  font-size: 16px;
+  color: #34495e;
+}
+.revenue-card .desc {
+  margin-top: 10px;
   font-size: 12px;
   color: #7f8c8d;
-  margin-top: 10px;
 }
 
-/* 响应式微调 */
+/* 响应式 */
 @media (max-width: 768px) {
-  .dashboard-container {
-    margin-left: 0;
-    margin-top: 60px;
-  }
-
-  .health-index-content {
+  .health-content {
     flex-direction: column;
-    align-items: center;
   }
-
-  .health-index-left,
-  .health-index-right {
-    margin-bottom: 20px;
+  .health-extra {
+    flex-direction: column;
   }
-}
-
-/* 淡入动画 */
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
+  .charts-row {
+    flex-direction: column;
   }
-  to {
-    opacity: 1;
-    transform: translateY(0);
+  .active-charts-group {
+    flex-direction: column;
   }
-}
-
-.animate-fade-in {
-  animation: fadeIn 1s ease forwards;
 }
 </style>
+

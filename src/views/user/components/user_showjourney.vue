@@ -3,7 +3,7 @@
         <div class="showjourney-container">
             <button class="close-button" @click="handleclose">×</button>
             <h2 class="myjourney">我的行程</h2>
-            <el-table :data="tableData" class="showtable" stripe border height="350">
+            <el-table :data="paginatedRecords" class="showtable" stripe border height="360">
                 <el-table-column label="序号" type="index" width="100"></el-table-column>
                 <el-table-column prop="originsite" label="起点" width="120"></el-table-column>
                 <el-table-column prop="destinationsite" label="终点" width="120"></el-table-column>
@@ -11,13 +11,22 @@
                 <el-table-column prop="downtime" label="下车时间" width="180" ></el-table-column>
                 <el-table-column prop="status" label="状态" width="100" ></el-table-column>
             </el-table>
-        </div>        
+            <div class="example-pagination-block">
+              <ElPagination background
+                layout="prev, pager, next" 
+                :total="tableData.length"
+                :page-size="pageSize" 
+                :current-page="currentpage.value"
+                @current-change="changecurrent" />
+            </div> 
+        </div>       
     </div>
 </template>
 
 <script setup>
 import { defineProps,defineEmits,ref,onMounted } from 'vue';
-import { ElTable, ElTableColumn } from 'element-plus';
+import { ElTable, ElTableColumn,ElPagination } from 'element-plus';
+import { computed } from 'vue';
 
 const props = defineProps({
   visible: {
@@ -33,11 +42,19 @@ const props = defineProps({
 const emit = defineEmits(['close_showjourney']);
 function handleclose(){
     emit('close_showjourney'); //调用user_main的close_showjourney函数
-    const kk = props.getjourneyrecord();
-    console.log(kk)
 }
 //const tableData = ref(props.getjourneyrecord());
 const tableData = ref([]);
+let currentpage = ref(1); // 当前页码
+const pageSize = 8; //每页显示的记录数
+let paginatedRecords = computed(()=>{
+  const start = (currentpage.value-1)*pageSize;
+  const end =start+pageSize;// Math.min(start+pageSize, comments.value.length-1);
+  return tableData.value.slice(start,end);
+})
+function changecurrent(page){
+  currentpage.value = page;
+}
 async function fetchtabledata(){
   //getjourneyrecord返回的是一个promise，而不是数据，需要这样处理
   try {
@@ -63,73 +80,6 @@ onMounted(()=> {
   setInterval(fetchtabledata, 5000);
 });
 
-// const tableData = ref([{
-//         origin: '榕园广场',
-//         destination: '教学楼',
-//         time_up : '2024-1-2 08:01',
-//         time_down : '---',
-//         state: '进行中'
-//       },{
-//         origin: '荔园食堂',
-//         destination: '教学楼',
-//         time_up : '2024-5-2 08:01',
-//         time_down : '2024-7-2 08:20',
-//         state: '结束'
-//       },{
-//         origin: '榕11',
-//         destination: '得一超市',
-//         time_up : '2024-3-2 08:01',
-//         time_down : '2024-2-2 08:20',
-//         state: '结束'
-//       },{
-//         origin: '荔园食堂',
-//         destination: '教学楼',
-//         time_up : '2024-5-2 08:01',
-//         time_down : '2024-7-2 08:20',
-//         state: '结束'
-//       },{
-//         origin: '荔园食堂',
-//         destination: '教学楼',
-//         time_up : '2024-5-2 08:01',
-//         time_down : '2024-7-2 08:20',
-//         state: '结束'
-//       },{
-//         origin: '荔园食堂',
-//         destination: '教学楼',
-//         time_up : '2024-5-2 08:01',
-//         time_down : '2024-7-2 08:20',
-//         state: '结束'
-//       },{
-//         origin: '荔园食堂',
-//         destination: '教学楼',
-//         time_up : '2024-5-2 08:01',
-//         time_down : '2024-7-2 08:20',
-//         state: '结束'
-//       },{
-//         origin: '荔园食堂',
-//         destination: '教学楼',
-//         time_up : '2024-5-2 08:01',
-//         time_down : '2024-7-2 08:20',
-//         state: '结束'
-//       },{
-//         origin: '荔园食堂',
-//         destination: '教学楼',
-//         time_up : '2024-5-2 08:01',
-//         time_down : '2024-7-2 08:20',
-//         state: '结束'
-//       },{
-//         origin: '荔园食堂',
-//         destination: '教学楼',
-//         time_up : '2024-5-2 08:01',
-//         time_down : '2024-7-2 08:20',
-//         state: '结束'
-//       },{
-//         origin: '荔园食堂',
-//         destination: '教学楼',
-//         time_up : '2024-5-2 08:01',
-//         time_down : '2024-7-2 08:20',
-//         state: '结束'
-//       }]);
 
 </script>
 
@@ -155,7 +105,7 @@ onMounted(()=> {
 .showjourney-container {
   /* 定义一个固定大小或根据内容自动调整 */
   width: 800px; /* 或者使用百分比宽度 */
-  height: 500px; /* 或者不设置高度让其根据内容自动调整 */
+  height: 530px; /* 或者不设置高度让其根据内容自动调整 */
 
   /* 设置边框以形成框的外观 */
   border: 1px solid #ccc;
@@ -213,7 +163,7 @@ onMounted(()=> {
   transform: scale(0.9); /* 缩小按钮以模拟按下效果 */
 }
 .showtable{
-    margin-top: 20px;
+    margin-top: 5px;
 }
 .myjourney{
   font-size: 2rem;
@@ -226,5 +176,8 @@ onMounted(()=> {
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* 阴影 */
   text-align: center; /* 文字居中 */
   transition: all 0.3s ease; /* 平滑过渡效果 */
+}
+.example-pagination-block {
+  margin-top: 10px;
 }
 </style>

@@ -29,12 +29,9 @@
           ></el-input>
         </el-form-item>
         <el-form-item label="Type" :label-width="formLabelWidth">
-          <el-select v-model="editForm.type">
+          <el-select v-model="editForm.type" disabled>
             <el-option
-                v-for="option in variableTypes"
-                :key="option.value"
-                :label="option.label"
-                :value="option.value"
+                disabled
             ></el-option>
           </el-select>
         </el-form-item>
@@ -114,23 +111,26 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import {ref, computed, onMounted} from 'vue';
+
 
 const formLabelWidth = "120px";
 
 const variableTypes = [
-  { label: 'String', value: 'string' },
-  { label: 'Number', value: 'number' },
-  { label: 'Boolean', value: 'boolean' },
-  { label: 'JSON', value: 'json' },
+  { label: 'String', value: 'String' },
+  { label: 'Number', value: 'Number' },
+  { label: 'Boolean', value: 'Boolean' },
+  { label: 'JSON', value: 'JSON' },
 ];
 
 // 硬编码一些示例数据
-const tableData = ref([
+let tableData = ref([
   { key: 'expiration_hours_admin', name: '管理员token过期时间', value: 'Number', description: '确认生成管理员登录token后token什么时候过期', type: 'Number', lastModified: '2024-12-20 10:00:00', lastModifiedBy: '7'},
   { key: 'expiration_hours_driver', name: '驾驶员token过期时间', value: 'Number', description: '确认生成驾驶员登录token后token什么时候过期', type: 'Number', lastModified: '2024-12-20 10:00:00', lastModifiedBy: '7' },
   { key: 'expiration_hours_passenger', name: '乘客token过期时间', value: 'Number', description: '确认生成乘客登录token后token什么时候过期', type: 'Number', lastModified: '2024-12-20 10:00:00', lastModifiedBy: '7' },
-  ]);
+]);
+
+
 
 const filters = ref({
   keyword: '',
@@ -145,6 +145,7 @@ const pagination = ref({
 
 const isEditVisible = ref(false);
 const editForm = ref({});
+
 
 // 根据filters和pagination计算当前展示的数据
 const displayData = computed(() => {
@@ -166,6 +167,7 @@ const displayData = computed(() => {
 
 const filterData = () => {
   // 根据筛选条件更新displayData (displayData是computed自动更新)
+  fetchData();
 };
 
 // eslint-disable-next-line no-unused-vars
@@ -179,11 +181,47 @@ const openEdit = (row) => {
   isEditVisible.value = true;
 };
 
-const saveEdit = () => {
+
+
+// type updateVariableRequest struct {
+//   Variable_name  string `json:"variable_name"`
+//   Variable_value string `json:"variable_value"`
+//   Token          string `json:"token"`
+// }
+
+const saveEdit = async () => {
   // 简化处理：直接在前端更新数据（实际上应发送请求到后端）
   const index = tableData.value.findIndex(item => item.key === editForm.value.key);
   if (index !== -1) {
-    tableData.value[index] = { ...editForm.value, lastModified: new Date().toISOString().slice(0,19).replace('T',' ') };
+    const prefixURL = localStorage.getItem("prefixURL"); // 使用本地存的url
+    const token = localStorage.getItem("jwtToken"); // 从 localStorage 获取 jwtToken
+
+    // 整理数据
+    const data = {
+      variable_name: editForm.value.key,
+      variable_value: editForm.value.value,
+      token: token,
+    }
+
+    // 发送请求
+    fetch(prefixURL + '/admin/variable/update', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    })
+    .then(response => response.json())
+    .then(data => {
+      console.log('Response data:', data);
+    })
+    .catch(error => {
+      console.error('Error:', error);
+    });
+    // 我知道你很急但你先别急
+    const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+    await wait(500);
+    await fetchData();
   }
   isEditVisible.value = false;
 };
@@ -191,6 +229,57 @@ const saveEdit = () => {
 const resetEditForm = () => {
   editForm.value = {};
 };
+
+const fetchData = async () => {
+  try {
+    const prefixURL = localStorage.getItem("prefixURL"); // 获取后端地址
+    const token = localStorage.getItem("jwtToken"); // 获取 JWT token
+
+    const response = await fetch(`${prefixURL}/admin/variable/get`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    // 只修改 value, lastModified, lastModifiedBy 字段
+    // 根据 key 找到对应的数据项
+
+    // 后端需要传来
+    // {
+    //   "key": "expiration_hours_passenger",
+    //   "value": "114514",
+    //   "lastModified": "2024-12-20 10:00:00",
+    //   "lastModifiedBy": "7"
+    // }
+    for (let i = 0; i < data.length; i++) {
+      const item = data[i];
+      const index = tableData.value.findIndex(row => row.key === item.key);
+      if (index !== -1) {
+        tableData.value[index].value = item.value;
+        tableData.value[index].lastModified = item.lastModified;
+        tableData.value[index].lastModifiedBy = item.lastModifiedBy;
+      }
+    }
+
+    // eslint-disable-next-line no-self-assign
+    tableData.value = tableData.value;
+
+  } catch (error) {
+    console.error("Error fetching data:", error);
+  }
+};
+
+onMounted(() => {
+  fetchData();
+});
+
 </script>
 
 <style scoped>

@@ -6,12 +6,13 @@ import ElementPlus from 'element-plus';
 import 'element-plus/dist/index.css'
 import { createPinia } from 'pinia';
 import '@fortawesome/fontawesome-free/css/all.css';
-import {VueReCaptcha} from "vue-recaptcha-v3";
+import { VueReCaptcha } from "vue-recaptcha-v3";
 import VueApexCharts from 'vue3-apexcharts'
 
 
 
 const app = createApp(App);
+
 
 
 app.use(VueApexCharts)
