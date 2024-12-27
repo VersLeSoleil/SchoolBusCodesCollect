@@ -1,4 +1,5 @@
 <template>
+  <el-card style=" height: 330px; width: 300px;">
   <div class="payment-count-container">
     <h3 class="title">付款人数统计</h3>
     <div class="stats">
@@ -24,6 +25,7 @@
     </div> 
     <!-- <button class="clear-button" @click="clearCurrentCount">清空本次付款人数</button> -->
   </div>
+  </el-card>
 </template>
 
 <script setup>

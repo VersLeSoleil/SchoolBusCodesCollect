@@ -1,6 +1,8 @@
 <template>
-  <div class="container">
-    <h3>车辆呼叫列表</h3>
+  <!-- <el-card class="container"> -->
+  <el-card  style=" height: 330px;width: 300px;background-color: transparent;">
+    <el-col :align="middle">
+      <h3>车辆呼叫列表</h3>
     <div v-if="vehicleCallMessages.length > 0" class="message-list">
       接收呼叫
       <div 
@@ -29,7 +31,10 @@
     <div v-else>
       <p>暂无车辆呼叫信息</p>
     </div>
-  </div>
+    </el-col>
+    
+  </el-card>
+
 </template>
 
 <script setup>

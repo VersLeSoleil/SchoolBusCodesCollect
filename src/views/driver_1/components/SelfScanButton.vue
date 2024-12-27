@@ -1,5 +1,5 @@
 <template>
-    <button @click="playSelfScanAudio" class="self-scan-btn">自觉扫码</button>
+    <el-button @click="playSelfScanAudio" type="primary" round style="height: 60px; width: 180px; margin-top: 20px;margin-left:10px;margin-bottom: 10px;"><p style="font-size: 20px;">自觉扫码</p></el-button>
   </template>
   
   <script>

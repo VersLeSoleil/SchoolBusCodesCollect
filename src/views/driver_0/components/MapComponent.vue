@@ -2,29 +2,29 @@
     <div class="page-container">
       <div id="container" class="map-container"></div>
       <div class="controls-container">
-        <button @click="showDriverInfo" class="showDriverInfoBtn">我的</button>
+        <!-- <button @click="showDriverInfo" class="showDriverInfoBtn">我的</button> -->
         <driver_Info :visible="dInfoVisible" :content="dInfoContent" @close="closeDInfo" />
-        <button @click="toggleFooterControls" class="showMoreInfoBtn">
+        <!-- <button @click="toggleFooterControls" class="showMoreInfoBtn">
           {{ footerVisible ? "收起" : "更多" }}
-        </button>
+        </button> -->
       </div>
       <transition name="slide-up">
         <div
           v-show="footerVisible"
           class="footer-controls-container"
         >
-          <button class="btn" @click="toggleRoutes">
+          <!-- <button class="btn" @click="toggleRoutes">
             {{ routesVisible ? "隐藏现有路线" : "显示现有路线" }}
-          </button>
-          <button class="btn toggleButton" @click="toggleStations">
+          </button> -->
+          <!-- <button class="btn toggleButton" @click="toggleStations">
             {{ stationsVisible ? "隐藏站点" : "显示站点" }}
-          </button>
-          <button class="btn autoLocateButton" @click="autoLocateCampus">
+          </button> -->
+          <!-- <button class="btn autoLocateButton" @click="autoLocateCampus">
             自动定位到校区
-          </button>
+          </button> -->
 
           <RemarkPlane />
-          <StartWork />
+
           
         </div>
       </transition>
@@ -34,18 +34,19 @@
   <script>
   import AMapLoader from "@amap/amap-jsapi-loader";
   import busStationData from "@/assets/bus_station_data.json";
-  import driver_Info from '@/views/driver_0/driver_Info.vue';
-  import StartWork from "./StartWork.vue";
+  import driver_Info from '@/views/driver_0/components/driver_Info.vue';
   import RemarkPlane from "./RemarkPlane.vue";
   import {useApiBaseStore} from "@/stores/network";
 
 
+
+  
   /* global AMap */
 
   export default {
     name: "MapComponent",
     components: {
-      StartWork,
+
       driver_Info,
       RemarkPlane,
       // ref,
@@ -68,6 +69,9 @@
       };
     },
     methods: {
+
+      
+
       toggleFooterControls() {
         this.footerVisible = !this.footerVisible;
       },

@@ -1,5 +1,5 @@
 <template>
-    <button @click="playSafetyAlertAudio" class="safety-alert-btn">安全提醒</button>
+    <el-button @click="playSafetyAlertAudio" type="success" round style="height: 60px; width: 180px;margin: 10px;"><p style="font-size: 20px;">安全提醒</p></el-button>
   </template>
   
   <script>

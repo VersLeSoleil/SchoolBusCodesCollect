@@ -2,28 +2,89 @@
 import MapComponent from '@/views/driver_1/components/MapComponent.vue';
 import SafetyAlertButton from '@/views/driver_1/components/SafetyAlertButton.vue';
 import SelfScanButton from '@/views/driver_1/components/SelfScanButton.vue';
-import PaymentCount from '@/views/driver_1/components/PaymentCount.vue';
-import CallCount from '@/views/driver_1/components/CallCount.vue';
+//import PaymentCount from '@/views/driver_1/components/PaymentCount.vue';
+//import CallCount from '@/views/driver_1/components/CallCount.vue';
 import ErrorBoundary from '@/views/driver_1/components/ErrorBoundary.vue'; // 通用错误边界组件
 
-import callSim from '@/views/schoolbus-simulation/components/call-sim.vue';
+//import callSim from '@/views/schoolbus-simulation/components/call-sim.vue';
 
-import QRCodeScanner from '@/views/driver_1/components/QRCodeScanner.vue'; // 通用错误边界组件
+//import QRCodeScanner from '@/views/driver_1/components/QRCodeScanner.vue'; // 通用错误边界组件
+import ShowDrewButton from './components/ShowDrewButton.vue';
+import EndWork from './components/EndWork.vue';
+import { ref,} from 'vue';
 
+const mapComponent= ref(null);
+const endWork = ref(null);
+
+// const toggleStations = () => {
+//   mapComponent.value.toggleStations(); // 直接调用 MapComponent 中的方法
+// };
+
+// const toggleRoutes = () => {
+//   mapComponent.value.toggleRoutes(); // 直接调用 MapComponent 中的方法
+// };
+
+const openForm = () => {
+  endWork.value.openForm(); // 直接调用 endWork 中的方法
+};
+
+const showDriverInfo = () => {
+  mapComponent.value.showDriverInfo(); // 直接调用 MapComponent 中的方法
+};
 
 </script>
 
 <template>
+ <div class="common-layout">
+    <el-container style="height: 100%;">
+      <el-header class="top-bar" style="background: linear-gradient(to right, rgb(113, 65, 168), rgba(44, 114, 241, 1)); opacity: 50%; display: flex; align-items: center;">
+        <span style="font-size: 20px;">在线 <strong>1</strong> 人</span>
+        <span style="font-size: 20px;">中山大学 (1号车)</span>
+      </el-header>
+      <el-container>
+        <el-aside width="190px" >
+          <el-col gutter="20px">
+        <ErrorBoundary>
+          <SelfScanButton />
+        </ErrorBoundary>
+        <ErrorBoundary>
+          <SafetyAlertButton />
+        </ErrorBoundary>
+
+        <ErrorBoundary>
+          <el-button @click="openForm" type="danger" round style="height: 60px; width: 180px; margin: 10px;"><p style="font-size: 20px;">下班</p></el-button>
+        </ErrorBoundary>
+        <ErrorBoundary>
+          <el-button @click="showDriverInfo" type="danger" round style="height: 60px; width: 180px; margin: 10px;"><p style="font-size: 20px;">我的</p></el-button>
+        </ErrorBoundary>
+
+
+        <ErrorBoundary>
+          <ShowDrewButton />
+        </ErrorBoundary>
+        
+        
+      </el-col>
+
+        </el-aside>
+        <el-main>     
+          <MapComponent ref="mapComponent"/>
+          <EndWork ref="endWork" />     
+        </el-main>
+      </el-container>
+    </el-container>
+  </div>
+
   <div id="app">
-    <!-- 顶部栏 -->
+    <!-- 顶部栏
     <div class="top-bar">
       <span>在线 <strong>1</strong> 人</span>
       <span>中山大学 (1号车)</span>
-    </div>
+    </div> -->
 
-    <!-- 主内容 -->
+    <!-- 主内容
     <div class="wrapper">
-      <!-- 功能按钮 -->
+      功能按钮
       <div class="button-container">
         <ErrorBoundary>
           <SelfScanButton />
@@ -31,23 +92,47 @@ import QRCodeScanner from '@/views/driver_1/components/QRCodeScanner.vue'; // �
         <ErrorBoundary>
           <SafetyAlertButton />
         </ErrorBoundary>
+        <ErrorBoundary>
+          <ShowDrewButton />
+        </ErrorBoundary>
       </div>
 
       <div class="map-container">
         <MapComponent />
       </div>
-    </div>
+    </div> -->
 
 
     <!-- 信息部分 -->
-    <div class="info-section">
+    <!-- <div class="info-section"> -->
+      <!-- <el-row :gutter="50">
+        <el-col :span="6">
+          <PaymentCount />
+        </el-col>
+        
+        <el-col :span="6">
+          <ErrorBoundary>
+          <CallCount />
+        </ErrorBoundary>
+        </el-col>
+        <el-col :span="6">
+          <ErrorBoundary>
+          <callSim />
+        </ErrorBoundary>
+        </el-col>
+        <el-rol :span="6">
+          <ErrorBoundary>
+          <QRCodeScanner />
+        </ErrorBoundary>
+        </el-rol>
+      </el-row> -->
       <!-- 付款人数 -->
-      <div class="stats-container">
+      <!-- <div class="stats-container">
         <PaymentCount />
-      </div>
+      </div> -->
 
       <!-- 呼叫人数 -->
-      <div class="stats-container">
+      <!-- <div class="stats-container">
         <ErrorBoundary>
           <CallCount />
         </ErrorBoundary>
@@ -61,8 +146,8 @@ import QRCodeScanner from '@/views/driver_1/components/QRCodeScanner.vue'; // �
         <ErrorBoundary>
           <QRCodeScanner />
         </ErrorBoundary>
-      </div>
-    </div>
+      </div> -->
+    <!-- </div> -->
   </div>
 </template>
 

@@ -2,7 +2,6 @@
   <div class="page-container">
     <div id="container" class="map-container">
       <div class="info-container">
-        <button @click="showDriverInfo" class="showDriverInfoButton">我的</button>
         <driver_Info :visible="dInfoVisible" :content="dInfoContent" @close="closeDInfo" />
         <button class="btn" @click="toggleRoutes" style="margin-bottom: 5px">
           {{ routesVisible ? '隐藏现有路线' : '显示现有路线' }}
@@ -11,10 +10,6 @@
           {{ stationsVisible ? '隐藏站点' : '显示站点' }}
         </button>
       </div>
-    </div>
-    <div>
-      <h1>车辆信息管理</h1>
-      <VehicleForm />
     </div>
     <div id="app">
       <div id="container"></div>
@@ -37,10 +32,11 @@ import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue';
 import AMapLoader from "@amap/amap-jsapi-loader";
 import VehicleStatusToggle from "@/views/driver_1/components/VehicleStatusToggle.vue";
 import ErrorBoundary from "@/views/driver_1/components/ErrorBoundary.vue";
-import VehicleForm from "@/views/driver_0/components/VehicleForm.vue";
-import driver_Info from '@/views/driver_0/driver_Info.vue';
+
+import driver_Info from '@/views/driver_0/components/driver_Info.vue';
 import { useUserStore } from "@/stores/user";
 import { useWebSocketStore } from '@/stores/webSocketStore';
+import { defineExpose } from 'vue';
 // import { useApiBaseStore } from '@/stores/network';
 
 /* global AMap */
@@ -436,12 +432,17 @@ onBeforeUnmount(() => {
   }
   webSocketStore.closeWebSocket();
 });
+
+defineExpose({
+  showDriverInfo,
+  closeDInfo,
+});
 </script>
 
 <style scoped>
 #container {
   width: 100%;
-  height: 500px;
+  height: 1000px;
 }
 
 #map-wrapper {
@@ -521,7 +522,7 @@ onBeforeUnmount(() => {
 .showDriverInfoButton {
   position: absolute;
   top: 20%;
-  left: 85%;
+  left: 1%;
   width: 52px;
   height: 52px;
   border-radius: 50%;
