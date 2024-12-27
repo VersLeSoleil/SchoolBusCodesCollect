@@ -2,10 +2,22 @@
   <div class="profile-container">
     <!-- 用户头像与基本信息 -->
     <div class="user-info-box">
-      <ElAvatar :src="userInfo.avatar" size="large" />
+      <ElAvatar :src="userStore.userInfo.avatar" size="large">
+        <template #default>
+          <span v-if="!userStore.userInfo.avatar">暂无头像</span>
+        </template>
+      </ElAvatar>
+      <ElUpload
+        class="avatar-uploader"
+        :show-upload-list="false"
+        :before-upload="beforeAvatarUpload"
+        @change="handleAvatarChange"
+      >
+        <ElButton type="primary" size="small">上传头像</ElButton>
+      </ElUpload>
       <div class="user-info-details">
-        <h2>{{ userInfo.name }}</h2>
-        <p>账号名：{{ userInfo.account }}</p>
+        <h2>{{ userStore.userInfo.name }}</h2>
+        <p>账号名：{{ userStore.userInfo.account }}</p>
       </div>
     </div>
 
@@ -13,13 +25,30 @@
     <div class="profile-details">
       <h3>基本信息</h3>
       <ul class="profile-grid">
-        <li v-for="field in fields" :key="field.key" class="field-item" @mouseover="hoveredField = field.key"
-          @mouseleave="hoveredField = ''">
+        <li
+          v-for="field in fields"
+          :key="field.key"
+          class="field-item"
+          @mouseover="hoveredField = field.key"
+          @mouseleave="hoveredField = ''"
+        >
           <div class="field-label">{{ field.label }}: </div>
           <div v-if="editingField === field.key" class="edit-input">
-            <ElInput v-if="field.key !== 'major'" ref="field.key" v-model="tempUserInfo[field.key]"
-              :placeholder="'请输入' + field.label" size="large" class="input-large" />
-            <ElSelect v-else v-model="tempUserInfo.major" placeholder="请选择专业" size="large" class="input-large-selected">
+            <ElInput
+              v-if="field.key !== 'major'"
+              ref="field.key"
+              v-model="tempUserInfo[field.key]"
+              :placeholder="'请输入' + field.label"
+              size="large"
+              class="input-large"
+            />
+            <ElSelect
+              v-else
+              v-model="tempUserInfo.major"
+              placeholder="请选择专业"
+              size="large"
+              class="input-large-selected"
+            >
               <ElOption label="软件工程学院" value="软件工程学院" />
               <ElOption label="计算机学院" value="计算机学院" />
               <ElOption label="人工智能学院" value="人工智能学院" />
@@ -29,9 +58,13 @@
             <ElButton @click="cancelEditing" type="default" size="large">取消</ElButton>
           </div>
           <div v-else class="field-value">
-            {{ userInfo[field.key] }}
-            <ElButton v-if="hoveredField === field.key && field.editable" @click="startEditing(field.key)" type="text"
-              class="edit-button">
+            {{ userStore.userInfo[field.key] }}
+            <ElButton
+              v-if="hoveredField === field.key && field.editable"
+              @click="startEditing(field.key)"
+              type="text"
+              class="edit-button"
+            >
               编辑
             </ElButton>
           </div>
@@ -42,125 +75,137 @@
 </template>
 
 <script setup>
-  import {
-    ref,
-    nextTick
-  } from "vue";
-  import {
+import { ref } from "vue";
+
+import {
     ElInput,
     ElButton,
     ElMessage,
     ElAvatar,
     ElSelect,
-    ElOption
-  } from "element-plus";
-  import logo from "@/assets/logo.png";
+    ElOption,
+    ElUpload,
+} from "element-plus";
+import { useUserStore } from "@/stores/userStore"; // 引入 User Store
 
-  // 用户信息
-  const userInfo = ref({
-    avatar: logo,
-    name: "HissCC",
-    account: "Richard",
-    studentId: "22331011",
-    grade: "1924",
-    major: "软件工程学院",
-    phone: "12345678901",
-  });
 
-  // 临时存储用户信息用于编辑时修改
-  const tempUserInfo = ref({
-    ...userInfo.value
-  });
 
-  // 控制编辑状态
-  const editingField = ref(""); // 当前正在编辑的字段
-  const hoveredField = ref(""); // 当前鼠标悬停的字段
-  const elInputRefs = ref({}); // 存储每个输入框的引用
+const userStore = useUserStore();
 
-  // 需要展示的字段
-  const fields = [{
-      key: "name",
-      label: "姓名",
-      editable: true
-    },
-    {
-      key: "account",
-      label: "账号",
-      editable: false
-    },
-    {
-      key: "studentId",
-      label: "学号",
-      editable: false
-    },
-    {
-      key: "grade",
-      label: "年级",
-      editable: true
-    },
-    {
-      key: "major",
-      label: "专业",
-      editable: true
-    },
-    {
-      key: "phone",
-      label: "电话号码",
-      editable: true
-    },
-  ];
+const tempUserInfo = ref({ ...userStore.userInfo });
 
-  // 开始编辑某个字段
-  function startEditing(field) {
-    editingField.value = field;
-    tempUserInfo.value[field] = userInfo.value[field];
+const editingField = ref(""); // 当前正在编辑的字段
+const hoveredField = ref(""); // 当前鼠标悬停的字段
 
-    // 等待 DOM 更新完成后，将输入框聚焦
-    nextTick(() => {
-      const inputRef = elInputRefs.value[field];
-      if (inputRef && inputRef.focus) {
-        inputRef.focus(); // 调用 Element Plus 输入框的 focus 方法
-      }
-    });
-  }
+// 需要展示的字段
+const fields = [
+    { key: "name", label: "姓名", editable: true },
+    { key: "account", label: "账号", editable: false },
+    { key: "studentId", label: "学号", editable: false },
+    { key: "grade", label: "年级", editable: true },
+    { key: "major", label: "专业", editable: true },
+    { key: "phone", label: "电话号码", editable: true },
+];
 
-  // 保存字段内容
-  function saveField(field) {
+// 开始编辑某个字段
+function startEditing(field) {
+  tempUserInfo.value = { ...userStore.userInfo };
+  editingField.value = field;
+}
+
+// 保存字段内容
+async function saveField(field) {
     if (validateField(field)) {
-      userInfo.value[field] = tempUserInfo.value[field];
-      editingField.value = "";
-      hoveredField.value = "";
-      ElMessage.success(`${field} 更新成功！`);
-    }
-  }
+        try {
+            const payload = {
+                student_account: userStore.userInfo.account,
+                name: tempUserInfo.value.name,
+                grade: parseInt(tempUserInfo.value.grade),
+                major: tempUserInfo.value.major,
+                phone: tempUserInfo.value.phone,
+                avatar: userStore.userInfo.avatar.replace('http://localhost:8888', ''), // 移除基础 URL
+                user_id: parseInt(userStore.userInfo.user_id),
+            };
 
-  // 取消编辑
-  function cancelEditing() {
-    tempUserInfo.value = {
-      ...userInfo.value
-    };
+            console.log("Payload to send:", payload);
+            // 发送更新请求
+            await userStore.updateUserInfo(payload);
+
+            editingField.value = "";
+            hoveredField.value = "";
+            ElMessage.success(`${fields.find(f => f.key === field).label} 更新成功！`);
+        } catch (error) {
+            console.error("更新失败:", error);
+            ElMessage.error("更新失败，请稍后重试");
+        }
+    }
+}
+
+// 取消编辑
+function cancelEditing() {
+    tempUserInfo.value = { ...userStore.userInfo };
     editingField.value = "";
     hoveredField.value = "";
-  }
+}
 
-  // 验证字段
-  function validateField(field) {
-    if (field === "name" && (!/^[\u4e00-\u9fa5]{1,10}$|^[a-zA-Z\s]{1,30}$|^[\u4e00-\u9fa5a-zA-Z\s]{1,30}$/.test(
-        tempUserInfo.value.name))) {
-      ElMessage.error("姓名应为最多 10 个中文字符或 30 个英文字符");
-      return false;
+// 验证字段
+function validateField(field) {
+    if (
+        field === "name" &&
+        !/^[\u4e00-\u9fa5]{1,10}$|^[a-zA-Z\s]{1,30}$|^[\u4e00-\u9fa5a-zA-Z\s]{1,30}$/.test(
+            tempUserInfo.value.name
+        )
+    ) {
+        ElMessage.error("姓名应为最多 10 个中文字符或 30 个英文字符");
+        return false;
     }
-    if (field === "grade" && (!/^(192[4-9]|19[3-9]\d|20[0-1]\d|202[0-4])$/.test(tempUserInfo.value.grade))) {
-      ElMessage.error("年级只能填写 1924 到 2024 之间的数字");
-      return false;
+    if (
+        field === "grade" &&
+        !/^(192[4-9]|19[3-9]\d|20[0-1]\d|202[0-4])$/.test(tempUserInfo.value.grade)
+    ) {
+        ElMessage.error("年级只能填写 1924 到 2024 之间的数字");
+        return false;
     }
-    if (field === "phone" && (!/^(\+|-|\d|\s){1,20}$/.test(tempUserInfo.value.phone) || (tempUserInfo.value.phone.match(
-        /\s/g) || []).length > 2)) {
-      ElMessage.error("电话号码只能包含数字、符号（+、-）和最多两个空格");
-      return false;
+    if (
+        field === "phone" &&
+        (!/^(\+|-|\d|\s){1,20}$/.test(tempUserInfo.value.phone) ||
+            (tempUserInfo.value.phone.match(/\s/g) || []).length > 2)
+    ) {
+        ElMessage.error("电话号码只能包含数字、符号（+、-）和最多两个空格");
+        return false;
     }
     return true;
-  }
+}
+
+// 头像上传前的检查
+function beforeAvatarUpload(file) {
+    const isImage = file.type.startsWith('image/');
+    if (!isImage) {
+        ElMessage.error('只能上传图片文件');
+        return false;
+    }
+    const isLt2M = file.size / 1024 / 1024 < 2;
+    if (!isLt2M) {
+        ElMessage.error('头像大小不能超过 2MB');
+        return false;
+    }
+    return true;
+}
+
+// 处理头像文件变化
+async function handleAvatarChange(file) {
+    if (file.status === 'ready' || file.status === 'uploading') {
+        await userStore.uploadAvatar(file.raw);
+    }
+    console.log(file.response);
+    if (file.status === 'success') {
+        ElMessage.success('头像上传成功');
+        // 更新头像 URL
+        // userStore.userInfo.avatar 已在 store 中更新
+    } else if (file.status === 'error') {
+        ElMessage.error('头像上传失败');
+    }
+}
 </script>
 
 <style scoped>
@@ -277,4 +322,17 @@
   ::v-deep .el-select__selected-item {
     font-size: 23px !important;
   }
+
+  .user-info-box {
+  display: flex;
+  align-items: center;
+}
+
+.avatar-uploader {
+  margin-left: 20px;
+}
+
+.user-info-details {
+  margin-left: 20px;
+}
 </style>

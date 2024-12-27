@@ -125,6 +125,42 @@ const routes = [
             name: 'variables',
             component: () => import('@/views/admin/Admin_variables.vue'),
             meta: { title: 'Variables', icon: 'variables' }
+        },
+        {
+            path: 'test',
+            name: 'test',
+            component: () => import('@/views/admin/Admin_test.vue'),
+            meta: { title: 'Test', icon: 'test' }
+        },
+        {
+            path: 'feedback',
+            name: 'feedback',
+            component: () => import('@/views/admin/Admin_feedback.vue'),
+            meta: { title: 'Feedback', icon: 'feedback' }
+        },
+        {
+            path: 'drivers',
+            name: 'drivers',
+            component: () => import('@/views/admin/Admin_drivers.vue'),
+            meta: { title: 'Drivers', icon: 'drivers' }
+        },
+        {
+            path: 'car_table',
+            name: 'car_table',
+            component: () => import('@/views/admin/Admin_car_table.vue'),
+            meta: { title: 'Car_table', icon: 'car_table' }
+        },
+        {
+            path: 'manage_routes',
+            name: 'manage_routes',
+            component: () => import('@/views/components/Map-admin.vue'),
+            meta: { title: 'Manage_routes', icon: 'manage_routes' }
+        },
+        {
+            path: 'work_table',
+            name: 'work_table',
+            component: () => import('@/views/admin/Admin_work_table.vue'),
+            meta: { title: 'Work_table', icon: 'work_table' }
         }
         ]
     },
@@ -185,6 +221,9 @@ router.beforeEach(async (to, from, next) => {
             // 如果令牌合法，继续导航
             const userRole = validation.role; // 获取角色
             console.log(userRole);
+            const userData = validation.data; // 获取角色
+            console.log(userData);
+
             // 检查目标路由是否有角色限制
             const requiredRoles = to.meta.requiredRoles || [];
             if (requiredRoles.length === 0 || requiredRoles.includes(userRole)) {
