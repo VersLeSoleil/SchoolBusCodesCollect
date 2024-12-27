@@ -135,19 +135,7 @@ function getTicket(value1, value2, value3,value4) {
     });
     
 }
-function confirmPay(value){
-    buyButtonVisible.value = false; 
-    buyTicketVisible.value=false;
-    callBusVisible.value=false;
-    currentPaymentMethod=value;
-    console.log(currentPaymentMethod);
-    submitPayment().then(() => {
-      fetchCurrentPayment().then(() => {
-      ChangeOrder("待开始");
-      ChangePayment("成功");
-    });
-    });
-}
+
 
 function cancleTicket(){
     ChangeOrder("已取消");
@@ -447,7 +435,7 @@ async function ChangePayment(value) {
       console.error("提交失败:", error);
       alert("提交失败，请稍后再试！");
     }
-
+}
 function confirmPay(){
     const rawValue = carid.value; // 使用 carid.value 而不是 toRaw(carid)
     let message = {
@@ -458,9 +446,17 @@ function confirmPay(){
     };
         // 将新的呼叫信息添加到 store 中
         webSocketStore.sendMessage(JSON.stringify(message));
-    buyButtonVisible.value = false; 
-    buyTicketVisible.value=false;
-    callBusVisible.value=false;
+        buyButtonVisible.value = false; 
+        buyTicketVisible.value=false;
+        callBusVisible.value=false;
+        currentPaymentMethod=currentPaymentMethod.value;
+        console.log(currentPaymentMethod);
+        submitPayment().then(() => {
+          fetchCurrentPayment().then(() => {
+          ChangeOrder("待开始");
+          ChangePayment("成功");
+    });
+    });
 }
 function showTicket() {
     provideTicketVisible.value = true;
@@ -540,22 +536,22 @@ function confirmInCar(){
         // 将新的呼叫信息添加到 store 中
         webSocketStore.sendMessage(JSON.stringify(message));
 }
-function confirmInCar(){
-    console.log("dafasf");
-    console.log(carid);
-    const rawValue = carid; // 使用 carid.value 而不是 toRaw(carid)
-    let message = {
-        type: 'boardingMessage',
-        car_id: rawValue._rawValue,
-        boardingCount: 1, // 
-        time: new Date().toLocaleString(), // 
-    };
-        // 将新的呼叫信息添加到 store 中
-        webSocketStore.sendMessage(JSON.stringify(message));
+// function confirmInCar(){
+//     console.log("dafasf");
+//     console.log(carid);
+//     const rawValue = carid; // 使用 carid.value 而不是 toRaw(carid)
+//     let message = {
+//         type: 'boardingMessage',
+//         car_id: rawValue._rawValue,
+//         boardingCount: 1, // 
+//         time: new Date().toLocaleString(), // 
+//     };
+//         // 将新的呼叫信息添加到 store 中
+//         webSocketStore.sendMessage(JSON.stringify(message));
 
-    buyButtonVisible.value = !buyButtonVisible.value;
-    leaveButtonVisible.value=false;
-}
+//     buyButtonVisible.value = !buyButtonVisible.value;
+//     leaveButtonVisible.value=false;
+// }
 async function handleLogout() {
         const validation = await validateToken();
         if (!validation.valid) {
@@ -588,7 +584,7 @@ async function handleLogout() {
                 ElMessage.error("登出失败，请稍后再试");
             }
         }
-    }
+}
 </script>
 
 <style scoped>
