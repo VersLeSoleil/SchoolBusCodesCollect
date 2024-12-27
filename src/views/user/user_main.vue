@@ -10,8 +10,8 @@
                 </ElButton>
             </div>
             <div class="user-info">
-                <ElAvatar :src="userInfo.avatar" size="medium" />
-                <span class="user-name">{{ userInfo.name }}</span>
+                <ElAvatar :src="userStore.userInfo.avatar" size="medium" />
+                <span class="user-name">{{ userStore.userInfo.name }}</span>
                 <ElButton @click="handleLogout" type="danger" size="large" round>登出</ElButton>
             </div>
         </header>
@@ -21,12 +21,13 @@
         <button v-show="buyButtonVisible&&!leaveButtonVisible" @click="showCallBus" class="btn callBus">叫车</button>
         <button v-show="!buyButtonVisible" @click="showTicket" class="btn ticket">上车凭证</button>
         <button v-show="!buyButtonVisible" @click="confirmTicket" class="btn confirmTicket">确认上车</button>
+        <button v-show="!buyButtonVisible" @click="cancleTicket" class="btn cancelTicket">取消订单</button>
         <button v-show="leaveButtonVisible" @click="leaveCar" class="btn leaveCar">确认下车</button>
     </div>
     <user_ticket :visible="buyTicketVisible" @close="close" @openPayment="openPayment" :getTicket="getTicket" />
     <User_proveticket :visible="provideTicketVisible" @close1="close1" @confirmInCar="confirmInCar" :from="from" :dest="dest" :carid="carid" :buyTime="buyTime"/>
     <User_callBus :visible="callBusVisible" @close3="close3" @openPayment="openPayment" :getTicket="getTicket"/>
-    <User_payment :visible="paymentVisible" @confirmPay="confirmPay" @close2="close2" :from="from" :dest="dest"/>
+    <User_payment :visible="paymentVisible" :confirmPay="confirmPay" @close2="close2" :from="from" :dest="dest"/>
     <user_showjourney :visible="showjourneyVisible" @close_showjourney="close_showjourney" :getjourneyrecord="getjourneyrecord"/>
 </template>
 
@@ -45,15 +46,17 @@ import {
         ElAvatar,
         ElButton,
         ElMessageBox,
-        ElMessage
+        ElMessage,
     } from "element-plus";
 import "element-plus/dist/index.css";
 import {
         useApiBaseStore
     } from "@/stores/network"; // 导入令牌验证函数
-import logo from "@/assets/logo.png";
 import User_payment from './user_payment.vue';
 import User_callBus from './user_callBus.vue';
+
+import { useUserStore } from '@/stores/userStore';
+const userStore=useUserStore();
 
 import { useWebSocketStore } from '@/stores/webSocketStore';
 
@@ -82,16 +85,13 @@ watch(Message, (newMessages) => {
 }, { deep: true });
 
 
-const userInfo = ref({
-        name: "Richard喵~~~~",
-        avatar: logo,
-});
-
 let journeydata = ref([])
 let from = ref("榕园广场");
 let dest = ref("教学楼");
-let carid = ref("粤C11111");
+let carid = ref("粤C111111");
 let buyTime = ref();
+let leaveTime=ref();
+let driverid=ref();
 let buyButtonVisible = ref(true);
 let buyTicketVisible = ref(false);
 let provideTicketVisible = ref(false);
@@ -99,6 +99,9 @@ let paymentVisible=ref(false);
 let leaveButtonVisible=ref(false);
 let callBusVisible=ref(false);
 let showjourneyVisible = ref(false);
+let currentOrderID=ref();
+let currentPaymentID=ref();
+let currentPaymentMethod=ref("微信");
 onMounted(async () => {
         const validation = await validateToken();
         if (!validation.valid) {
@@ -112,7 +115,6 @@ function showBuyTickt() {
 function showCallBus(){
     callBusVisible.value=true;
 }
-
 function close() {
     buyTicketVisible.value = false;
 }
@@ -122,29 +124,158 @@ function close_showjourney(){
 function openPayment(){
     paymentVisible.value=true;
 }
-function getTicket(value1, value2, value3) {
-    from.value = value1;
-    dest.value = value2;
-    carid.value = value3;
+function getTicket(value1, value2, value3,value4) {
+    from.value = value1.value;
+    dest.value = value2.value;
+    carid.value = value3.value;
+    driverid.value=value4;
     buyTime.value = new Date().toLocaleString();
-    submitOrder();
-    // 购票后隐藏购票按钮
+    submitOrder().then(() => {
+      fetchCurrentOrder();
+    });
+    
+}
+function confirmPay(value){
+    buyButtonVisible.value = false; 
+    buyTicketVisible.value=false;
+    callBusVisible.value=false;
+    currentPaymentMethod=value;
+    console.log(currentPaymentMethod);
+    submitPayment().then(() => {
+      fetchCurrentPayment().then(() => {
+      ChangeOrder("待开始");
+      ChangePayment("成功");
+    });
+    });
 }
 
+function cancleTicket(){
+    ChangeOrder("已取消");
+    ChangePayment("已退款");
+    buyButtonVisible.value = true;
+    buyTicketVisible.value = false;
+    provideTicketVisible.value= false;
+    paymentVisible.value=false;
+    leaveButtonVisible.value=false;
+    callBusVisible.value=false;
+}
+async function fetchCurrentOrder() {
+  try {
+    //const apiBaseStore = useApiBaseStore();
+    //let endpoint = apiBaseStore.baseUrl + "/getDriverData"; 
+    let endpoint ="http://localhost:8888/getCurrentOrder";
+    let method = 'POST';
+    let requestBody = {
+      student_account:userStore.userInfo.id,
+      pickup_time:buyTime.value
+    };
+    // 发送请求到后端
+    const response = await fetch(endpoint, {
+      method: method,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(requestBody),  // 将请求体转为 JSON 格式
+    });
+
+    // 调试：打印响应状态码和响应内容
+    console.log('Response Status:', response.status);
+    console.log('Response Headers:', response.headers);
+    
+    // 如果响应状态不是200，返回错误信息
+    if (!response.ok) {
+      alert('请求失败，状态码：' + response.status);
+      const errorText = await response.text();
+      console.log('Error Response:', errorText);  // 打印返回的 HTML 或其他内容
+      return;
+    }
+
+    // 解析响应
+    const result = await response.json();
+    console.log('Response Data:', result);
+
+    // 处理成功与否
+    if (response.ok) {
+      // 司机数据成功返回，填充数据
+      currentOrderID.value=result.order_id;
+
+      alert('取得订单信息成功！');
+    } else {
+      // 错误处理
+      alert(result.error || '取得订单信息失败！');
+    }
+  } catch (error) {
+    console.error('提交用户ID失败:', error);
+    alert('提交用户ID失败，请稍后再试！');
+  }
+}
+async function fetchCurrentPayment() {
+  try {
+    //const apiBaseStore = useApiBaseStore();
+    //let endpoint = apiBaseStore.baseUrl + "/getDriverData"; 
+    let endpoint ="http://localhost:8888/getCurrentPayment";
+    let method = 'POST';
+    let requestBody = {
+      order_id:currentOrderID.value,
+      payment_time:buyTime.value
+    };
+    // 发送请求到后端
+    const response = await fetch(endpoint, {
+      method: method,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(requestBody),  // 将请求体转为 JSON 格式
+    });
+
+    // 调试：打印响应状态码和响应内容
+    console.log('Response Status:', response.status);
+    console.log('Response Headers:', response.headers);
+    
+    // 如果响应状态不是200，返回错误信息
+    if (!response.ok) {
+      alert('请求失败，状态码：' + response.status);
+      const errorText = await response.text();
+      console.log('Error Response:', errorText);  // 打印返回的 HTML 或其他内容
+      return;
+    }
+
+    // 解析响应
+    const result = await response.json();
+    console.log('Response Data:', result);
+
+    // 处理成功与否
+    if (response.ok) {
+      // 司机数据成功返回，填充数据
+      currentPaymentID.value=result.payment_id;
+      alert('取得支付信息成功！');
+    } else {
+      // 错误处理
+      alert(result.error || '取得支付信息失败！');
+    }
+  } catch (error) {
+    console.error('提交用户ID失败:', error);
+    alert('提交用户ID失败，请稍后再试！');
+  }
+}
 async function submitOrder() {
   try {
-    const apiBaseStore = useApiBaseStore();
-    let endpoint = apiBaseStore + "/submitUserOrder";
+    // const apiBaseStore = useApiBaseStore();
+    let endpoint = "http://localhost:8888" + "/submitUserOrder";
     let method = "POST";
     let requestBody = {
-      order_id: 111111,
-      //driver_avatar:user.avatar,
-      student_id:21123,
-      pickup_station_id:123123,
-      dropoff_station_id:1231231,
+      order_id: null, 
+      student_account:userStore.userInfo.id,
+      driver_id:driverid.value,
+      car_id:carid.value,
+      pickup_station_id:0,
+      dropoff_station_id:0,
+      pickup_station_name:from.value,
+      dropoff_station_name:dest.value,
       pickup_time:buyTime.value,
+      dropoff_time:null,  
       status:"待付款",
-      payment_id:12321231
+      payment_id:null
     }
     const response = await fetch(endpoint, {
       method: method,
@@ -167,6 +298,155 @@ async function submitOrder() {
       alert("提交失败，请稍后再试！");
     }
 }
+async function ChangeOrder(value) {
+  try {
+    // const apiBaseStore = useApiBaseStore();
+    let endpoint = "http://localhost:8888" + "/changeOrder";
+    let method = "POST";
+    let requestBody = {
+      order_id: currentOrderID.value, 
+      student_account:userStore.userInfo.id,
+      driver_id:driverid.value,
+      car_id:carid.value,
+      pickup_station_id:0,
+      dropoff_station_id:0,
+      pickup_time:buyTime.value,
+      pickup_station_name:from.value,
+      dropoff_station_name:dest.value,
+      dropoff_time:null,
+      status:value,
+      payment_id:currentPaymentID.value
+    }
+    const response = await fetch(endpoint, {
+      method: method,
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(requestBody),
+    });
+    console.log(JSON.stringify(requestBody));
+    const result = await response.json();
+    if (response.ok) {
+      // 信息提交成功
+      alert("操作成功！");
+    } else {
+      // 错误处理
+      alert(result.message || "操作失败，请检查输入！");
+    }
+   }catch (error) {
+      console.error("提交失败:", error);
+      alert("提交失败，请稍后再试！");
+    }
+}
+async function ChangeLeaveTime(value) {
+  try {
+    // const apiBaseStore = useApiBaseStore();
+    let endpoint = "http://localhost:8888" + "/changeLeaveTime";
+    let method = "POST";
+    let requestBody = {
+      order_id:currentOrderID.value, 
+      student_account:userStore.userInfo.id,
+      driver_id:driverid.value,
+      car_id:carid.value,
+      pickup_station_id:0,
+      dropoff_station_id:0,
+      pickup_station_name:from.value,
+      dropoff_station_name:dest.value,
+      pickup_time:buyTime.value,
+      dropoff_time:value,
+      status:null,
+      payment_id:null
+    }
+    const response = await fetch(endpoint, {
+      method: method,
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(requestBody),
+    });
+    console.log(JSON.stringify(requestBody));
+    const result = await response.json();
+    if (response.ok) {
+      // 信息提交成功
+      alert("操作成功！");
+    } else {
+      // 错误处理
+      alert(result.message || "操作失败，请检查输入！");
+    }
+   }catch (error) {
+      console.error("提交失败:", error);
+      alert("提交失败，请稍后再试！");
+    }
+}
+async function submitPayment() {
+  try {
+    // const apiBaseStore = useApiBaseStore();
+    let endpoint = "http://localhost:8888" + "/submitUserPayment";
+    let method = "POST";
+    let requestBody = {
+      payment_id:null,
+      order_id: currentOrderID.value, 
+      vehicle_id:carid.value,
+      payment_amount:123,
+      payment_method:currentPaymentMethod.value,
+      payment_time:buyTime.value,
+      payment_status:"失败"
+    }
+    const response = await fetch(endpoint, {
+      method: method,
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(requestBody),
+    });
+    console.log(JSON.stringify(requestBody));
+    const result = await response.json();
+    if (response.ok) {
+      // 信息提交成功
+      alert("操作成功！");
+    } else {
+      // 错误处理
+      alert(result.message || "操作失败，请检查输入！");
+    }
+   }catch (error) {
+      console.error("提交失败:", error);
+      alert("提交失败，请稍后再试！");
+    }
+}
+async function ChangePayment(value) {
+  try {
+    // const apiBaseStore = useApiBaseStore();
+    let endpoint = "http://localhost:8888" + "/changePayment";
+    let method = "POST";
+    let requestBody = {
+      payment_id:currentPaymentID.value,
+      order_id: currentOrderID.value, 
+      vehicle_id:carid.value,
+      payment_amount:111,
+      payment_method:currentPaymentMethod.value,
+      payment_time:buyTime.value,
+      payment_status:value
+    }
+    const response = await fetch(endpoint, {
+      method: method,
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(requestBody),
+    });
+    console.log(JSON.stringify(requestBody));
+    const result = await response.json();
+    if (response.ok) {
+      // 信息提交成功
+      alert("操作成功！");
+    } else {
+      // 错误处理
+      alert(result.message || "操作失败，请检查输入！");
+    }
+   }catch (error) {
+      console.error("提交失败:", error);
+      alert("提交失败，请稍后再试！");
+    }
 
 function confirmPay(){
     const rawValue = carid.value; // 使用 carid.value 而不是 toRaw(carid)
@@ -182,11 +462,9 @@ function confirmPay(){
     buyTicketVisible.value=false;
     callBusVisible.value=false;
 }
-
 function showTicket() {
     provideTicketVisible.value = true;
 }
-
 function close1() {
     provideTicketVisible.value = false;
 }
@@ -228,6 +506,7 @@ async function getjourneyrecord(){
 function confirmTicket() {
     buyButtonVisible.value=true;
     leaveButtonVisible.value=true;
+    ChangeOrder("行程中");
     // 这里可以添加其他逻辑，例如确认上车后执行的操作
     console.log(carid);
     const rawValue = carid.value; // 使用 carid.value 而不是 toRaw(carid)
@@ -243,7 +522,14 @@ function confirmTicket() {
 function leaveCar(){
     buyButtonVisible.value=true;
     leaveButtonVisible.value=false;
-
+    leaveTime.value = new Date().toLocaleString();
+    ChangeOrder("已结束");
+    ChangeLeaveTime(leaveTime.value);
+}
+function confirmInCar(){
+    buyButtonVisible.value = true;
+    leaveButtonVisible.value=true;
+    ChangeOrder("行程中");
     const rawValue = carid.value; 
     let message = {
         type: 'alightingMessage',
@@ -269,8 +555,6 @@ function confirmInCar(){
 
     buyButtonVisible.value = !buyButtonVisible.value;
     leaveButtonVisible.value=false;
-
-
 }
 async function handleLogout() {
         const validation = await validateToken();

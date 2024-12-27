@@ -7,10 +7,10 @@
                 </h2>
                 <!-- 横向菜单：使用 ElTabs 实现 -->
                 <el-tabs v-model="selectedPaymentMethod" @tab-click="handleTabClick">
-                    <el-tab-pane label="微信支付" name="wechat">
+                    <el-tab-pane label="微信支付" name="微信支付">
                         <img v-if="showQrCode" :src="wechatQrCodeUrl" alt="微信支付二维码" class="qr-code" />
                     </el-tab-pane>
-                    <el-tab-pane label="支付宝支付" name="alipay">
+                    <el-tab-pane label="支付宝支付" name="支付宝支付">
                         <img v-if="showQrCode" :src="alipayQrCodeUrl" alt="支付宝支付二维码" class="qr-code" />
                     </el-tab-pane>
                 </el-tabs>
@@ -28,7 +28,7 @@
   <script setup>
   import { defineProps, defineEmits ,ref} from 'vue';
   import { ElTabs, ElTabPane ,ElMessage} from 'element-plus';
-  const selectedPaymentMethod = ref('wechat'); // 默认选择微信支付
+  const selectedPaymentMethod = ref("微信支付"); // 默认选择微信支付
   const wechatQrCodeUrl = ref();
   const alipayQrCodeUrl = ref();
   // 定义 props
@@ -37,6 +37,10 @@
     from: String,
     dest: String,
     carid:String,
+    confirmPay: {
+    type: Function,
+    required: true, 
+  }
   });
   
   // 定义 emits
@@ -46,6 +50,7 @@
     emit('confirmPay');
     ElMessage.success("支付成功！");
     closePopup(); // 关闭弹窗
+    props.confirmPay(selectedPaymentMethod);
   }
   // 确定逻辑
   function cancelPayment() {
