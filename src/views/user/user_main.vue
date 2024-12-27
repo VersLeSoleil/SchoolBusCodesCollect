@@ -10,8 +10,8 @@
                 </ElButton>
             </div>
             <div class="user-info">
-                <ElAvatar :src="userInfo.avatar" size="medium" />
-                <span class="user-name">{{ userInfo.name }}</span>
+                <ElAvatar :src="userStore.userInfo.avatar" size="medium" />
+                <span class="user-name">{{ userStore.userInfo.name }}</span>
                 <ElButton @click="handleLogout" type="danger" size="large" round>登出</ElButton>
             </div>
         </header>
@@ -50,16 +50,10 @@ import "element-plus/dist/index.css";
 import {
         useApiBaseStore
     } from "@/stores/network"; // 导入令牌验证函数
-import logo from"@/assets/logo.png"
 import User_payment from './user_payment.vue';
 import User_callBus from './user_callBus.vue';
-const userInfo = ref({
-        id:123456,
-        name: "Richard喵~~~~",
-        avatar: logo,
-});
-// import { useUserStore } from '@/stores/userStore';
-// const userStore=useUserStore();
+import { useUserStore } from '@/stores/userStore';
+ const userStore=useUserStore();
 
 let journeydata = ref([])
 let from = ref("榕园广场");
@@ -142,7 +136,7 @@ async function fetchCurrentOrder() {
     let endpoint ="http://localhost:8888/getCurrentOrder";
     let method = 'POST';
     let requestBody = {
-      student_account:userInfo.value.id,
+      student_account:userStore.userInfo.id,
       pickup_time:buyTime.value
     };
     // 发送请求到后端
@@ -241,7 +235,7 @@ async function submitOrder() {
     let method = "POST";
     let requestBody = {
       order_id: null, 
-      student_account:userInfo.value.id,
+      student_account:userStore.userInfo.id,
       driver_id:driverid.value,
       car_id:carid.value,
       pickup_station_id:0,
@@ -281,7 +275,7 @@ async function ChangeOrder(value) {
     let method = "POST";
     let requestBody = {
       order_id: currentOrderID.value, 
-      student_account:userInfo.value.id,
+      student_account:userStore.userInfo.id,
       driver_id:driverid.value,
       car_id:carid.value,
       pickup_station_id:0,
@@ -321,7 +315,7 @@ async function ChangeLeaveTime(value) {
     let method = "POST";
     let requestBody = {
       order_id:currentOrderID.value, 
-      student_account:userInfo.value.id,
+      student_account:userStore.userInfo.id,
       driver_id:driverid.value,
       car_id:carid.value,
       pickup_station_id:0,
