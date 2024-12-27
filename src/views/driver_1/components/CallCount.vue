@@ -11,9 +11,9 @@
       >
         <p>
           <strong>呼叫信息：</strong> 从 
-          [{{ message.from.name }}] 
+          [{{ message.from_str }}] 
           到 
-          [{{ message.to.name }}]
+          [{{ message.to_str }}]
         </p>
         <button 
           v-if="!message.isAccepted" 
@@ -49,7 +49,9 @@
   // 發送接收消息到後端
   const payload = {
       type: 'call_accept',
-      id: message.id,
+      driver_id: localStorage.getItem("id"),
+      car_id: localStorage.getItem("car_id"),
+      passenger_id: message.passenger_id,
       status: 'accepted',
     };
     webSocketStore.sendMessage(JSON.stringify(payload));
@@ -74,7 +76,7 @@
       webSocketStore.sendMessage(JSON.stringify(payload));
 
       console.log("呼叫已完成");
-    }, 5000); // 模擬 5 秒後到達
+    }, 10000); // 模擬 5 秒後到達
   };
 </script>
 

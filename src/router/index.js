@@ -74,7 +74,7 @@ const routes = [
         name: 'test-admin',
         component: test_admin_map,
         meta: {
-            requiredRoles: [0, 2]  // admin 和 driver 都能访问
+            requiredRoles: [0, 1, 2]  // admin 和 driver 都能访问
         },
     },
     {

@@ -298,7 +298,7 @@ export default {
     // 初始化 WebSocket
     initWebSocket (){        
       const webSocketStore = useWebSocketStore();
-      webSocketStore.initWebSocket("ws://localhost:8888/ws");
+      webSocketStore.initWebSocket(localStorage.getItem("webprefixURL"));
     },
         // 可以添加其他处理方法，如发送消息
     sendMessage(message) {
@@ -308,7 +308,8 @@ export default {
   },
   created() {
     const webSocketStore = useWebSocketStore();
-    webSocketStore.initWebSocket(); // 初始化 WebSocket
+    webSocketStore.initWebSocket(localStorage.getItem("webprefixURL"));
+    // webSocketStore.initWebSocket(); // 初始化 WebSocket
   },
     mounted() {
         window._AMapSecurityConfig = {

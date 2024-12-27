@@ -34,11 +34,13 @@
 import user_ticket from './user_ticket.vue';
 import user_showjourney from './components/user_showjourney.vue';
 import router from '@/router';
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed, watch } from 'vue';
 import User_proveticket from './user_proveticket.vue';
 import axios from "axios";
 import {validateToken} from "@/auth.js";
-import user_map from './user_map.vue';
+// import user_map from './user_map.vue';
+import user_map from '@/views/components/Map-user.vue';
+
 import {
         ElAvatar,
         ElButton,
@@ -52,6 +54,34 @@ import {
 import logo from "@/assets/logo.png";
 import User_payment from './user_payment.vue';
 import User_callBus from './user_callBus.vue';
+
+import { useWebSocketStore } from '@/stores/webSocketStore';
+
+const webSocketStore = useWebSocketStore();
+
+// 使用 computed 來確保 Message 是響應式的
+const Message = computed(() => webSocketStore.messages);
+
+// 监听 Message 队列的变化
+watch(Message, (newMessages) => {
+  // 遍历消息队列，处理类型为 'case_accept' 的消息
+  for (let i = 0; i < newMessages.length; i++) {
+    const message = newMessages[i];
+
+    // 判断消息类型
+    if (message.type === 'call_accept') {
+      // 进行相应的处理
+      carid.value = message.car_id
+      console.log('Processing case_accept message:', message);
+
+      // 处理完后删除该条消息
+      webSocketStore.messages.splice(i, 1); // 从队列中移除该条消息
+      break; // 如果只需要处理一条符合条件的消息，可以跳出循环
+    }
+  }
+}, { deep: true });
+
+
 const userInfo = ref({
         name: "Richard喵~~~~",
         avatar: logo,
@@ -139,6 +169,15 @@ async function submitOrder() {
 }
 
 function confirmPay(){
+    const rawValue = carid.value; // 使用 carid.value 而不是 toRaw(carid)
+    let message = {
+        type: 'payment_user_count',
+        car_id: rawValue._rawValue,
+        count: 1, // 付款人数
+        time: new Date().toLocaleString(), // 付款时间
+    };
+        // 将新的呼叫信息添加到 store 中
+        webSocketStore.sendMessage(JSON.stringify(message));
     buyButtonVisible.value = false; 
     buyTicketVisible.value=false;
     callBusVisible.value=false;
@@ -190,14 +229,48 @@ function confirmTicket() {
     buyButtonVisible.value=true;
     leaveButtonVisible.value=true;
     // 这里可以添加其他逻辑，例如确认上车后执行的操作
+    console.log(carid);
+    const rawValue = carid.value; // 使用 carid.value 而不是 toRaw(carid)
+    let message = {
+        type: 'boardingMessage',
+        car_id: rawValue._rawValue,
+        boardingCount: 1, // 
+        time: new Date().toLocaleString(), // 
+    };
+        // 将新的呼叫信息添加到 store 中
+        webSocketStore.sendMessage(JSON.stringify(message));
 }
 function leaveCar(){
     buyButtonVisible.value=true;
     leaveButtonVisible.value=false;
+
+    const rawValue = carid.value; 
+    let message = {
+        type: 'alightingMessage',
+        car_id: rawValue._rawValue,
+        alightingCount: 1, // 
+        time: new Date().toLocaleString(), // 
+    };
+        // 将新的呼叫信息添加到 store 中
+        webSocketStore.sendMessage(JSON.stringify(message));
 }
 function confirmInCar(){
+    console.log("dafasf");
+    console.log(carid);
+    const rawValue = carid; // 使用 carid.value 而不是 toRaw(carid)
+    let message = {
+        type: 'boardingMessage',
+        car_id: rawValue._rawValue,
+        boardingCount: 1, // 
+        time: new Date().toLocaleString(), // 
+    };
+        // 将新的呼叫信息添加到 store 中
+        webSocketStore.sendMessage(JSON.stringify(message));
+
     buyButtonVisible.value = !buyButtonVisible.value;
     leaveButtonVisible.value=false;
+
+
 }
 async function handleLogout() {
         const validation = await validateToken();
