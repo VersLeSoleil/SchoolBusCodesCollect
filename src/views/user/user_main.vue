@@ -27,7 +27,7 @@
     <user_ticket :visible="buyTicketVisible" @close="close" @openPayment="openPayment" :getTicket="getTicket" />
     <User_proveticket :visible="provideTicketVisible" @close1="close1" @confirmInCar="confirmInCar" :from="from" :dest="dest" :carid="carid" :buyTime="buyTime"/>
     <User_callBus :visible="callBusVisible" @close3="close3" @openPayment="openPayment" :getTicket="getTicket"/>
-    <User_payment :visible="paymentVisible" @confirmPay="confirmPay" @close2="close2" :from="from" :dest="dest"/>
+    <User_payment :visible="paymentVisible" :confirmPay="confirmPay" @close2="close2" :from="from" :dest="dest"/>
     <user_showjourney :visible="showjourneyVisible" @close_showjourney="close_showjourney" :getjourneyrecord="getjourneyrecord"/>
 </template>
 
@@ -50,7 +50,7 @@ import "element-plus/dist/index.css";
 import {
         useApiBaseStore
     } from "@/stores/network"; // 导入令牌验证函数
-import logo from "@/assets/logo.png";
+import logo from"@/assets/logo.png"
 import User_payment from './user_payment.vue';
 import User_callBus from './user_callBus.vue';
 const userInfo = ref({
@@ -58,6 +58,8 @@ const userInfo = ref({
         name: "Richard喵~~~~",
         avatar: logo,
 });
+// import { useUserStore } from '@/stores/userStore';
+// const userStore=useUserStore();
 
 let journeydata = ref([])
 let from = ref("榕园广场");
@@ -65,6 +67,7 @@ let dest = ref("教学楼");
 let carid = ref("粤C111111");
 let buyTime = ref();
 let leaveTime=ref();
+let driverid=ref();
 let buyButtonVisible = ref(true);
 let buyTicketVisible = ref(false);
 let provideTicketVisible = ref(false);
@@ -72,8 +75,8 @@ let paymentVisible=ref(false);
 let leaveButtonVisible=ref(false);
 let callBusVisible=ref(false);
 let showjourneyVisible = ref(false);
-let currentOrderID=ref(1);
-let currentPaymentID=ref(4);
+let currentOrderID=ref();
+let currentPaymentID=ref();
 let currentPaymentMethod=ref("微信");
 onMounted(async () => {
         const validation = await validateToken();
@@ -97,12 +100,16 @@ function close_showjourney(){
 function openPayment(){
     paymentVisible.value=true;
 }
-function getTicket(value1, value2, value3) {
+function getTicket(value1, value2, value3,value4) {
     from.value = value1.value;
     dest.value = value2.value;
     carid.value = value3.value;
+    driverid.value=value4;
     buyTime.value = new Date().toLocaleString();
-    submitOrder();
+    submitOrder().then(() => {
+      fetchCurrentOrder();
+    });
+    
 }
 function confirmPay(value){
     buyButtonVisible.value = false; 
@@ -110,10 +117,14 @@ function confirmPay(value){
     callBusVisible.value=false;
     currentPaymentMethod=value;
     console.log(currentPaymentMethod);
-    submitPayment();
-    ChangeOrder("待开始");
-    ChangePayment("成功");
+    submitPayment().then(() => {
+      fetchCurrentPayment().then(() => {
+      ChangeOrder("待开始");
+      ChangePayment("成功");
+    });
+    });
 }
+
 function cancleTicket(){
     ChangeOrder("已取消");
     ChangePayment("已退款");
@@ -124,6 +135,105 @@ function cancleTicket(){
     leaveButtonVisible.value=false;
     callBusVisible.value=false;
 }
+async function fetchCurrentOrder() {
+  try {
+    //const apiBaseStore = useApiBaseStore();
+    //let endpoint = apiBaseStore.baseUrl + "/getDriverData"; 
+    let endpoint ="http://localhost:8888/getCurrentOrder";
+    let method = 'POST';
+    let requestBody = {
+      student_account:userInfo.value.id,
+      pickup_time:buyTime.value
+    };
+    // 发送请求到后端
+    const response = await fetch(endpoint, {
+      method: method,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(requestBody),  // 将请求体转为 JSON 格式
+    });
+
+    // 调试：打印响应状态码和响应内容
+    console.log('Response Status:', response.status);
+    console.log('Response Headers:', response.headers);
+    
+    // 如果响应状态不是200，返回错误信息
+    if (!response.ok) {
+      alert('请求失败，状态码：' + response.status);
+      const errorText = await response.text();
+      console.log('Error Response:', errorText);  // 打印返回的 HTML 或其他内容
+      return;
+    }
+
+    // 解析响应
+    const result = await response.json();
+    console.log('Response Data:', result);
+
+    // 处理成功与否
+    if (response.ok) {
+      // 司机数据成功返回，填充数据
+      currentOrderID.value=result.order_id;
+
+      alert('取得订单信息成功！');
+    } else {
+      // 错误处理
+      alert(result.error || '取得订单信息失败！');
+    }
+  } catch (error) {
+    console.error('提交用户ID失败:', error);
+    alert('提交用户ID失败，请稍后再试！');
+  }
+}
+async function fetchCurrentPayment() {
+  try {
+    //const apiBaseStore = useApiBaseStore();
+    //let endpoint = apiBaseStore.baseUrl + "/getDriverData"; 
+    let endpoint ="http://localhost:8888/getCurrentPayment";
+    let method = 'POST';
+    let requestBody = {
+      order_id:currentOrderID.value,
+      payment_time:buyTime.value
+    };
+    // 发送请求到后端
+    const response = await fetch(endpoint, {
+      method: method,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(requestBody),  // 将请求体转为 JSON 格式
+    });
+
+    // 调试：打印响应状态码和响应内容
+    console.log('Response Status:', response.status);
+    console.log('Response Headers:', response.headers);
+    
+    // 如果响应状态不是200，返回错误信息
+    if (!response.ok) {
+      alert('请求失败，状态码：' + response.status);
+      const errorText = await response.text();
+      console.log('Error Response:', errorText);  // 打印返回的 HTML 或其他内容
+      return;
+    }
+
+    // 解析响应
+    const result = await response.json();
+    console.log('Response Data:', result);
+
+    // 处理成功与否
+    if (response.ok) {
+      // 司机数据成功返回，填充数据
+      currentPaymentID.value=result.payment_id;
+      alert('取得支付信息成功！');
+    } else {
+      // 错误处理
+      alert(result.error || '取得支付信息失败！');
+    }
+  } catch (error) {
+    console.error('提交用户ID失败:', error);
+    alert('提交用户ID失败，请稍后再试！');
+  }
+}
 async function submitOrder() {
   try {
     // const apiBaseStore = useApiBaseStore();
@@ -131,16 +241,17 @@ async function submitOrder() {
     let method = "POST";
     let requestBody = {
       order_id: null, 
-      student_id:userInfo.value.id,
+      student_account:userInfo.value.id,
+      driver_id:driverid.value,
       car_id:carid.value,
-      pickup_station_id:123123,
-      dropoff_station_id:1231231,
+      pickup_station_id:0,
+      dropoff_station_id:0,
       pickup_station_name:from.value,
       dropoff_station_name:dest.value,
       pickup_time:buyTime.value,
       dropoff_time:null,  
       status:"待付款",
-      payment_id:currentOrderID.value
+      payment_id:null
     }
     const response = await fetch(endpoint, {
       method: method,
@@ -170,16 +281,17 @@ async function ChangeOrder(value) {
     let method = "POST";
     let requestBody = {
       order_id: currentOrderID.value, 
-      student_id:userInfo.value.id,
+      student_account:userInfo.value.id,
+      driver_id:driverid.value,
       car_id:carid.value,
-      pickup_station_id:123123,
-      dropoff_station_id:1231231,
+      pickup_station_id:0,
+      dropoff_station_id:0,
       pickup_time:buyTime.value,
       pickup_station_name:from.value,
       dropoff_station_name:dest.value,
       dropoff_time:null,
       status:value,
-      payment_id:currentOrderID.value
+      payment_id:currentPaymentID.value
     }
     const response = await fetch(endpoint, {
       method: method,
@@ -208,17 +320,18 @@ async function ChangeLeaveTime(value) {
     let endpoint = "http://localhost:8888" + "/changeLeaveTime";
     let method = "POST";
     let requestBody = {
-      order_id: currentOrderID.value, 
-      student_id:userInfo.value.id,
+      order_id:currentOrderID.value, 
+      student_account:userInfo.value.id,
+      driver_id:driverid.value,
       car_id:carid.value,
-      pickup_station_id:123123,
-      dropoff_station_id:1231231,
-      pickup_time:buyTime.value,
+      pickup_station_id:0,
+      dropoff_station_id:0,
       pickup_station_name:from.value,
       dropoff_station_name:dest.value,
+      pickup_time:buyTime.value,
       dropoff_time:value,
-      status:value,
-      payment_id:currentOrderID.value
+      status:null,
+      payment_id:null
     }
     const response = await fetch(endpoint, {
       method: method,

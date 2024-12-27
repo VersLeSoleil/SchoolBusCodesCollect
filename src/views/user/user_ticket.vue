@@ -10,23 +10,21 @@
           <p><strong>出发地：</strong>
             <select class="select1" v-model="select_from">
               <option value="" disabled selected>请选择...</option>
-              <option value="榕园广场">榕园广场</option>
-              <option value="荔园广场">荔园广场</option>
-              <option value="教学楼">教学楼</option></select></p>
+              <option v-for="station in busStationData" :key="station.name" :value="station.name">{{ station.name }}</option>
+            </select>
+          </p>
 
           <p><strong>目的地：</strong>
             <select class="select1" v-model="select_dest">
               <option value="" disabled selected>请选择...</option>
-              <option value="榕园广场">榕园广场</option>
-              <option value="荔园广场">荔园广场</option>
-              <option value="教学楼">教学楼</option></select></p>
+              <option v-for="station in busStationData" :key="station.name" :value="station.name">{{ station.name }}</option>
+            </select>
+          </p>
           <p>
             <strong>车牌号：</strong>
             <select class="select3" v-model="select_carID">
               <option value="" disabled selected>请选择...</option>
-              <option value="粤C11111">粤C11111</option>
-              <option value="粤C11112">粤C11112</option>
-              <option value="粤C11113">粤C11113</option></select>
+              <option v-for="work in work_shift" :key="work.car_id" :value="work.car_id">{{ work.car_id }}</option></select>
           </p>
           <p>
               <button @click="cancel" class="cancel">取消</button>
@@ -41,10 +39,20 @@
 
 <script setup>
 import { defineProps, defineEmits } from 'vue';
-import {ref} from 'vue';
+import {ref,onMounted,computed} from 'vue';
+import busStationData from "@/assets/bus_station_data.json";
 let select_from=ref();
 let select_dest=ref();
-let select_carID=ref();
+let work_shift = ref();
+let select_carID = ref(111);
+let driverIDs = computed(() => {
+if (!Array.isArray(work_shift.value)) {
+        return 0;
+}
+return work_shift.value
+        .filter(work_shift => work_shift.car_id === select_carID.value)
+        .map(work_shift => work_shift.driver_id);
+    });
 // 定义 props
 const props = defineProps({
   visible: {
@@ -56,7 +64,55 @@ const props = defineProps({
     required: true, 
   }
 });
+onMounted(fetchWorkShift);
+async function fetchWorkShift() {
+  try {
+    //const apiBaseStore = useApiBaseStore();
+    //let endpoint = apiBaseStore.baseUrl + "/getDriverData"; 
+    let endpoint ="http://localhost:8888/getWorkShift";
+    let method = 'POST';
+    let requestBody = {
+        current_time:new Date().toLocaleString()
+    };
+    // 发送请求到后端
+    const response = await fetch(endpoint, {
+      method: method,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(requestBody),  // 将请求体转为 JSON 格式
+    });
 
+    // 调试：打印响应状态码和响应内容
+    console.log('Response Status:', response.status);
+    console.log('Response Headers:', response.headers);
+    
+    // 如果响应状态不是200，返回错误信息
+    if (!response.ok) {
+      alert('请求失败，状态码：' + response.status);
+      const errorText = await response.text();
+      console.log('Error Response:', errorText);  // 打印返回的 HTML 或其他内容
+      return;
+    }
+
+    // 解析响应
+    const result = await response.json();
+    console.log('Response Data:', result);
+
+    // 处理成功与否
+    if (response.ok) {
+      // 司机数据成功返回，填充数据
+      work_shift.value=result;
+      alert('取得工作信息成功！');
+    } else {
+      // 错误处理
+      alert(result.error || '取得工作信息失败！');
+    }
+  } catch (error) {
+    console.error('提交时间失败:', error);
+    alert('提交时间失败，请稍后再试！');
+  }
+}
 // 定义 emits
 const emit = defineEmits(['close','openPayment']);
 // 购票逻辑（这里暂时没有实现具体逻辑）
@@ -68,7 +124,9 @@ function cancel() {
 function confirm() {
   console.log('确定功能触发');
   emit('openPayment');
-  props.getTicket(select_from,select_dest,select_carID);
+  fetchWorkShift().then(()=>{
+    props.getTicket(select_from,select_dest,select_carID, parseInt(driverIDs.value[0]));
+  })
 }
 
 // 关闭弹窗
