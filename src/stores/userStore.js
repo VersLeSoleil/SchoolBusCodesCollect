@@ -47,7 +47,7 @@ export const useUserStore = defineStore('user', {
                 console.log(response.data);
                 if (response.data) {
                     this.userInfo.name = response.data.student_name;
-                    this.userInfo.account = response.data.student_account;
+                    this.userInfo.student_account = response.data.student_account;
                     this.userInfo.grade = response.data.grade;
                     this.userInfo.major = response.data.major;
                     this.userInfo.studentId = response.data.student_number;

@@ -266,7 +266,7 @@ export default {
                 });
               } else if (response.data.role === 1) {
                 this.$router.push({
-                  name: 'user-person',
+                  name: 'user-main',
                 });
               } else if (response.data.role === 2) {
                 this.$router.push({
@@ -302,12 +302,12 @@ export default {
         apiBaseStore.switchToLocal();
         localStorage.setItem('prefixURL', apiBaseStore.baseUrl);
         localStorage.setItem('webprefixURL', apiBaseStore.webBaseUrl);
-        console.log(apiBaseStore.webBaseUrl);
+        // console.log(apiBaseStore.webBaseUrl);
       } else {
         apiBaseStore.switchToDeployed();
         localStorage.setItem('prefixURL', apiBaseStore.baseUrl);
         localStorage.setItem('webprefixURL', apiBaseStore.webBaseUrl);
-        console.log(apiBaseStore.webBaseUrl);
+        // console.log(apiBaseStore.webBaseUrl);
       }
       
       this.isUsingDeployed = !this.isUsingDeployed;

@@ -27,7 +27,7 @@
 
 <style scoped>
   .user-notice {
-    padding: 60px;
+    padding: 23px;
     background-color: #f5f5f5;
     border-radius: 10px;
     max-width: 800px;
@@ -35,6 +35,7 @@
     font-family: 'Arial', sans-serif;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
     position: relative;
+    animation: fadeIn 0.5s ease-in-out;
   }
 
   .title {
@@ -80,4 +81,15 @@
     font-size: 16px;
     color: #888;
   }
+
+  @keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
 </style>
