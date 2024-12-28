@@ -10,14 +10,14 @@
           <p><strong>出发地：</strong>
             <select class="select1" v-model="select_from">
               <option value="" disabled selected>请选择...</option>
-              <option v-for="station in busStationData" :key="station.name" :value="station.name">{{ station.name }}</option>
+              <option v-for="station in sites" :key="station.name" :value="station.name">{{ station.name }}</option>
             </select>
           </p>
 
           <p><strong>目的地：</strong>
             <select class="select1" v-model="select_dest">
               <option value="" disabled selected>请选择...</option>
-              <option v-for="station in busStationData" :key="station.name" :value="station.name">{{ station.name }}</option>
+              <option v-for="station in sites" :key="station.name" :value="station.name">{{ station.name }}</option>
             </select>
           </p>
           <p>
@@ -40,7 +40,9 @@
 <script setup>
 import { defineProps, defineEmits } from 'vue';
 import {ref,onMounted,computed} from 'vue';
-import busStationData from "@/assets/bus_station_data.json";
+// import sites from "@/assets/bus_station_data.json";
+
+
 let select_from=ref();
 let select_dest=ref();
 let work_shift = ref();
@@ -62,7 +64,11 @@ const props = defineProps({
   getTicket: {
     type: Function,
     required: true, 
-  }
+  },
+  sites: {
+    type: Array,
+    required: true,
+  },
 });
 onMounted(fetchWorkShift);
 async function fetchWorkShift() {

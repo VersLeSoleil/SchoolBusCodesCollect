@@ -16,7 +16,7 @@
             </div>
         </header>
     <div class="app-container">  
-        <user_map/> 
+        <user_map @updateSites="updateSites"/> 
         <button v-show="buyButtonVisible&&!leaveButtonVisible" @click="showBuyTickt" class="btn buyTicket">购票</button>
         <button v-show="buyButtonVisible&&!leaveButtonVisible" @click="showCallBus" class="btn callBus">叫车</button>
         <button v-show="!buyButtonVisible" @click="showTicket" class="btn ticket">上车凭证</button>
@@ -24,9 +24,9 @@
         <button v-show="!buyButtonVisible" @click="cancleTicket" class="btn cancelTicket">取消订单</button>
         <button v-show="leaveButtonVisible" @click="leaveCar" class="btn leaveCar">确认下车</button>
     </div>
-    <user_ticket :visible="buyTicketVisible" @close="close" @openPayment="openPayment" :getTicket="getTicket" />
+    <user_ticket :visible="buyTicketVisible" :sites="sites" @close="close" @openPayment="openPayment" :getTicket="getTicket" />
     <User_proveticket :visible="provideTicketVisible" @close1="close1" @confirmInCar="confirmInCar" :from="from" :dest="dest" :carid="carid" :buyTime="buyTime"/>
-    <User_callBus :visible="callBusVisible" @close3="close3" @openPayment="openPayment" :getTicket="getTicket"/>
+    <User_callBus :visible="callBusVisible" :sites="sites" @close3="close3" @openPayment="openPayment" :getTicket="getTicket"/>
     <User_payment :visible="paymentVisible" :confirmPay="confirmPay" @close2="close2" :from="from" :dest="dest"/>
     <user_showjourney :visible="showjourneyVisible" @close_showjourney="close_showjourney" :getjourneyrecord="getjourneyrecord"/>
 </template>
@@ -39,8 +39,8 @@ import { ref, onMounted, computed, watch } from 'vue';
 import User_proveticket from './user_proveticket.vue';
 import axios from "axios";
 import {validateToken} from "@/auth.js";
-// import user_map from './user_map.vue';
-import user_map from '@/views/components/Map-user.vue';
+import user_map from './user_map.vue';
+// import user_map from '@/views/components/Map-user.vue';
 
 import {
         ElAvatar,
@@ -54,17 +54,13 @@ import {
     } from "@/stores/network"; // 导入令牌验证函数
 import User_payment from './user_payment.vue';
 import User_callBus from './user_callBus.vue';
-
 import { useUserStore } from '@/stores/userStore';
 const userStore=useUserStore();
 
 import { useWebSocketStore } from '@/stores/webSocketStore';
-
 const webSocketStore = useWebSocketStore();
-
 // 使用 computed 來確保 Message 是響應式的
 const Message = computed(() => webSocketStore.messages);
-
 // 监听 Message 队列的变化
 watch(Message, (newMessages) => {
   // 遍历消息队列，处理类型为 'case_accept' 的消息
@@ -84,6 +80,7 @@ watch(Message, (newMessages) => {
   }
 }, { deep: true });
 
+let sites = [];
 
 let journeydata = ref([])
 let from = ref("榕园广场");
@@ -437,10 +434,9 @@ async function ChangePayment(value) {
     }
 }
 function confirmPay(){
-    const rawValue = carid.value; // 使用 carid.value 而不是 toRaw(carid)
     let message = {
         type: 'payment_user_count',
-        car_id: rawValue._rawValue,
+        car_id: carid.value,
         count: 1, // 付款人数
         time: new Date().toLocaleString(), // 付款时间
     };
@@ -505,15 +501,15 @@ function confirmTicket() {
     ChangeOrder("行程中");
     // 这里可以添加其他逻辑，例如确认上车后执行的操作
     console.log(carid);
-    const rawValue = carid.value; // 使用 carid.value 而不是 toRaw(carid)
+    // const rawValue = carid.value; // 使用 carid.value 而不是 toRaw(carid)
     let message = {
         type: 'boardingMessage',
-        car_id: rawValue._rawValue,
+        car_id: carid.value,
         boardingCount: 1, // 
         time: new Date().toLocaleString(), // 
     };
-        // 将新的呼叫信息添加到 store 中
-        webSocketStore.sendMessage(JSON.stringify(message));
+    // 将新的呼叫信息添加到 store 中
+    webSocketStore.sendMessage(JSON.stringify(message));
 }
 function leaveCar(){
     buyButtonVisible.value=true;
@@ -521,20 +517,21 @@ function leaveCar(){
     leaveTime.value = new Date().toLocaleString();
     ChangeOrder("已结束");
     ChangeLeaveTime(leaveTime.value);
+    let message = {
+        type: 'alightingMessage',
+        car_id: carid.value,
+        alightingCount: 1, // 
+        time: new Date().toLocaleString(), // 
+    };
+    // 将新的呼叫信息添加到 store 中
+    webSocketStore.sendMessage(JSON.stringify(message));
 }
 function confirmInCar(){
     buyButtonVisible.value = true;
     leaveButtonVisible.value=true;
     ChangeOrder("行程中");
-    const rawValue = carid.value; 
-    let message = {
-        type: 'alightingMessage',
-        car_id: rawValue._rawValue,
-        alightingCount: 1, // 
-        time: new Date().toLocaleString(), // 
-    };
-        // 将新的呼叫信息添加到 store 中
-        webSocketStore.sendMessage(JSON.stringify(message));
+    // const rawValue = carid.value; 
+
 }
 // function confirmInCar(){
 //     console.log("dafasf");
@@ -584,6 +581,10 @@ async function handleLogout() {
                 ElMessage.error("登出失败，请稍后再试");
             }
         }
+}
+
+function updateSites(newSites) {
+    sites = newSites;
 }
 </script>
 

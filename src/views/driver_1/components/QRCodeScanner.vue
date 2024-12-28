@@ -10,9 +10,9 @@
   import { onMounted, ref } from 'vue'
   import QRCode from 'qrcode'
   import { useWebSocketStore } from '@/stores/webSocketStore';
-  import { useUserStore } from "@/stores/user";
-    const userStore = useUserStore();
-    console.log(userStore.userAccount)
+  // import { useUserStore } from "@/stores/user";
+    // const userStore = useUserStore();
+    // console.log(userStore.userAccount)
     const webSocketStore = useWebSocketStore();
 
   
