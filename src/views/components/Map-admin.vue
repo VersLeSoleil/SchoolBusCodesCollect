@@ -42,7 +42,7 @@ import RouteEditor from "@/views/driver_1/components/RouteEditor.vue";
 // import { useUserStore } from "@/stores/user";
 import mod from "@/views/components/ModifyStation.vue"
 import { useWebSocketStore } from '@/stores/webSocketStore';
-import { computed, watch, getCurrentInstance } from 'vue';
+import { computed, watch, getCurrentInstance, onMounted } from 'vue';
 
 /* global AMap */
 
@@ -91,6 +91,35 @@ export default {
       },
       { deep: true } // 确保监听数组内部的变化
     );
+    onMounted(() => {
+      for (let i = 0; i < Message.value.length; i++) {
+        const message = Message.value[i];
+        console.log('Processing case_accept message:', message);
+
+        // 判断消息类型
+        if (message.type === 'route') {
+          proxy.routes = message.routes;
+          // 进行相应的处理
+          if (!proxy.isMapInitialized)
+          {
+            setTimeout(() => {
+              proxy.loadAndDrawRoutes();
+            }, 10000);
+          }
+        }
+        else if (message.type === 'site') {
+          proxy.sites = message.sites;
+          // proxy.$emit("updateSites", message.sites);
+          proxy.updateSites();
+          if (!proxy.isMapInitialized)
+          {
+            setTimeout(() => {
+              proxy.addBusStationMarkers();
+            }, 10000);
+          }
+        }
+      }
+    });
     return {
       webSocketStore,
       driverGpsMessages,
