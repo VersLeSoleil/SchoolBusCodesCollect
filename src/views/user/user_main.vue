@@ -436,7 +436,7 @@ async function ChangePayment(value) {
       alert("提交失败，请稍后再试！");
     }
 }
-function confirmPay(){
+function confirmPay(value){
     const rawValue = carid.value; // 使用 carid.value 而不是 toRaw(carid)
     let message = {
         type: 'payment_user_count',
@@ -449,7 +449,7 @@ function confirmPay(){
         buyButtonVisible.value = false; 
         buyTicketVisible.value=false;
         callBusVisible.value=false;
-        currentPaymentMethod=currentPaymentMethod.value;
+        currentPaymentMethod=value.value;
         console.log(currentPaymentMethod);
         submitPayment().then(() => {
           fetchCurrentPayment().then(() => {
