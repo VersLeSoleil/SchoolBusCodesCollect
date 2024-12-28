@@ -141,8 +141,8 @@
       rating: 0,
       feedback_content: '',
       feedback_time: null,
+      
     };
-    console.log("fbv",newFeedback.value);
     feedbackDialogVisible.value = true;
   };
 
@@ -164,7 +164,6 @@ newFeedback.value.feedback_time = chinaTime.toISOString().slice(0, 16).replace('
       feedback_content: newFeedback.value.feedback_content, // 用户评价内容
       feedback_time: newFeedback.value.feedback_time, // 时间
     });
-    console.log("feedback is" +  response)
     if (response.status === 200) {
       // 将订单的 isRated 字段标记为 true
       const order = orderData.value.find((o) => o.order_id === newFeedback.value.order_id);
@@ -221,6 +220,7 @@ const fetchData = async () => {
     padding: 10px;
     border-radius: 8px;
     box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+    animation: fadeIn 0.5s ease-in-out;
   }
 
   h2 {
@@ -228,17 +228,20 @@ const fetchData = async () => {
     color: #409eff;
     margin-bottom: 10px;
     font-size: 35px;
+    animation: fadeIn 0.6s ease-in-out;
   }
 
   .tabs-container {
     background-color: #ffffff;
     border-radius: 8px;
     padding: 10px;
+    animation: fadeIn 0.5s ease-in-out;
   }
 
   .el-table th {
     background-color: #409eff;
     color: white;
+    animation: fadeIn 0.5s ease-in-out;
   }
 
   .el-button {
@@ -262,10 +265,22 @@ const fetchData = async () => {
     font-size: 20px;
     /* padding: 10px; */
     /* border-top: 1px solid #e2e4e8; */
+    animation: fadeIn 0.3s ease-in-out;
   }
 
   ::v-deep .el-tabs__item {
     text-align: center;
     font-size: 20px;
   }
+
+  @keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
 </style>

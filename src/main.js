@@ -10,11 +10,11 @@ import { VueReCaptcha } from "vue-recaptcha-v3";
 import VueApexCharts from 'vue3-apexcharts'
 
 
-
 const app = createApp(App);
+export const pinia = createPinia() // <-- 先创建并导出
 
 
-
+app.use(pinia)
 app.use(VueApexCharts)
 app.use(ElementPlus)
 app.use(router); // 使用路由
