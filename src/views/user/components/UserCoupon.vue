@@ -179,6 +179,7 @@ onMounted(async () => {
   background: #f5f5f5;
   border-radius: 15px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+  animation: fadeIn 0.5s ease-in-out;
 }
 
 .filter-dropdown {
@@ -209,6 +210,7 @@ onMounted(async () => {
   height: 200px;
   overflow: hidden;
   box-sizing: border-box; /* 确保装饰不改变外部尺寸 */
+  animation: fadeIn 0.6s ease-in-out; 
 }
 
 /* 给卡片添加一些更精致的装饰：票券侧面圆形切口 */
@@ -327,5 +329,16 @@ onMounted(async () => {
 
 ::v-deep .el-dropdown-menu__item {
   font-size: 20px;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 </style>

@@ -152,7 +152,7 @@
 import { nextTick } from "vue";
 import axios from "axios";
 import { useApiBaseStore } from '@/stores/network';
-import { useUserStore } from "@/stores/user";
+// import { useUserStore } from "@/stores/user";
 
 export default {
   name: "AuthPage",
@@ -253,10 +253,10 @@ export default {
             if (response.data.code === 200) {
               console.log("登陆成功：", response.data.data);
               console.log("数据：", response.data.role);
-              const userStore = useUserStore();
-              userStore.setUserAccount(this.username);
-              console.log(userStore.userAccount)
-              localStorage.setItem('id', this.username);
+              // const userStore = useUserStore();
+              // userStore.setUserAccount(this.username);
+              // console.log(userStore.userAccount)
+              // localStorage.setItem('id', this.username);
               localStorage.setItem('jwtToken', response.data.data);
 
               // 按照role跳转
@@ -266,7 +266,7 @@ export default {
                 });
               } else if (response.data.role === 1) {
                 this.$router.push({
-                  name: 'user-person',
+                  name: 'user-main',
                 });
               } else if (response.data.role === 2) {
                 this.$router.push({
@@ -301,13 +301,13 @@ export default {
       if (this.isUsingDeployed) {
         apiBaseStore.switchToLocal();
         localStorage.setItem('prefixURL', apiBaseStore.baseUrl);
-        localStorage.setItem('webprefixURL', apiBaseStore.webBaseUrl);
-        console.log(apiBaseStore.webBaseUrl);
+        // localStorage.setItem('webprefixURL', apiBaseStore.webBaseUrl);
+        // console.log(apiBaseStore.webBaseUrl);
       } else {
         apiBaseStore.switchToDeployed();
         localStorage.setItem('prefixURL', apiBaseStore.baseUrl);
-        localStorage.setItem('webprefixURL', apiBaseStore.webBaseUrl);
-        console.log(apiBaseStore.webBaseUrl);
+        // localStorage.setItem('webprefixURL', apiBaseStore.webBaseUrl);
+        // console.log(apiBaseStore.webBaseUrl);
       }
       
       this.isUsingDeployed = !this.isUsingDeployed;
