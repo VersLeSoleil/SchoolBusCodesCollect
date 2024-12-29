@@ -3,31 +3,10 @@
     <!-- 信息填写窗口 -->
     <div v-if="showForm" class="form-modal">
       <div class="form-content">
-        <h3>请填写工作班次信息</h3>
+        <h3>确认下班</h3>
         <form @submit.prevent="submitForm">
-          <div class="form-item">
-            <label for="driver_id">司机编号:</label>
-            <input v-model="formData.driver_id" id="driver_id" type="text" placeholder="请输入司机编号" required />
-          </div>
-          <div class="form-item">
-            <label for="route_id">路线路径:</label>
-            <input v-model="formData.route_id" id="route_id" type="text" placeholder="请输入路线路径" required />
-          </div>
-          <div class="form-item">
-            <label for="car_id">车牌号:</label>
-            <input v-model="formData.car_id" id="car_id" type="text" placeholder="请输入车牌号" required />
-          </div>
-          <div class="form-item">
-            <label for="car_isusing">车辆状态:</label>
-            <select v-model="formData.car_isusing" id="car_isusing" required>
-              <option value="" disabled>请选择状态</option>
-              <option value="正常运营"> 正常运营</option>
-              <option value="试通行">试通行</option>
-            </select>
-          </div>
-
           <div class="form-actions">
-            <button type="submit"  class="submit-button">提交</button>
+            <button type="submit"  class="submit-button">下班</button>
             <button type="button" @click="closeForm" class="cancel-button">取消</button>
           </div>
         </form>
@@ -45,10 +24,10 @@ export default {
     return {
       showForm: false, // 控制弹窗显示与否
       formData: {
-        driver_id: "",    // 工号
-        route_id: "",       // 路线路径
-        car_id: "",       // 车牌号
-        car_isusing: "",
+        driver_id: localStorage.getItem("id"),  // 工号
+        route_id: localStorage.getItem("route_id"),       // 路线路径
+        car_id: localStorage.getItem("car_id"),       // 车牌号
+        car_isusing: "休息",
       },
       router: useRouter(), // 获取路由实例
     };
@@ -66,10 +45,10 @@ export default {
     // 重置表单
     resetForm() {
       this.formData = {
-        driver_id: "",
-        route_id: "",
-        car_id: "",
-        car_isusing: "",
+        driver_id: localStorage.getItem("id"),
+        route_id: localStorage.getItem("route_id"),
+        car_id: localStorage.getItem("car_id"),
+        car_isusing:"休息",
       };
     },
     // 提交表单
