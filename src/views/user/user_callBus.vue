@@ -1,56 +1,56 @@
 <template>
-    <div v-if="props.visible" class="popup">
-      <div class="popup-content">
-        <div class="profile-container">
-          <div class="info">
-            <h2 class="headline">
-                <strong>叫车</strong>
-            </h2>
-            
-            <p><strong>目的地：</strong>
-              <select class="select1" v-model="select_dest">
-                <option value="" disabled selected>请选择...</option>
-                <option value="榕园广场">榕园广场</option>
-                <option value="荔园广场">荔园广场</option>
-                <option value="教学楼">教学楼</option></select></p>
-            <p>
-                <button @click="cancel" class="cancel">取消</button>
-                <button @click="confirm" class="confirm">确定</button>
-            </p>
-            <div class="form-group">
-        <label for="fromLocation">选择出发地点：</label>
-        <select v-model="fromLocation" id="fromLocation" class="location-select">
-          <option v-for="station in busStationsData" :key="station.name + station.position" :value="station">
-            {{ station.name }}
-          </option>
-        </select>
-      </div>
-  
-      <!-- 目標地點選擇 -->
-      <div class="form-group">
-        <label for="toLocation">选择目标地点：</label>
-        <select v-model="toLocation" id="toLocation" class="location-select">
-          <option v-for="station in busStationsData" :key="station.name + station.position" :value="station">
-            {{ station.name }}
-          </option>
-        </select>
-      </div>
+  <div v-if="props.visible" class="popup">
+    <div class="popup-content">
+      <div class="profile-container">
+        <div class="info">
+          <h2 class="headline">
+              <strong>叫车</strong>
+          </h2>
+          
+          <p><strong>目的地：</strong>
+            <select class="select1" v-model="select_dest">
+              <option value="" disabled selected>请选择...</option>
+              <option value="榕园广场">榕园广场</option>
+              <option value="荔园广场">荔园广场</option>
+              <option value="教学楼">教学楼</option></select></p>
+          <p>
+              <button @click="cancel" class="cancel">取消</button>
+              <button @click="confirm" class="confirm">确定</button>
+          </p>
+          <div class="form-group">
+      <label for="fromLocation">选择出发地点：</label>
+      <select v-model="fromLocation" id="fromLocation" class="location-select">
+        <option v-for="station in sites" :key="station.name + station.position" :value="station">
+          {{ station.name }}
+        </option>
+      </select>
+    </div>
 
-            <!-- 發送呼叫請求 -->
-            <button @click="sendCallRequest" class="call-btn">发送呼叫请求</button>
-          </div>
-          <button @click="closePopup" class="closebutton">X</button>
+    <!-- 目標地點選擇 -->
+    <div class="form-group">
+      <label for="toLocation">选择目标地点：</label>
+      <select v-model="toLocation" id="toLocation" class="location-select">
+        <option v-for="station in sites" :key="station.name + station.position" :value="station">
+          {{ station.name }}
+        </option>
+      </select>
+    </div>
+
+          <!-- 發送呼叫請求 -->
+          <button @click="sendCallRequest" class="call-btn">发送呼叫请求</button>
         </div>
+        <button @click="closePopup" class="closebutton">X</button>
       </div>
     </div>
-  </template>
+  </div>
+</template>
   
   <script setup>
   import { defineProps, defineEmits } from 'vue';
   import { ref, onMounted } from 'vue';
   import { useWebSocketStore } from '@/stores/webSocketStore';
     // 讀取 bus station 數據
-    import busStationsData from '@/assets/bus_station_data.json';
+    // import busStationsData from '@/assets/bus_station_data.json';
     // 設置出發地點和目標地點
     const fromLocation = ref(null);
     const toLocation = ref(null);
@@ -94,7 +94,11 @@ onMounted(() => {
     getTicket: {
       type: Function,
       required: true, 
-    }
+    },
+    sites: {
+      type: Array,
+      required: true,
+    },
   });
   
   // 定义 emits
@@ -118,39 +122,46 @@ onMounted(() => {
 
     // 發送呼叫請求
     const sendCallRequest = () => {
-
-        if (!fromLocation.value || !toLocation.value) {
-            alert('請選擇出發地和目標地！');
-            return;
-        }
-        const from_location = {
-        latitude: fromLocation.value.position[0],
-        longitude: fromLocation.value.position[1],
+      if (!fromLocation.value || !toLocation.value) {
+        alert('請選擇出發地和目標地！');
+        return;
+      }
+      const from_location = {
+        latitude: fromLocation.value.location.latitude,
+        longitude: fromLocation.value.location.longitude,
       }
       const to_location = {
-        latitude: toLocation.value.position[0],
-        longitude: toLocation.value.position[1],
+        latitude: fromLocation.value.location.latitude,
+        longitude: fromLocation.value.location.longitude,
       }
-        // 創建呼叫訊息對象
-        const callMessage = {
-          type: 'vehicle_call',
-          passenger_id: localStorage.getItem("id"),
-            from_str: fromLocation.value.name,
-            from: from_location,
-            to_str: toLocation.value.name,
-            to: to_location,
-            status: '待接收', // 初始狀態為待接收
-            time: new Date().toLocaleString(), // 呼叫時間
-        };
+      // 創建呼叫訊息對象
+      const callMessage = {
+        type: 'vehicle_call',
+        passenger_id: localStorage.getItem("id"),
+          from_str: fromLocation.value.name,
+          from: from_location,
+          to_str: toLocation.value.name,
+          to: to_location,
+          status: '待接收', // 初始狀態為待接收
+          time: new Date().toLocaleString(), // 呼叫時間
+      };
 
-        // 将新的呼叫信息添加到 store 中
-        webSocketStore.sendMessage(JSON.stringify(callMessage));
-        emit('openPayment');
-        props.getTicket(fromLocation.value.name, toLocation.value.name, "暂未有车辆接收呼叫");
-        // 清空選擇
-        fromLocation.value = null;
-        toLocation.value = null;
-        console.log('确定功能触发');
+      // 将新的呼叫信息添加到 store 中
+      webSocketStore.sendMessage(JSON.stringify(callMessage));
+      emit('openPayment');
+      let a = ref();
+      let b = ref();
+      let c = ref();
+      let d = ref();
+      a.value = fromLocation.value.name;
+      b.value = toLocation.value.name;
+      c.value = "暂未有车辆接收呼叫";
+      d.value = 0;
+      props.getTicket(a, b, c, d);
+      // 清空選擇
+      fromLocation.value = null;
+      toLocation.value = null;
+      console.log('确定功能触发');
 
     };
 

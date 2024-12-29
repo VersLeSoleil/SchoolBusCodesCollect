@@ -1,90 +1,208 @@
 <template>
-    <div class="station-editor">
-      <div class="header">
-        <h3>站點編輯器</h3>
-        <p>可編輯的站點數據</p>
-      </div>
-  
-      <div class="station-list">
-        <div v-for="(station, index) in paginatedStations" :key="index" class="station-item">
-            <div class="form-group">
-            <label>站點名稱:</label>
-            <input v-model="station.name" type="text" :placeholder="'請輸入站點名稱'" required />
+  <div class="station-editor">
+    <div class="header">
+      <h3>站點編輯器</h3>
+      <p>管理站點數據</p>
+    </div>
+
+    <transition-group name="fade" tag="div" class="station-list">
+      <div
+        v-for="(station, index) in paginatedStations"
+        :key="index"
+        class="station-item"
+      >
+        <div class="form-group">
+          <label>站點名稱:</label>
+          <input
+            v-model="station.name"
+            type="text"
+            :disabled="!isEditing"
+            placeholder="請輸入站點名稱"
+            required
+          />
+          <span v-if="isEditing && !station.name" class="error-message">站點名稱不能為空！</span>
         </div>
         <div class="form-group">
           <label>位置</label>
-          <input v-model="station.position" type="text" :disabled="station.is_used !== 1" required />
+          <label>緯度</label>
+          <input
+            v-model="station.location.latitude"
+            type="text"
+            :disabled="!isEditing"
+            required
+          />
+          <span v-if="isEditing && !station.location.latitude" class="error-message">緯度不能為空！</span>
+          <label>經度</label>
+          <input
+            v-model="station.location.longitude"
+            type="text"
+            :disabled="!isEditing"
+            required
+          />
+          <span v-if="isEditing && !station.location.longitude" class="error-message">經度不能為空！</span>
         </div>
         <div class="form-group">
-            <label>是否正在使用:</label>
-            <input v-model="station.is_used" type="checkbox" checked />
+          <label>是否正在使用:</label>
+          <input
+            v-model="station.is_used"
+            type="checkbox"
+            :true-value="1"
+            :false-value="0"
+            :disabled="!isEditing"
+          />
         </div>
         <div class="form-group">
-            <input v-model="station.note" type="text" placeholder="可選填，備註" />
-          </div>
+          <input
+            v-model="station.note"
+            type="text"
+            placeholder="可選填，備註"
+            :disabled="!isEditing"
+          />
         </div>
       </div>
-      <div class="pagination">
-        <button @click="prevPage" :disabled="currentPage === 1">上一頁</button>
-        <button @click="nextPage" :disabled="currentPage >= maxPages">下一頁</button>
-      </div>
-      <div class="footer">
-        <button @click="saveChanges">保存變更</button>
-      </div>
+    </transition-group>
+
+    <div class="pagination">
+      <button @click="prevPage" :disabled="currentPage === 1">上一頁</button>
+      <button @click="nextPage" :disabled="currentPage >= maxPages">下一頁</button>
     </div>
-  </template>
-  
-  <script setup>
-  import { ref, onMounted, computed } from 'vue';
-  import busStationData from "@/assets/bus_station_data.json";
-  
-  // 定義參數
-  const stationsData = ref([]);
-  const currentPage = ref(1);
-  const pageSize = 10;
-  
-  const loadData = async () => {
-    // 直接將 bus_station_data.json 的內容加載到 stationsData
-    stationsData.value = [...busStationData];
-  };
-    // 分頁邏輯
-    const maxPages = computed(() => Math.ceil(stationsData.value.length / pageSize));
-  // 分頁功能
-  const prevPage = () => {
-    if (currentPage.value > 1) currentPage.value--;
-  };
-  
-  const nextPage = () => {
-    if (currentPage.value < maxPages.value) currentPage.value++;
-  };
-  
-  // 計算當前頁顯示的站點
-  const paginatedStations = computed(() => {
-    const startIndex = (currentPage.value - 1) * pageSize;
-    return stationsData.value.slice(startIndex, startIndex + pageSize);
-  });
 
-  // 保存數據
-  const saveChanges = () => {
-    // 構建符合要求的 JSON 格式
-    const formattedData = stationsData.value.map(station => ({
-      position: station.position,
-      name: station.name,
-      note: station.note || "",  // 如果備註為空，設為空字符串
-      is_used: station.is_used,
-    }));
+    <div class="footer">
+      <button @click="toggleEdit" v-if="!isEditing">修改站點</button>
+      <button @click="saveChanges" v-if="isEditing">保存變更</button>
+      <button @click="cancelChanges" v-if="isEditing">取消修改</button>
+      <button @click="addStation" v-if="isEditing">新增站點</button>
+    </div>
+  </div>
+</template>
 
-    // 模擬保存，這裡將數據儲存到 localStorage 作為替代（如果需要，也可以儲存到其他地方）
-    localStorage.setItem('bus_station_data', JSON.stringify(formattedData));
+<script setup>
+import { ref, computed, defineProps, watch } from 'vue';
+import { useWebSocketStore } from '@/stores/webSocketStore';
 
-    // 模擬返回保存結果
-    alert('數據已保存！');
+const webS = useWebSocketStore();
+
+const props = defineProps({
+  sites: {
+    type: Array,
+    required: true,
+  },
+});
+
+const stationsData = ref([]);
+const originalData = ref([]);
+const currentPage = ref(1);
+const pageSize = 5;
+const isEditing = ref(false);
+
+// 初始化數據
+watch(
+  () => props.sites,
+  (newSites) => {
+    stationsData.value = JSON.parse(JSON.stringify(newSites)); // 深拷貝數據
+    originalData.value = JSON.parse(JSON.stringify(newSites)); // 保存原始數據
+  },
+  { immediate: true, deep: true }
+);
+
+// 分頁邏輯
+const maxPages = computed(() => Math.ceil(stationsData.value.length / pageSize));
+
+const paginatedStations = computed(() => {
+  const startIndex = (currentPage.value - 1) * pageSize;
+  return stationsData.value.slice(startIndex, startIndex + pageSize);
+});
+
+const prevPage = () => {
+  if (currentPage.value > 1) {
+    currentPage.value--;
+  }
+};
+
+const nextPage = () => {
+  if (currentPage.value < maxPages.value) {
+    currentPage.value++;
+  }
+};
+
+// 切換修改模式
+const toggleEdit = () => {
+  isEditing.value = true;
+};
+
+// 保存修改
+const saveChanges = async () => {
+  // 遍歷所有站點，驗證必填字段
+  for (const station of stationsData.value) {
+    if (!station.name) {
+      alert('站點名稱不能為空！');
+      isEditing.value = true;
+      return; // 終止保存
+    }
+    if (!station.location.latitude) {
+      alert('緯度不能為空！');
+      isEditing.value = true;
+      return; // 終止保存
+    }
+    if (!station.location.longitude) {
+      alert('經度不能為空！');
+      isEditing.value = true;
+      return; // 終止保存
+    }
+  }
+  try {
+
+    // 構造 WebSocket 消息數據
+    const message = {
+      type: 'update_sites', // 消息類型
+      sites: stationsData.value.map((station, index) => ({
+        id: index + 1, // 如果無 ID，默認為 0
+        name: station.name,
+        location: {
+          latitude: parseFloat(station.location.latitude),
+          longitude: parseFloat(station.location.longitude),
+        },
+        site_passenger: station.site_passenger || 0, // 默認為 0
+        is_used: station.is_used,
+        site_note: station.note || '', // 如果備註為空，設為空字符串
+      })),
+      time: new Date().toISOString(), // 當前時間
+    };
+
+    webS.sendMessage(JSON.stringify(message));
+
+    // 如果所有驗證通過，保存數據
+    isEditing.value = false;
+    alert('修改已保存，數據已同步到服務器！');
+  } catch (error) {
+    console.error('保存失敗：', error);
+    alert('保存失敗，請稍後再試！');
+    isEditing.value = true; // 恢復到編輯模式
+  }
+};
+
+// 取消修改
+const cancelChanges = () => {
+  stationsData.value = JSON.parse(JSON.stringify(originalData.value)); // 恢復到原始數據
+  isEditing.value = false;
+  alert('修改已取消！');
+};
+
+// 新增站點
+const addStation = () => {
+  const newStation = {
+    id: Date.now(),
+    name: '',
+    location: { latitude: '', longitude: '' },
+    is_used: 0,
+    note: '',
   };
-  
-  onMounted(loadData);
-  </script>
-  
-  <style scoped>
+  stationsData.value.push(newStation);
+  currentPage.value = maxPages.value; // 跳轉到最後一頁
+};
+</script>
+
+<style scoped>
 .station-editor {
   font-family: Arial, sans-serif;
   padding: 20px;
@@ -92,6 +210,7 @@
   border-radius: 8px;
   max-width: 800px;
   margin: auto;
+  animation: fadeIn 0.5s ease-in-out;
 }
 
 .header {
@@ -109,15 +228,10 @@
   color: #666;
 }
 
-.pagination {
-  display: flex;
-  justify-content: space-between;
-  margin: 20px 0;
-}
-
 .station-list {
   max-height: 400px;
   overflow-y: auto;
+  margin-bottom: 20px;
 }
 
 .station-item {
@@ -128,15 +242,10 @@
   padding: 10px;
   border-radius: 6px;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  animation: slideIn 0.5s ease-in-out;
 }
-  
-  .station-item input {
-    margin: 5px 0;
-    padding: 5px;
-    font-size: 14px;
-  }
 
-  .station-item .form-group {
+.station-item .form-group {
   margin-bottom: 10px;
 }
 
@@ -156,28 +265,72 @@
 .station-item .form-group input:disabled {
   background-color: #f0f0f0;
 }
-  
-  .footer {
-    margin-top: 20px;
-    text-align: center;
+
+.pagination {
+  display: flex;
+  justify-content: space-between;
+  margin: 20px 0;
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+.footer {
+  margin-top: 20px;
+  text-align: center;
+}
+
+button {
+  padding: 10px 20px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  cursor: pointer;
+  border-radius: 5px;
+  font-size: 14px;
+  transition: background-color 0.3s ease-in-out;
+}
+
+button:disabled {
+  background-color: #ccc;
+}
+
+button:hover {
+  background-color: #0056b3;
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.5s;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+.error-message {
+  color: red;
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+
+@keyframes slideIn {
+  from {
+    transform: translateY(10px);
+    opacity: 0;
   }
-  
-  button {
-    padding: 10px 20px;
-    background-color: #007bff;
-    color: white;
-    border: none;
-    cursor: pointer;
-    border-radius: 5px;
-    font-size: 14px;
+  to {
+    transform: translateY(0);
+    opacity: 1;
   }
-  
-  button:disabled {
-    background-color: #ccc;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
   }
-  
-  button:hover {
-    background-color: #0056b3;
+  to {
+    opacity: 1;
   }
-  </style>
-  
+}
+</style>

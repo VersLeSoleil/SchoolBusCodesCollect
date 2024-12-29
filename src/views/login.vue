@@ -256,7 +256,7 @@ export default {
               // const userStore = useUserStore();
               // userStore.setUserAccount(this.username);
               // console.log(userStore.userAccount)
-              // localStorage.setItem('id', this.username);
+              localStorage.setItem('id', this.username);
               localStorage.setItem('jwtToken', response.data.data);
 
               // 按照role跳转
@@ -301,12 +301,12 @@ export default {
       if (this.isUsingDeployed) {
         apiBaseStore.switchToLocal();
         localStorage.setItem('prefixURL', apiBaseStore.baseUrl);
-        // localStorage.setItem('webprefixURL', apiBaseStore.webBaseUrl);
+        localStorage.setItem('webprefixURL', apiBaseStore.webBaseUrl);
         // console.log(apiBaseStore.webBaseUrl);
       } else {
         apiBaseStore.switchToDeployed();
         localStorage.setItem('prefixURL', apiBaseStore.baseUrl);
-        // localStorage.setItem('webprefixURL', apiBaseStore.webBaseUrl);
+        localStorage.setItem('webprefixURL', apiBaseStore.webBaseUrl);
         // console.log(apiBaseStore.webBaseUrl);
       }
       

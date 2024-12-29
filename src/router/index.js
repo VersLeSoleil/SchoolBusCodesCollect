@@ -4,7 +4,7 @@ import HomePage from '../views/HomePage.vue';
 import Driver_Page_0 from '@/views/driver_0/driver_Page_0.vue';
 import Driver_Page_1 from '@/views/driver_1/driver_Page_1.vue';
 import Driver_Info from '@/views/driver_0/driver_Info.vue';
-import test_user_map from '@/views/components/Map-user.vue';
+// import test_user_map from '@/views/components/Map-user(backup).vue';
 import test_admin_map from '@/views/components/Map-admin.vue';
 import User_main from '@/views/user/user_main.vue';
 import User_person from '@/views/user/user_person.vue';
@@ -62,14 +62,14 @@ const routes = [
             requiredRoles: [0, 2]  // admin 和 driver 都能访问
         },
     },
-    {
-        path: '/test-user',
-        name: 'test-user',
-        component: test_user_map,
-        meta: {
-            requiredRoles: [0, 2]  // admin 和 driver 都能访问
-        },
-    },
+    // {
+    //     path: '/test-user',
+    //     name: 'test-user',
+    //     component: test_user_map,
+    //     meta: {
+    //         requiredRoles: [0, 2]  // admin 和 driver 都能访问
+    //     },
+    // },
     {
         path: '/test-admin',
         name: 'test-admin',

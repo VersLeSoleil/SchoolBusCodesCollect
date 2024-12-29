@@ -34,7 +34,7 @@ import VehicleStatusToggle from "@/views/driver_1/components/VehicleStatusToggle
 import ErrorBoundary from "@/views/driver_1/components/ErrorBoundary.vue";
 
 import driver_Info from '@/views/driver_0/components/driver_Info.vue';
-import { useUserStore } from "@/stores/user";
+// import { useUserStore } from "@/stores/user";
 import { useWebSocketStore } from '@/stores/webSocketStore';
 import { defineExpose } from 'vue';
 // import { useApiBaseStore } from '@/stores/network';
@@ -137,35 +137,36 @@ const addBusStationMarkers = () => {
     // return;
   } 
 
-      if (Array.isArray(sites.value) && sites.value.length > 0) {
-        sites.value.forEach((site) => {
-          const labelMarker = new AMap.LabelMarker({
-            position:  [site.location.longitude,
-                site.location.latitude],
-            text: {
-              content: site.name,
-              style: {
-                fontSize: 15,
-                fillColor: "#fff",
-                backgroundColor: "blue",
-                borderColor: "#ccc",
-                borderWidth: 2,
-                padding: [5, 10],
-              },
-            },
-            icon: {
-              image: require("@/assets/circle-icon.png"),
-              size: [15, 15],
-              anchor: "center",
-            },
-          });
-          
-          stationMarkers.value.push(labelMarker);
-          map.value.add(labelMarker);
-        });
-      } else {
-        console.warn('Sites 数据为空或不是数组');
-      }
+  if (Array.isArray(sites.value) && sites.value.length > 0) {
+    sites.value.forEach((site) => {
+      if (site.is_used == 0) return;
+      const labelMarker = new AMap.LabelMarker({
+        position:  [site.location.latitude,
+          site.location.longitude],
+        text: {
+          content: site.name,
+          style: {
+            fontSize: 15,
+            fillColor: "#fff",
+            backgroundColor: "blue",
+            borderColor: "#ccc",
+            borderWidth: 2,
+            padding: [5, 10],
+          },
+        },
+        icon: {
+          image: require("@/assets/circle-icon.png"),
+          size: [15, 15],
+          anchor: "center",
+        },
+      });
+      
+      stationMarkers.value.push(labelMarker);
+      map.value.add(labelMarker);
+    });
+  } else {
+    console.warn('Sites 数据为空或不是数组');
+  }
 };
 
 const initMap = (longitude, latitude) => {
@@ -242,7 +243,6 @@ watch(Message, (newMessages) => {
         setTimeout(() => {
           loadAndDrawRoutes();
         }, 10000);
-        webSocketStore.messages.splice(i, 1); // 从队列中移除该条消息
       }
     }
     else if (message.type === 'site') {
@@ -253,12 +253,7 @@ watch(Message, (newMessages) => {
           addBusStationMarkers();
         }, 10000);
       }
-      webSocketStore.messages.splice(i, 1); // 从队列中移除该条消息
     }
-    // console.log('Processing case_accept message:', message);
-    // // 处理完后删除该条消息
-    // webSocketStore.messages.splice(i, 1); // 从队列中移除该条消息
-    // break; // 如果只需要处理一条符合条件的消息，可以跳出循环
   }
   // console.log("dsdfas");
   // loadAndDrawRoutes();
@@ -305,8 +300,8 @@ const updateLocation = () => {
 };
 
 const sendLocationToBackendWebSocket = async (longitude, latitude) => {
-  const userStore = useUserStore();
-  const driverID = userStore.userAccount;
+  // const userStore = useUserStore();
+  // const driverID = userStore.userAccount;
   // const webSocketStore = useWebSocketStore(); // 已在顶部引入
 
   if (typeof longitude !== "number" || typeof latitude !== "number") {
@@ -321,7 +316,7 @@ const sendLocationToBackendWebSocket = async (longitude, latitude) => {
 
   const message = {
     type: "driver_gps",
-    driver_id: driverID,
+    driver_id: localStorage.getItem("id"),
     location: location,
   };
 

@@ -25,6 +25,9 @@
 
 <script setup>
 import { defineProps, defineEmits } from 'vue';
+import { useWebSocketStore } from '@/stores/webSocketStore';
+const webSocketStore = useWebSocketStore();
+
 // 定义 props
 const props = defineProps({
   visible: Boolean,
@@ -41,6 +44,15 @@ const emit = defineEmits(['close1','confirmInCar']);
 // 确定逻辑
 function confirmIntoCar() {
   console.log('确定功能触发');
+  let message = {
+        type: 'boardingMessage',
+        car_id: props.carid,
+        boardingCount: 1, // 
+        time: new Date().toLocaleString(), // 
+    };
+  // 将新的呼叫信息添加到 store 中
+  webSocketStore.sendMessage(JSON.stringify(message));
+  console.log("asdfsad");
   emit('confirmInCar');
   closePopup(); // 关闭弹窗
 }
