@@ -73,9 +73,9 @@ const props = defineProps({
 onMounted(fetchWorkShift);
 async function fetchWorkShift() {
   try {
-    //const apiBaseStore = useApiBaseStore();
-    //let endpoint = apiBaseStore.baseUrl + "/getDriverData"; 
-    let endpoint ="http://localhost:8888/getWorkShift";
+    const apiBaseStore = useApiBaseStore();
+    let endpoint = `${apiBaseStore}/getWorkShift`;
+    // let endpoint ="http://localhost:8888/getWorkShift";
     let method = 'POST';
     let requestBody = {
         current_time:new Date().toLocaleString()
