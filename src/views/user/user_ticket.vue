@@ -40,6 +40,7 @@
 <script setup>
 import { defineProps, defineEmits } from 'vue';
 import {ref,onMounted,computed} from 'vue';
+import { useApiBaseStore } from '@/stores/network';
 // import sites from "@/assets/bus_station_data.json";
 
 
@@ -74,7 +75,7 @@ onMounted(fetchWorkShift);
 async function fetchWorkShift() {
   try {
     const apiBaseStore = useApiBaseStore();
-    let endpoint = `${apiBaseStore}/getWorkShift`;
+    let endpoint = apiBaseStore.localBaseUrl+"/getWorkShift";
     // let endpoint ="http://localhost:8888/getWorkShift";
     let method = 'POST';
     let requestBody = {
