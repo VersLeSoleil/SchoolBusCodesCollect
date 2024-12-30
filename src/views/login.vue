@@ -187,7 +187,7 @@ export default {
   methods: {
     setInitialLocalStorage() {
     const defaultValues = {
-      jwtToken: '', 
+      jwtToken: '',
       prefixURL: 'http://121.199.79.24:5793', // 默认的后端URL
     };
     for (const [key, value] of Object.entries(defaultValues)) {
@@ -256,7 +256,8 @@ export default {
               // const userStore = useUserStore();
               // userStore.setUserAccount(this.username);
               // console.log(userStore.userAccount)
-              localStorage.setItem('id', this.username);
+
+              localStorage.setItem('id', response.data.additional_info);
               localStorage.setItem('jwtToken', response.data.data);
 
               // 按照role跳转
@@ -309,7 +310,7 @@ export default {
         localStorage.setItem('webprefixURL', apiBaseStore.webBaseUrl);
         // console.log(apiBaseStore.webBaseUrl);
       }
-      
+
       this.isUsingDeployed = !this.isUsingDeployed;
     },
 

@@ -14,7 +14,7 @@ import Lay_out from '@/views/admin/Admin_layout.vue';
 import Registry from '@/views/deprecated/loginRegistry.vue';
 import { validateToken } from '@/auth.js'; // 导入验证函数
 import simulation from '@/views/schoolbus-simulation/schoolbus-simulation.vue';
-import { pinia } from '@/main' 
+import { pinia } from '@/main'
 import { useUserStore } from '@/stores/userStore'
 import ScannedPage from '@/views/driver_1/components/ScannedPage.vue'; // 通用错误边界组件
 
@@ -128,12 +128,6 @@ const routes = [
             meta: { title: 'Variables', icon: 'variables' }
         },
         {
-            path: 'test',
-            name: 'test',
-            component: () => import('@/views/admin/Admin_test.vue'),
-            meta: { title: 'Test', icon: 'test' }
-        },
-        {
             path: 'feedback',
             name: 'feedback',
             component: () => import('@/views/admin/Admin_feedback.vue'),
@@ -162,6 +156,12 @@ const routes = [
             name: 'work_table',
             component: () => import('@/views/admin/Admin_work_table.vue'),
             meta: { title: 'Work_table', icon: 'work_table' }
+        },
+        {
+            path: 'ai',
+            name: 'ai',
+            component: () => import('@/views/admin/Admin_ai.vue'),
+            meta: { title: 'AI', icon: 'ai' }
         }
         ]
     },
@@ -231,7 +231,7 @@ router.beforeEach(async (to, from, next) => {
                  // === 在这里判断是否要先获取用户信息 ===
         if (to.name === 'user-person') {
             const store = useUserStore(pinia);
-            await store.fetchUserInfo(); 
+            await store.fetchUserInfo();
           }
                 next();
             } else {
