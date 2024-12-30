@@ -125,9 +125,10 @@ const variableTypes = [
 
 // 硬编码一些示例数据
 let tableData = ref([
-  { key: 'expiration_hours_admin', name: '管理员token过期时间', value: 'Number', description: '确认生成管理员登录token后token什么时候过期', type: 'Number', lastModified: '2024-12-20 10:00:00', lastModifiedBy: '7'},
-  { key: 'expiration_hours_driver', name: '驾驶员token过期时间', value: 'Number', description: '确认生成驾驶员登录token后token什么时候过期', type: 'Number', lastModified: '2024-12-20 10:00:00', lastModifiedBy: '7' },
-  { key: 'expiration_hours_passenger', name: '乘客token过期时间', value: 'Number', description: '确认生成乘客登录token后token什么时候过期', type: 'Number', lastModified: '2024-12-20 10:00:00', lastModifiedBy: '7' },
+  { key: 'expiration_hours_admin', name: '管理员token过期时间(小时)', value: 'Number', description: '确认生成管理员登录token后token什么时候过期', type: 'Number', lastModified: '2024-12-20 10:00:00', lastModifiedBy: '7'},
+  { key: 'expiration_hours_driver', name: '驾驶员token过期时间(小时)', value: 'Number', description: '确认生成驾驶员登录token后token什么时候过期', type: 'Number', lastModified: '2024-12-20 10:00:00', lastModifiedBy: '7' },
+  { key: 'expiration_hours_passenger', name: '乘客token过期时间(小时)', value: 'Number', description: '确认生成乘客登录token后token什么时候过期', type: 'Number', lastModified: '2024-12-20 10:00:00', lastModifiedBy: '7' },
+  { key: 'expiration_ride_coupon', name: '赠送rider的coupon过期时间(天)', value: 'Number', description: '确认给予投诉的乘客赠送coupon后coupon什么时候过期', type: 'Number', lastModified: '2024-12-30 10:00:00', lastModifiedBy: '7' },
 ]);
 
 
