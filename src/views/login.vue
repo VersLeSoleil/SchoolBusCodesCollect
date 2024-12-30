@@ -266,6 +266,7 @@ export default {
                   name: 'admin_home',
                 });
               } else if (response.data.role === 1) {
+                localStorage.setItem('id', this.username);
                 this.$router.push({
                   name: 'user-main',
                 });

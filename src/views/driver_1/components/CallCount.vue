@@ -19,7 +19,7 @@
         </p>
         <button 
           v-if="!message.isAccepted" 
-          @click="acceptCall(message, index)"
+          @click="acceptCall(message)"
           class="accept-btn"
         >
           接收呼叫
@@ -38,16 +38,36 @@
 </template>
 
 <script setup>
-  import { computed  } from 'vue';
-  import { useWebSocketStore } from '@/stores/webSocketStore';
+import { computed, watch } from 'vue';
+import { useWebSocketStore } from '@/stores/webSocketStore';
 
-  const webSocketStore = useWebSocketStore();
+const webSocketStore = useWebSocketStore();
 
-  // 使用 computed 來確保 vehicleCallMessages 是響應式的
-  const vehicleCallMessages = computed(() => webSocketStore.vehicleCallMessages);
+// 使用 computed 來確保 vehicleCallMessages 是響應式的
+const vehicleCallMessages = computed(() => webSocketStore.vehicleCallMessages);
+const Message = computed(() => webSocketStore.messages);
+
+// 动态加载路线的 watcher
+watch(Message, (newMessages) => {
+  for (let i = 0; i < newMessages.length; i++) {
+    const message = newMessages[i];
+    console.log('Processing case_accept message:', message);
+
+    // 判断消息类型
+    if (message.type === 'call_accept') {
+      const index = webSocketStore.vehicleCallMessages.findIndex(
+        (msg) => msg.passenger_id === message.passenger_id
+      );
+      if (index !== -1) {
+        webSocketStore.vehicleCallMessages.splice(index, 1); // 移除消息
+      }
+    }
+  }
+}, { deep: true });
 
   // 接收呼叫：點擊按鈕並發送接收確認
-  const acceptCall = (message, index) => {
+const acceptCall = (message) => {
+  duplicateMessage(message);
   message.isAccepted = true;
   console.log(`接收呼叫: 从 ${message.from.latitude}, ${message.from.longitude} 到 ${message.to.latitude}, ${message.to.longitude}`);
 
@@ -62,27 +82,37 @@
     webSocketStore.sendMessage(JSON.stringify(payload));
 
     // 模擬駕駛員前往出發地點的過程
-    simulateDriverArrival(message, index);
-  };
+    simulateDriverArrival(message);
+};
 
-  // 模擬駕駛員到達出發地點
-  const simulateDriverArrival = (message, index) => {
-    setTimeout(() => {
-      console.log("驾驶员已到达出发地:", message.from);
-      message.isCompleted = true;
+// 复制消息并设置为已接收状态
+const duplicateMessage = (message) => {
+  // 深拷贝原始消息
+  const newMessage = JSON.parse(JSON.stringify(message));
 
-      // 發送到達確認消息到後端
-      const payload = {
-        type: 'call_complete',
-        id: message.id,
-        status: 'completed',
-        i: index
-      };
-      webSocketStore.sendMessage(JSON.stringify(payload));
+  // 修改新消息的状态为已接收
+  newMessage.isAccepted = true;
 
-      console.log("呼叫已完成");
-    }, 10000); // 模擬 5 秒後到達
-  };
+  // 将新消息添加到列表中
+  webSocketStore.vehicleCallMessages.push(newMessage);
+
+  console.log("复制了一条消息:", newMessage);
+};
+
+// 模擬駕駛員到達出發地點
+const simulateDriverArrival = (message) => {
+  setTimeout(() => {
+    console.log("驾驶员已到达出发地:", message.from);
+    message.isCompleted = true;
+    const index = webSocketStore.vehicleCallMessages.findIndex(
+      (msg) => msg.passenger_id === message.passenger_id
+    );
+    if (index !== -1) {
+      webSocketStore.vehicleCallMessages.splice(index, 1); // 移除消息
+    }
+    console.log("呼叫已完成");
+  }, 5000); // 模擬 5 秒後到達
+};
 </script>
 
 <style scoped>
