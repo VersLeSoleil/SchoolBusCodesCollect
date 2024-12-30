@@ -23,7 +23,7 @@ const closepopup = () => {
 const user = reactive({
   avatar: '', // 头像图片链接
   name: '',
-  id: '223310',
+  id: localStorage.getItem("id"),
   password: '',
   sex: '',
   phone: '',

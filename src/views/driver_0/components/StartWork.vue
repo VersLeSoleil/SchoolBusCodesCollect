@@ -6,10 +6,6 @@
           <h3>请填写工作班次信息</h3>
           <form @submit.prevent="submitForm">
             <div class="form-item">
-              <label for="driver_id">司机编号:</label>
-              <input v-model="formData.driver_id" id="driver_id" type="text" placeholder="请输入司机编号" required />
-            </div>
-            <div class="form-item">
               <label for="route_id">路线路径:</label>
               <input v-model="formData.route_id" id="route_id" type="text" placeholder="请输入路线路径" required />
             </div>
@@ -45,7 +41,7 @@
       return {
         showForm: false, // 控制弹窗显示与否
         formData: {
-          driver_id: "",    // 工号
+          driver_id: localStorage.getItem("id"),   // 工号
           route_id: "",       // 路线路径
           car_id: "",       // 车牌号
           car_isusing: "",
@@ -66,7 +62,7 @@
       // 重置表单
       resetForm() {
         this.formData = {
-          driver_id: "",
+          driver_id: localStorage.getItem("id"),
           route_id: "",
           car_id: "",
           car_isusing: "",
