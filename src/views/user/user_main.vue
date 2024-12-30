@@ -149,9 +149,9 @@ function cancleTicket(){
 }
 async function fetchCurrentOrder() {
   try {
-    //const apiBaseStore = useApiBaseStore();
-    //let endpoint = apiBaseStore.baseUrl + "/getDriverData"; 
-    let endpoint ="http://localhost:8888/getCurrentOrder";
+    const apiBaseStore = useApiBaseStore();
+    let endpoint = `${apiBaseStore}/getCurrentOrder`;
+    //let endpoint ="http://localhost:8888/getCurrentOrder";
     let method = 'POST';
     let requestBody = {
       student_account:userStore.userInfo.id,
@@ -199,9 +199,9 @@ async function fetchCurrentOrder() {
 }
 async function fetchCurrentPayment() {
   try {
-    //const apiBaseStore = useApiBaseStore();
-    //let endpoint = apiBaseStore.baseUrl + "/getDriverData"; 
-    let endpoint ="http://localhost:8888/getCurrentPayment";
+    const apiBaseStore = useApiBaseStore();
+    let endpoint = `${apiBaseStore}/getCurrentPayment`;
+    // let endpoint ="http://localhost:8888/getCurrentPayment";
     let method = 'POST';
     let requestBody = {
       order_id:currentOrderID.value,
@@ -248,8 +248,9 @@ async function fetchCurrentPayment() {
 }
 async function submitOrder() {
   try {
-    // const apiBaseStore = useApiBaseStore();
-    let endpoint = "http://localhost:8888" + "/submitUserOrder";
+    const apiBaseStore = useApiBaseStore();
+    let endpoint = `${apiBaseStore}/submitUserOrder`;
+    // let endpoint = "http://localhost:8888" + "/submitUserOrder";
     let method = "POST";
     let requestBody = {
       order_id: null, 
@@ -288,8 +289,9 @@ async function submitOrder() {
 }
 async function ChangeOrder(value) {
   try {
-    // const apiBaseStore = useApiBaseStore();
-    let endpoint = "http://localhost:8888" + "/changeOrder";
+    const apiBaseStore = useApiBaseStore();
+    let endpoint = `${apiBaseStore}/changeOrder`;
+    // let endpoint = "http://localhost:8888" + "/changeOrder";
     let method = "POST";
     let requestBody = {
       order_id: currentOrderID.value, 
@@ -328,8 +330,9 @@ async function ChangeOrder(value) {
 }
 async function ChangeLeaveTime(value) {
   try {
-    // const apiBaseStore = useApiBaseStore();
-    let endpoint = "http://localhost:8888" + "/changeLeaveTime";
+    const apiBaseStore = useApiBaseStore();
+    let endpoint = `${apiBaseStore}/changeLeaveTime`;
+    // let endpoint = "http://localhost:8888" + "/changeLeaveTime";
     let method = "POST";
     let requestBody = {
       order_id:currentOrderID.value, 
@@ -368,8 +371,9 @@ async function ChangeLeaveTime(value) {
 }
 async function submitPayment() {
   try {
-    // const apiBaseStore = useApiBaseStore();
-    let endpoint = "http://localhost:8888" + "/submitUserPayment";
+    const apiBaseStore = useApiBaseStore();
+    let endpoint = `${apiBaseStore}/submitUserPayment"`;
+    // let endpoint = "http://localhost:8888" + "/submitUserPayment";
     let method = "POST";
     let requestBody = {
       payment_id:null,
@@ -403,8 +407,9 @@ async function submitPayment() {
 }
 async function ChangePayment(value) {
   try {
-    // const apiBaseStore = useApiBaseStore();
-    let endpoint = "http://localhost:8888" + "/changePayment";
+    const apiBaseStore = useApiBaseStore();
+    let endpoint = `${apiBaseStore}/changePayment"`;
+    // let endpoint = "http://localhost:8888" + "/changePayment";
     let method = "POST";
     let requestBody = {
       payment_id:currentPaymentID.value,
