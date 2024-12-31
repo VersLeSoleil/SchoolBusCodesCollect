@@ -1,5 +1,5 @@
 <script setup>
-import MapComponent from '@/views/driver_1/components/MapComponent.vue';
+import MapComponent from '@/views/driver_0/components/MapComponent.vue';
 import driverSimulation from '@/views/schoolbus-simulation/components/driver-simulation.vue';
 import callSim from '@/views/schoolbus-simulation/components/call-sim.vue';
 

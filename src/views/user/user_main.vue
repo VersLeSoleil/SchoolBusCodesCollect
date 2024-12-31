@@ -68,7 +68,7 @@ watch(Message, (newMessages) => {
     const message = newMessages[i];
 
     // 判断消息类型
-    if (message.type === 'call_accept') {
+    if (message.type === 'call_accept' && message.passenger_id === localStorage.getItem("id")) {
       // 进行相应的处理
       carid.value = message.car_id
       console.log('Processing case_accept message:', message);
