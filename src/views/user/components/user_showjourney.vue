@@ -87,13 +87,13 @@ async function fetchtabledata(){
     }
     console.log(tableData.value);
     console.log(payload);
-    onMounted(() => {
-      tableData.value.forEach(item => {
-        if (!item.time_down) {
-          item.time_down = '空';
-        }
-      });
-    });
+    // onMounted(() => {
+    //   tableData.value.forEach(item => {
+    //     if (!item.time_down) {
+    //       item.time_down = '空';
+    //     }
+    //   });
+    // });
   } catch (error) {
     console.error('There was an error fetching the data!', error);
   }

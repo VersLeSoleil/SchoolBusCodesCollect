@@ -58,9 +58,6 @@
 <script setup>
 import router from '@/router';
 import user_comment from './components/user_comment.vue'
-import {
-        useApiBaseStore
-    } from "@/stores/network"; // 导入令牌验证函数
 import { ElButton ,ElContainer, ElHeader, ElMain, ElAside, ElPagination,ElCard, ElAvatar } from "element-plus";
 import { computed,ref } from 'vue';
 const comments = ref([]);
@@ -89,8 +86,10 @@ function close_WriteComment(){
 async function getComments(){
   //获取评论内容
   try{
-      const apiBaseStore = useApiBaseStore();
-      let endpoint = apiBaseStore.localBaseUrl + "/getcomments";
+      //const apiBaseStore = useApiBaseStore();
+      const prefixURL = localStorage.getItem("prefixURL") || 'http://localhost:8888';
+
+      let endpoint = prefixURL + "/getcomments";
       const response = await fetch(endpoint,{
         method: 'GET',
         headers:{'Content-Type':'application/json',},
@@ -105,8 +104,9 @@ getComments();
 async function getNotices(){
   //获取公告内容
   try{
-    const apiBaseStore = useApiBaseStore();
-      let endpoint = apiBaseStore.localBaseUrl + "/getnotices";
+    const prefixURL = localStorage.getItem("prefixURL") || 'http://localhost:8888';
+
+      let endpoint = prefixURL + "/getnotices";
       const response = await fetch(endpoint,{
         method: 'GET',
         headers:{'Content-Type':'application/json',},

@@ -56,7 +56,7 @@ import User_payment from './user_payment.vue';
 import User_callBus from './user_callBus.vue';
 import { useUserStore } from '@/stores/userStore';
 const userStore=useUserStore();
-
+//import { getUserIDFromToken } from "@/auth.js";
 import { useWebSocketStore } from '@/stores/webSocketStore';
 const webSocketStore = useWebSocketStore();
 // 使用 computed 來確保 Message 是響應式的
@@ -480,9 +480,15 @@ function toPlatform(){
     router.push('/user-platform');
 }
 async function getjourneyrecord(){
+        const prefixURL = localStorage.getItem("prefixURL") || 'http://localhost:8888';
+        // const token = localStorage.getItem("jwtToken");
+        // const userID = getUserIDFromToken(token);
+        // const params = new URLSearchParams();
+        // params.append("userID", userID);
     try{
-        const apiBaseStore = useApiBaseStore();
-        let endpoint = apiBaseStore.localBaseUrl + "/getjourneyrecord";
+        //const apiBaseStore = useApiBaseStore();
+        //let endpoint = apiBaseStore.localBaseUrl + "/getjourneyrecord";
+        let endpoint = prefixURL + "/getjourneyrecord";
         let method = 'GET';
         const response = await fetch(endpoint, {
             method: method,
@@ -490,7 +496,9 @@ async function getjourneyrecord(){
             'Content-Type': 'application/json',
           },
         });
+        //const response = await axios.post(`${prefixURL}/api/getOrders`, params);
         const result = await response.json();
+        //const result = response.data;
         journeydata.value = result;
         //console.log(journeydata.value);
         return journeydata.value;
