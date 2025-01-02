@@ -14,6 +14,9 @@
 import {defineEmits, defineProps, ref} from 'vue'
 import { ElInput } from "element-plus";
 import {useApiBaseStore} from "@/stores/network"; // 导入令牌验证函数
+import { useUserStore } from "@/stores/userStore"; // 引入 User Store
+const userStore = useUserStore();
+const tempUserInfo = ref({ ...userStore.userInfo });
 const emit = defineEmits(['close_showjourney']);
 const commentarea = ref('');
 const props = defineProps({
@@ -31,10 +34,10 @@ async function submitComment(){
         const apiBaseStore = useApiBaseStore();
         let endpoint = apiBaseStore.localBaseUrl + "/submitUserComment";
         let requestBody = {
-            studentname : '小Y',
+            studentname : tempUserInfo.value.name,
             commentcontent: commentarea.value,
             commenttime : new Date().getFullYear() + "-" + (new Date().getMonth() + 1) + "-" + new Date().getDate() + " " + new Date().toLocaleTimeString(),
-            avatar : 'picture location',
+            avatar : userStore.userInfo.avatar.replace('http://localhost:8888', ''),
         };
         const response = await fetch(endpoint, {
             method: 'POST',
