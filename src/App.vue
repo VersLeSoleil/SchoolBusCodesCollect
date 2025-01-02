@@ -23,5 +23,5 @@ export default {
 </script>
 
 <style>
-/* 可选：全局样式 */
+
 </style>

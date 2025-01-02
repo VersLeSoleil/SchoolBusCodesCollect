@@ -19,6 +19,8 @@ import Header from './Admin_header.vue'
 .layout {
   display: flex;
   height: 100vh;
+  overflow-x: hidden;
+  overflow-y: hidden;
   /* 对移动端做响应式处理时，可能需要media query将Sidebar隐藏或折叠 */
 }
 
@@ -30,8 +32,8 @@ import Header from './Admin_header.vue'
 
 .content {
   padding: 16px;
-  overflow-y: auto;
-  margin-top: 60px; /* 避免与header重叠 */
+  overflow-y: hidden;
+  margin-top: 50px; /* 避免与header重叠 */
   background-color: #f9f9f9; /* 给主内容区淡色背景，突出侧边栏与header */
   min-height: calc(100vh - 60px);
   transition: background-color 0.3s ease;
