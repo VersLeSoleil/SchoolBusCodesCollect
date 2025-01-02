@@ -327,10 +327,15 @@ export default {
 
 
     const sortByPriority = () => {
-      sortedAndFilteredList.value.sort((a, b) => {
-        if (a.priority === b.priority) return 0;
-        return a.priority ? -1 : 1; // 优先显示 priority 为 true 的
-      });
+      try {
+        sortedAndFilteredList.value.sort((a, b) => {
+          if (a.priority === b.priority) return 0;
+          return a.priority ? -1 : 1; // 优先显示 priority 为 true 的
+        });
+      }
+      catch (error) {
+        console.log("easy")
+      }
     };
 
     // 设置排序字段
