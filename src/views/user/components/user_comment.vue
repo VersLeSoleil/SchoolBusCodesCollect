@@ -13,7 +13,7 @@
 <script setup>
 import {defineEmits, defineProps, ref} from 'vue'
 import { ElInput } from "element-plus";
-import {useApiBaseStore} from "@/stores/network"; // 导入令牌验证函数
+//import {useApiBaseStore} from "@/stores/network"; // 导入令牌验证函数
 import { useUserStore } from "@/stores/userStore"; // 引入 User Store
 const userStore = useUserStore();
 const tempUserInfo = ref({ ...userStore.userInfo });
@@ -26,13 +26,14 @@ const props = defineProps({
   }
 });
 async function submitComment(){
+    const prefixURL = localStorage.getItem("prefixURL") || 'http://localhost:8888';
     if(commentarea.value == ''){
         alert("请输入评论内容");
         return;
     }
     try{
-        const apiBaseStore = useApiBaseStore();
-        let endpoint = apiBaseStore.localBaseUrl + "/submitUserComment";
+        //const apiBaseStore = useApiBaseStore();
+        let endpoint = prefixURL + "/submitUserComment";
         let requestBody = {
             studentname : tempUserInfo.value.name,
             commentcontent: commentarea.value,
