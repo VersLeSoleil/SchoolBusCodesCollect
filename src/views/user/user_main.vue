@@ -585,7 +585,7 @@ async function handleLogout() {
             });
             ElMessage.success("您已成功登出~");
             localStorage.removeItem('jwtToken'); // 移除令牌
-            localStorage.setItem('prefixURL', 'http://121.199.79.24:5793');
+            localStorage.setItem('prefixURL', 'https://sysuschoolbus.top:5793');
             router.push('/login'); // 跳转到登录页面
         } catch (error) {
             if (error !== "cancel") {

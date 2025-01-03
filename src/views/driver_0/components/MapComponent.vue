@@ -287,8 +287,8 @@ export default {
           if (site.is_used == 0) return;
           // console.log("wqeq");
           const labelMarker = new AMap.LabelMarker({
-            position:  [site.location.latitude,
-                site.location.longitude],
+            position:  [site.location.longitude,
+                site.location.latitude],
             text: {
               content: site.name,
               style: {
@@ -457,7 +457,7 @@ export default {
 
   created() {
     const webSocketStore = useWebSocketStore();
-    webSocketStore.initWebSocket(); // 初始化 WebSocket
+    webSocketStore.initWebSocket(localStorage.getItem("webprefixURL")); // 初始化 WebSocket
   },
   mounted() {
     window._AMapSecurityConfig = {

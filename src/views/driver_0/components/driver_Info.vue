@@ -54,9 +54,9 @@ const cancelChanges = () => {
 
 async function fetchDriverData() {
   try {
-    //const apiBaseStore = useApiBaseStore();
-    //let endpoint = apiBaseStore.baseUrl + "/getDriverData"; 
-    let endpoint ="http://localhost:8888/getDriverData";
+    const apiBaseStore = useApiBaseStore();
+    let endpoint = apiBaseStore.baseUrl + "/getDriverData"; 
+    // let endpoint ="http://localhost:8888/getDriverData";
     let method = 'POST';
     let requestBody = {
       driver_id: user.id,  // 假设 user.id 是前端存储的当前用户的 ID
