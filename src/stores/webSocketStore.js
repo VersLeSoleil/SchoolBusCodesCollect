@@ -36,7 +36,7 @@ export const useWebSocketStore = defineStore('websocket', {
         },
 
         // 初始化 WebSocket 连接
-        initWebSocket(url = "ws://localhost:8888/ws") {
+        initWebSocket(url = "wss://localhost:8888/ws") {
             if (webSocket && webSocket.readyState === WebSocket.OPEN) {
                 return; // 已连接，直接返回
             }
@@ -48,6 +48,7 @@ export const useWebSocketStore = defineStore('websocket', {
                     this.isConnected = true;
                     reconnectAttempts = 0;
                     console.log("WebSocket 已连接");
+                    console.log(url);
                     // 发送待发送队列中的消息
                     this.flushSendQueue();
                 };

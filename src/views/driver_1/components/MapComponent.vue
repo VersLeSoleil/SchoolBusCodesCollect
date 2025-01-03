@@ -141,8 +141,8 @@ const addBusStationMarkers = () => {
     sites.value.forEach((site) => {
       if (site.is_used == 0) return;
       const labelMarker = new AMap.LabelMarker({
-        position:  [site.location.latitude,
-          site.location.longitude],
+        position:  [site.location.longitude,
+        site.location.latitude],
         text: {
           content: site.name,
           style: {

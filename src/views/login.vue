@@ -188,7 +188,7 @@ export default {
     setInitialLocalStorage() {
     const defaultValues = {
       jwtToken: '',
-      prefixURL: 'http://121.199.79.24:5793', // 默认的后端URL
+      prefixURL: 'https://sysuschoolbus.top:5793', // 默认的后端URL
     };
     for (const [key, value] of Object.entries(defaultValues)) {
       // 如果localStorage中没有这个键，则设置初始值
