@@ -76,7 +76,7 @@ async function fetchWorkShift() {
   try {
     // const apiBaseStore = useApiBaseStore();
     // let endpoint = apiBaseStore.localBaseUrl+"/getWorkShift";
-    const prefixURL=localStorage.getItem("prefixURL")||'http://localhost:8888';
+    const prefixURL=localStorage.getItem("prefixURL")||'https://localhost:8888';
     let endpoint = `${prefixURL}/getWorkShift`;
     let method = 'POST';
     let requestBody = {
@@ -191,7 +191,7 @@ function closePopup() {
   border: 1px solid #ccc;
   border-radius: 4px;
   appearance: none;
-  background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="%236c757d" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>') no-repeat right 0.75rem center/8px 8px;
+  background: url('data:image/svg+xml;utf8,<svg xmlns="https://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="%236c757d" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>') no-repeat right 0.75rem center/8px 8px;
 }
 .select2 {
   width: 100%;
@@ -201,7 +201,7 @@ function closePopup() {
   border: 1px solid #ccc;
   border-radius: 4px;
   appearance: none;
-  background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="%236c757d" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>') no-repeat right 0.75rem center/8px 8px;
+  background: url('data:image/svg+xml;utf8,<svg xmlns="https://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="%236c757d" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>') no-repeat right 0.75rem center/8px 8px;
 }
 .select3 {
   width: 100%;
@@ -211,7 +211,7 @@ function closePopup() {
   border: 1px solid #ccc;
   border-radius: 4px;
   appearance: none;
-  background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="%236c757d" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>') no-repeat right 0.75rem center/8px 8px;
+  background: url('data:image/svg+xml;utf8,<svg xmlns="https://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="%236c757d" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>') no-repeat right 0.75rem center/8px 8px;
 }
 
 .cancel,
