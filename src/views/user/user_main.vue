@@ -145,8 +145,10 @@ function cancleTicket(){
 }
 async function fetchCurrentOrder() {
   try {
-    const apiBaseStore = useApiBaseStore();
-    let endpoint = apiBaseStore.localBaseUrl+"/getCurrentOrder";
+    // const apiBaseStore = useApiBaseStore();
+    // let endpoint = apiBaseStore.localBaseUrl+"/getCurrentOrder";
+    const prefixURL=localStorage.getItem("prefixURL")||'http://localhost:8888';
+    let endpoint = `${prefixURL}/getCurrentOrder`;
     //let endpoint ="http://localhost:8888/getCurrentOrder";
     let method = 'POST';
     let requestBody = {
@@ -195,8 +197,10 @@ async function fetchCurrentOrder() {
 }
 async function fetchCurrentPayment() {
   try {
-    const apiBaseStore = useApiBaseStore();
-    let endpoint = apiBaseStore.localBaseUrl+"/getCurrentPayment";
+    // const apiBaseStore = useApiBaseStore();
+    // let endpoint = apiBaseStore.localBaseUrl+"";
+    const prefixURL=localStorage.getItem("prefixURL")||'http://localhost:8888';
+    let endpoint = `${prefixURL}/getCurrentPayment`;
     // let endpoint ="http://localhost:8888/getCurrentPayment";
     let method = 'POST';
     let requestBody = {
@@ -244,8 +248,10 @@ async function fetchCurrentPayment() {
 }
 async function submitOrder() {
   try {
-    const apiBaseStore = useApiBaseStore();
-    let endpoint = apiBaseStore.localBaseUrl+"/submitUserOrder";
+    // const apiBaseStore = useApiBaseStore();
+    // let endpoint = apiBaseStore.localBaseUrl+"/submitUserOrder";
+    const prefixURL=localStorage.getItem("prefixURL")||'http://localhost:8888';
+    let endpoint = `${prefixURL}/submitUserOrder`;
     // let endpoint = "http://localhost:8888" + "/submitUserOrder";
     let method = "POST";
     let requestBody = {
@@ -285,8 +291,10 @@ async function submitOrder() {
 }
 async function ChangeOrder(value) {
   try {
-    const apiBaseStore = useApiBaseStore();
-    let endpoint = apiBaseStore.localBaseUrl+"/changeOrder";
+    // const apiBaseStore = useApiBaseStore();
+    // let endpoint = apiBaseStore.localBaseUrl+"/changeOrder";
+    const prefixURL=localStorage.getItem("prefixURL")||'http://localhost:8888';
+    let endpoint = `${prefixURL}/changeOrder`;
     // let endpoint = "http://localhost:8888" + "/changeOrder";
     let method = "POST";
     let requestBody = {
@@ -326,8 +334,10 @@ async function ChangeOrder(value) {
 }
 async function ChangeLeaveTime(value) {
   try {
-    const apiBaseStore = useApiBaseStore();
-    let endpoint = apiBaseStore.localBaseUrl+"/changeLeaveTime";
+    // const apiBaseStore = useApiBaseStore();
+    // let endpoint = apiBaseStore.localBaseUrl+"/changeLeaveTime";
+    const prefixURL=localStorage.getItem("prefixURL")||'http://localhost:8888';
+    let endpoint = `${prefixURL}/changeLeaveTime`;
     // let endpoint = "http://localhost:8888" + "/changeLeaveTime";
     let method = "POST";
     let requestBody = {
@@ -367,8 +377,10 @@ async function ChangeLeaveTime(value) {
 }
 async function submitPayment() {
   try {
-    const apiBaseStore = useApiBaseStore();
-    let endpoint = apiBaseStore.localBaseUrl+"/submitUserPayment";
+    // const apiBaseStore = useApiBaseStore();
+    // let endpoint = apiBaseStore.localBaseUrl+"/submitUserPayment";
+    const prefixURL=localStorage.getItem("prefixURL")||'http://localhost:8888';
+    let endpoint = `${prefixURL}/submitUserPayment`;
     // let endpoint = "http://localhost:8888" + "/submitUserPayment";
     let method = "POST";
     let requestBody = {
@@ -403,8 +415,10 @@ async function submitPayment() {
 }
 async function ChangePayment(value) {
   try {
-    const apiBaseStore = useApiBaseStore();
-    let endpoint = apiBaseStore.localBaseUrl+"/changePayment";
+    // const apiBaseStore = useApiBaseStore();
+    // let endpoint = apiBaseStore.localBaseUrl+"/changePayment";
+    const prefixURL=localStorage.getItem("prefixURL")||'http://localhost:8888';
+    let endpoint = `${prefixURL}/changePayment`;
     // let endpoint = "http://localhost:8888" + "/changePayment";
     let method = "POST";
     let requestBody = {
