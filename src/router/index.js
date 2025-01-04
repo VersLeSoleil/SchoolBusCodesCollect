@@ -3,7 +3,7 @@ import LoginPage from '../views/login.vue'; // 确保路径正确
 import HomePage from '../views/HomePage.vue';
 import Driver_Page_0 from '@/views/driver_0/driver_Page_0.vue';
 import Driver_Page_1 from '@/views/driver_1/driver_Page_1.vue';
-import Driver_Info from '@/views/driver_0/driver_Info.vue';
+import Driver_Info from '@/views/driver_0/components/driver_Info.vue';
 // import test_user_map from '@/views/components/Map-user(backup).vue';
 import test_admin_map from '@/views/components/Map-admin.vue';
 import User_main from '@/views/user/user_main.vue';
@@ -228,11 +228,11 @@ router.beforeEach(async (to, from, next) => {
             // 检查目标路由是否有角色限制
             const requiredRoles = to.meta.requiredRoles || [];
             if (requiredRoles.length === 0 || requiredRoles.includes(userRole)) {
-                 // === 在这里判断是否要先获取用户信息 ===
-        if (to.name === 'user-person') {
-            const store = useUserStore(pinia);
-            await store.fetchUserInfo();
-          }
+                // === 在这里判断是否要先获取用户信息 ===
+                if (to.name === 'user-person') {
+                    const store = useUserStore(pinia);
+                    await store.fetchUserInfo();
+                }
                 next();
             } else {
                 next('/404'); // 重定向到 404 页面
