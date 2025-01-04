@@ -201,11 +201,11 @@ const initMap = (longitude, latitude) => {
     }
   );
     // 初始化用户位置标记
-    marker.value = new AMap.Marker({
-      position: [longitude, latitude],
-      map: map.value,
-    });
-    map.value.add(marker.value);
+    // marker.value = new AMap.Marker({
+    //   position: [longitude, latitude],
+    //   map: map.value,
+    // });
+    // map.value.add(marker.value);
 
   addBusStationMarkers();
   loadAndDrawRoutes(); // 加载并绘制路线
@@ -280,13 +280,24 @@ const updateLocation = () => {
         (position) => {
           const { longitude, latitude } = position.coords;
 
-          if (!isMapInitialized.value) {
-            initMap(longitude, latitude);
-          } else if (marker.value) {
-            marker.value.setPosition([longitude, latitude]);
-          }
+          // 转换为高德地图坐标（GCJ-02）
+          const gps = [[longitude, latitude]];
+          AMap.convertFrom(gps, 'gps', (status, result) => {
+            if (result.info === 'ok') {
+              const { lng, lat } = result.locations[0];
 
-          sendLocationToBackendWebSocket(longitude, latitude);
+              if (!isMapInitialized.value) {
+                initMap(lng, lat);
+              } else if (marker.value) {
+                marker.value.setPosition([lng, lat]);
+              }
+
+              // 发送转换后的坐标到后端
+              sendLocationToBackendWebSocket(lng, lat);
+            } else {
+              console.error("坐标转换失败", result);
+            }
+          });
         },
         (error) => {
           console.error("无法获取位置", error);
@@ -298,6 +309,7 @@ const updateLocation = () => {
     console.error("浏览器不支持地理定位");
   }
 };
+
 
 const sendLocationToBackendWebSocket = async (longitude, latitude) => {
   // const userStore = useUserStore();
@@ -347,6 +359,24 @@ const updateMarkers = async () => {
     });
     markers.value.push(marker);
   });
+
+  // const messages = [...driverGpsMessages.value];
+  // messages.forEach((message) => {
+  //   if (!message.location) return;
+  //   const { location } = message;
+  //   var gps = [[location.longitude, location.latitude]];
+  //   AMap.convertFrom(gps, 'gps', function (status, result) {
+  //     if (result.info === 'ok') {
+  //       const lnglats = result.locations[0]; // {lng, lat}
+  //       const marker = new AMap.Marker({
+  //         position: [lnglats.lng, lnglats.lat],
+  //         map: map.value,
+  //       });
+  //       markers.value.push(marker);
+  //     }
+  //   });
+  // });
+
 
   // 清空已处理的消息队列
   webSocketStore.clearDriverGpsMessages(); // 假设存在该方法
