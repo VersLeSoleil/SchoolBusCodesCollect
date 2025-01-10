@@ -47,7 +47,7 @@ import {ref,onMounted,computed} from 'vue';
 let select_from=ref();
 let select_dest=ref();
 let work_shift = ref();
-let select_carID = ref(111);
+let select_carID = ref();
 let driverIDs = computed(() => {
 if (!Array.isArray(work_shift.value)) {
         return 0;
@@ -130,10 +130,14 @@ function cancel() {
 }
 // 确定逻辑
 function confirm() {
-  console.log('确定功能触发');
-  emit('openPayment');
+  if (!select_from.value || !select_dest.value||!select_carID.value) {
+        alert('請選擇出發地和目標地和车辆！');
+        return;
+    }
   fetchWorkShift().then(()=>{
     props.getTicket(select_from,select_dest,select_carID, parseInt(driverIDs.value[0]));
+    console.log('确定功能触发');
+    emit('openPayment');
   })
 }
 
