@@ -7,16 +7,8 @@
               <strong>叫车</strong>
           </h2>
           
-          <p><strong>目的地：</strong>
-            <select class="select1" v-model="select_dest">
-              <option value="" disabled selected>请选择...</option>
-              <option value="榕园广场">榕园广场</option>
-              <option value="荔园广场">荔园广场</option>
-              <option value="教学楼">教学楼</option></select></p>
-          <p>
-              <button @click="cancel" class="cancel">取消</button>
-              <button @click="confirm" class="confirm">确定</button>
-          </p>
+          
+         
           <div class="form-group">
       <label for="fromLocation">选择出发地点：</label>
       <select v-model="fromLocation" id="fromLocation" class="location-select">
@@ -83,7 +75,6 @@ onMounted(() => {
 });
 
 //   let select_from=ref();
-  let select_dest=ref();
 //   let select_carID=ref();
   // 定义 props
   const props = defineProps({
@@ -103,17 +94,8 @@ onMounted(() => {
   
   // 定义 emits
   const emit = defineEmits(['close3','openPayment']);
-  // 购票逻辑（这里暂时没有实现具体逻辑）
-  function cancel() {
-    closePopup(); // 关闭弹窗
-    // 你可以在这里添加付款的具体逻辑
-  }
-  // 确定逻辑
-  function confirm() {
-    console.log('确定功能触发');
-    emit('openPayment');
-    props.getTicket("当前位置",select_dest,"来接车辆车牌");
-  }
+
+
   
   // 关闭弹窗
   function closePopup() {
@@ -238,9 +220,21 @@ onMounted(() => {
     appearance: none;
     background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="%236c757d" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>') no-repeat right 0.75rem center/8px 8px;
   }
+  .location-select{
+    
+    width: 100%;
+    font-size: 18px;
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    appearance: none;
+    background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="%236c757d" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>') no-repeat right 0.75rem center/8px 8px;
   
+  }
   .cancel,
-  .confirm {
+  .confirm, 
+  .call-btn{
     position: relative;
     left: 35%;
     display: inline-block;
@@ -256,12 +250,14 @@ onMounted(() => {
   }
   
   .cancel:hover,
-  .confirm:hover {
+  .confirm:hover,
+  .call-btn:hover {
     background-color: #047b0c;
   }
   
   .cancel:active,
-  .confirm:active {
+  .confirm:active ,
+  .call-btn:active{
     transform: translateY(1px);
   }
   
