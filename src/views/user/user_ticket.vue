@@ -41,7 +41,9 @@
 import { defineProps, defineEmits } from 'vue';
 import {ref,onMounted,computed} from 'vue';
 // import sites from "@/assets/bus_station_data.json";
-
+import {
+        useApiBaseStore
+    } from "@/stores/network"; // 导入令牌验证函数
 
 let select_from=ref();
 let select_dest=ref();

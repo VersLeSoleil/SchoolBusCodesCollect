@@ -25,15 +25,12 @@
             <div class="overlay-text">更换头像</div>
           </div>
         </div>
-        <div v-else>加载中...</div>
+        <div v-else>点击上传头像</div>
       </ElUpload>
 
-      <div class="user-info-details" v-if="userStore.userInfo && userStore.userInfo.name">
+      <div class="user-info-details">
         <h2>{{ userStore.userInfo.name }}</h2>
         <p>账号名：{{ userStore.userInfo.student_account }}</p>
-      </div>
-      <div v-else>
-        加载中...
       </div>
     </div>
 
@@ -146,6 +143,7 @@ async function saveField(field) {
         user_id: parseInt(userStore.userInfo.user_id),
       };
       await userStore.updateUserInfo(payload);
+      
 
       editingField.value = "";
       hoveredField.value = "";
