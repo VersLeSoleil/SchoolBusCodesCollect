@@ -94,6 +94,7 @@
           if (response.ok) {
             // 信息提交成功
             alert("操作成功！");
+            localStorage.setItem("car_id", this.formData.car_id);
             this.router.push('/driver-1'); // 跳转到 `/driver-0`
             // window.location.href = "/driver-1"; // 替换为目标页面路径
           } else {

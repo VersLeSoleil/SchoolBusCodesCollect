@@ -67,7 +67,7 @@
   <script setup>
   import { ref, onMounted, onBeforeUnmount } from "vue";
   import axios from "axios";
-  import {useApiBaseStore} from "@/stores/network";
+  // import {useApiBaseStore} from "@/stores/network";
   import { useWebSocketStore } from '@/stores/webSocketStore'; // 导入 WebSocket store
 
 
@@ -92,8 +92,8 @@
     }
     console.log("Creating driver with ID:", id);
     try {
-      const apiBaseStore = useApiBaseStore();
-      const response = await axios.post(apiBaseStore.localBaseUrl + "/create_driver", {
+      // const apiBaseStore = useApiBaseStore();
+      const response = await axios.post(localStorage.getItem('prefixURL') + "/create_driver", {
         id: id.toString(), // 确保 id 是字符串
       });
       console.log("Driver created with ID:", id);
@@ -113,8 +113,8 @@
     }
     console.log("Deleting driver with ID:", id);
     try {
-      const apiBaseStore = useApiBaseStore();
-      const response = await axios.post(apiBaseStore.localBaseUrl + "/delete_driver", {
+      // const apiBaseStore = useApiBaseStore();
+      const response = await axios.post(localStorage.getItem('prefixURL') + "/delete_driver", {
         id: id.toString(), // 确保 id 是字符串
       });
       console.log("Driver delete with ID:", id);
@@ -127,7 +127,7 @@
   // 初始化 WebSocket
   const initWebSocket = () => {
     // 在组件挂载时初始化 WebSocket 连接
-    webSocketStore.initWebSocket("ws://localhost:8888/ws");
+    // webSocketStore.initWebSocket("ws://localhost:8888/ws");
   };
 
   // 更新驾驶员位置

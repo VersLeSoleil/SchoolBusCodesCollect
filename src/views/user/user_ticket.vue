@@ -40,6 +40,7 @@
 <script setup>
 import { defineProps, defineEmits } from 'vue';
 import {ref,onMounted,computed} from 'vue';
+// import { useApiBaseStore } from '@/stores/network';
 // import sites from "@/assets/bus_station_data.json";
 import {
         useApiBaseStore
@@ -48,7 +49,7 @@ import {
 let select_from=ref();
 let select_dest=ref();
 let work_shift = ref();
-let select_carID = ref(111);
+let select_carID = ref();
 let driverIDs = computed(() => {
 if (!Array.isArray(work_shift.value)) {
         return 0;
@@ -75,9 +76,10 @@ const props = defineProps({
 onMounted(fetchWorkShift);
 async function fetchWorkShift() {
   try {
-    const apiBaseStore = useApiBaseStore();
-    let endpoint = `${apiBaseStore}/getWorkShift`;
-    // let endpoint ="http://localhost:8888/getWorkShift";
+    // const apiBaseStore = useApiBaseStore();
+    // let endpoint = apiBaseStore.localBaseUrl+"/getWorkShift";
+    const prefixURL=localStorage.getItem("prefixURL")||'https://localhost:8888';
+    let endpoint = `${prefixURL}/getWorkShift`;
     let method = 'POST';
     let requestBody = {
         current_time:new Date().toLocaleString()
@@ -130,10 +132,14 @@ function cancel() {
 }
 // 确定逻辑
 function confirm() {
-  console.log('确定功能触发');
-  emit('openPayment');
+  if (!select_from.value || !select_dest.value||!select_carID.value) {
+        alert('請選擇出發地和目標地和车辆！');
+        return;
+    }
   fetchWorkShift().then(()=>{
     props.getTicket(select_from,select_dest,select_carID, parseInt(driverIDs.value[0]));
+    console.log('确定功能触发');
+    emit('openPayment');
   })
 }
 
@@ -191,7 +197,7 @@ function closePopup() {
   border: 1px solid #ccc;
   border-radius: 4px;
   appearance: none;
-  background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="%236c757d" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>') no-repeat right 0.75rem center/8px 8px;
+  background: url('data:image/svg+xml;utf8,<svg xmlns="https://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="%236c757d" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>') no-repeat right 0.75rem center/8px 8px;
 }
 .select2 {
   width: 100%;
@@ -201,7 +207,7 @@ function closePopup() {
   border: 1px solid #ccc;
   border-radius: 4px;
   appearance: none;
-  background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="%236c757d" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>') no-repeat right 0.75rem center/8px 8px;
+  background: url('data:image/svg+xml;utf8,<svg xmlns="https://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="%236c757d" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>') no-repeat right 0.75rem center/8px 8px;
 }
 .select3 {
   width: 100%;
@@ -211,7 +217,7 @@ function closePopup() {
   border: 1px solid #ccc;
   border-radius: 4px;
   appearance: none;
-  background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="%236c757d" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>') no-repeat right 0.75rem center/8px 8px;
+  background: url('data:image/svg+xml;utf8,<svg xmlns="https://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="%236c757d" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>') no-repeat right 0.75rem center/8px 8px;
 }
 
 .cancel,

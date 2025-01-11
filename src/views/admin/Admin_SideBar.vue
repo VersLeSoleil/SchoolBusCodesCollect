@@ -79,6 +79,7 @@ const menuItems = [
     name: 'Userspass',
     children: [
       {path: '/admin_home/userspass', title: '学生列表', icon: 'el-icon-document', name: 'UserList'},
+      {path: '/admin_home/feedback', title: '投诉意见处理', icon: 'el-icon-bell', name: 'Feedback'},
     ]
   },
   {
@@ -103,20 +104,18 @@ const menuItems = [
     ]
   },
   {
-    path: '/admin_home/feedback',
-    title: '投诉意见处理',
-    icon: 'el-icon-bell',
-    name: 'Feedback'
-  },
-  {
-    path: '/admin_home/variables',
+    path: '',
     title: '系统设置',
-    icon: 'el-icon-s-tools',
-    name: 'SystemSettings'
+    icon: 'el-icon-map-location',
+    name: 'Route',
+    children: [
+      {path: '/admin_home/variables', title: '变量管理', icon: 'el-icon-s-tools', name: 'SystemSettings'},
+      {path: '/admin_home/manage_routes', title: '编辑路线', icon: 'el-icon-edit', name: 'RouteEdit'}
+    ]
   },
   {
-    path: '/admin_home/test',
-    title: '测试工具',
+    path: '/admin_home/ai',
+    title: '智能助手',
     icon: 'el-icon-s-opportunity',
     name: 'TestTools'
   }

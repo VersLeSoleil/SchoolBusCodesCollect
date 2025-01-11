@@ -27,6 +27,11 @@
 import { defineProps,defineEmits,ref,onMounted } from 'vue';
 import { ElTable, ElTableColumn,ElPagination } from 'element-plus';
 import { computed } from 'vue';
+import { useUserStore } from "@/stores/userStore"; // 引入 User Store
+
+const userStore = useUserStore();
+const tempUserInfo = ref({ ...userStore.userInfo });
+
 
 const props = defineProps({
   visible: {
@@ -41,6 +46,7 @@ const props = defineProps({
 // 定义 emits
 const emit = defineEmits(['close_showjourney']);
 function handleclose(){
+  // alert(tempUserInfo.value.name);
     emit('close_showjourney'); //调用user_main的close_showjourney函数
 }
 //const tableData = ref(props.getjourneyrecord());
@@ -59,17 +65,35 @@ async function fetchtabledata(){
   //getjourneyrecord返回的是一个promise，而不是数据，需要这样处理
   try {
     const data = await props.getjourneyrecord();
-    if (data) {
-      tableData.value = data;
+    const payload = {
+        student_account: userStore.userInfo.student_account,
+        name: tempUserInfo.value.name,
+        grade: parseInt(tempUserInfo.value.grade),
+        major: tempUserInfo.value.major,
+        phone: tempUserInfo.value.phone,
+        avatar: userStore.userInfo.avatar.replace('http://localhost:8888', ''),
+        user_id: parseInt(userStore.userInfo.user_id),
+      };
+    //await userStore.updateUserInfo(payload);
+    //const tmp = data.filter(data => data.studentaccount === "ws");
+    const tmp = [];
+    data.forEach(d => {
+      if(d.studentaccount === payload.student_account){
+        tmp.push(d);
+      }
+    });
+    if (tmp) {
+      tableData.value = tmp;
     }
     console.log(tableData.value);
-    onMounted(() => {
-      tableData.value.forEach(item => {
-        if (!item.time_down) {
-          item.time_down = '空';
-        }
-      });
-    });
+    console.log(payload);
+    // onMounted(() => {
+    //   tableData.value.forEach(item => {
+    //     if (!item.time_down) {
+    //       item.time_down = '空';
+    //     }
+    //   });
+    // });
   } catch (error) {
     console.error('There was an error fetching the data!', error);
   }
@@ -77,7 +101,8 @@ async function fetchtabledata(){
 onMounted(()=> {
   fetchtabledata();
   // 启动定时器，每隔一段时间（例如5秒）重新获取数据
-  setInterval(fetchtabledata, 5000);
+  setInterval(fetchtabledata, 10000);
+  //setInterval(getinformation, 15000);
 });
 
 

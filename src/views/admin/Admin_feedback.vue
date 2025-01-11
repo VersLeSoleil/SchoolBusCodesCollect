@@ -98,7 +98,17 @@
         <h2>处理投诉 - 反馈ID: {{ selectedFeedback.feedback_id }}</h2>
         <p>司机ID: {{ selectedFeedback.driver_id }}</p>
         <p>车辆号: {{ selectedFeedback.vehicle_number }}</p>
-        <!-- TODO: 添加更多处理选项 -->
+
+          <label for="complaint-text">投诉内容:</label>
+          <textarea
+              id="complaint-text"
+              v-model="driverComplaintContent"
+              placeholder="请输入对司机的投诉内容..."
+              class="complaint-textarea"
+          ></textarea>
+
+        <p v-if="isComplaintEmpty" class="error-message">投诉内容不能为空！</p>
+
         <button @click="closeProcessModal" class="close-button">关闭</button>
         <button @click="dealWithComplaint" class="deal-button">处理</button>
       </div>
@@ -112,12 +122,17 @@ import {computed, onMounted, ref} from 'vue';
 export default {
   name: 'FeedbackHandler',
   setup() {
+    const driverComplaintContent = ref(''); // 对司机的投诉内容
     const feedbackList = ref([]);
     const isModalOpen = ref(false);
     const selectedFeedback = ref({});
 
+    const isComplaintEmpty = ref(false); // 检测投诉内容是否为空
+
     // 搜索关键字
     const searchTerm = ref('');
+
+
 
     // 排序相关
     const sortKey = ref('');
@@ -217,7 +232,8 @@ export default {
           body: JSON.stringify({
             type: "coupon",
             feedback_id: feedback.feedback_id,
-            other: {}
+            complaint: '',
+            driver_id: feedback.driver_id,
           }),
         });
 
@@ -252,7 +268,16 @@ export default {
 
     // 处理投诉
     const dealWithComplaint = async () => {
+      // 检测投诉内容是否为空
+      if (driverComplaintContent.value === "") {
+        isComplaintEmpty.value = true; // 显示错误信息
+        console.log("empty")
+        return; // 终止提交操作
+      }
+      isComplaintEmpty.value = false; // 重置错误信息
+
       try {
+        console.log("into")
         const prefixURL = localStorage.getItem("prefixURL"); // 获取后端地址
         const token = localStorage.getItem("jwtToken"); // 获取 JWT token
 
@@ -265,7 +290,8 @@ export default {
           body: JSON.stringify({
             type: "complaint",
             feedback_id: selectedFeedback.value.feedback_id,
-            other: {}
+            complaint: driverComplaintContent.value, // 将输入的投诉内容发送到后端
+            driver_id: selectedFeedback.value.driver_id,
           }),
         });
 
@@ -273,18 +299,19 @@ export default {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
 
-        closeProcessModal();
+        closeProcessModal(); // 关闭模态框
+        driverComplaintContent.value = ''; // 重置投诉内容
 
-        // 我知道你很急但你先别急
         const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
         await wait(250);
 
-        await fetchFeedbackData();
+        await fetchFeedbackData(); // 刷新数据
 
       } catch (error) {
-        console.error("Error fetching data:", error);
+        console.error("Error processing complaint:", error);
       }
     };
+
 
     // 前端搜索过滤
     const filteredList = computed(() => {
@@ -300,10 +327,15 @@ export default {
 
 
     const sortByPriority = () => {
-      sortedAndFilteredList.value.sort((a, b) => {
-        if (a.priority === b.priority) return 0;
-        return a.priority ? -1 : 1; // 优先显示 priority 为 true 的
-      });
+      try {
+        sortedAndFilteredList.value.sort((a, b) => {
+          if (a.priority === b.priority) return 0;
+          return a.priority ? -1 : 1; // 优先显示 priority 为 true 的
+        });
+      }
+      catch (error) {
+        console.log("easy")
+      }
     };
 
     // 设置排序字段
@@ -362,7 +394,9 @@ export default {
       canIssueCoupon,
       canHandleComplaint,
       sortByPriority,
-      filterFeedbackContent
+      filterFeedbackContent,
+      driverComplaintContent,
+      isComplaintEmpty,
     };
   },
 };
@@ -477,6 +511,24 @@ h1 {
 
 
 
+.complaint-textarea {
+  width: 100%;
+  height: 80px;
+  margin-top: 10px;
+  margin-bottom: 10px;
+  padding: 8px;
+  font-size: 14px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  resize: none;
+}
+
+.error-message {
+  color: #e74c3c;
+  font-size: 12px;
+  margin-top: -5px;
+  margin-bottom: 10px;
+}
 
 
 

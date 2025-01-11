@@ -16,7 +16,7 @@
             </div>
         </header>
     <div class="app-container">  
-        <user_map/> 
+        <user_map @updateSites="updateSites"/> 
         <button v-show="buyButtonVisible&&!leaveButtonVisible" @click="showBuyTickt" class="btn buyTicket">购票</button>
         <button v-show="buyButtonVisible&&!leaveButtonVisible" @click="showCallBus" class="btn callBus">叫车</button>
         <button v-show="!buyButtonVisible" @click="showTicket" class="btn ticket">上车凭证</button>
@@ -24,9 +24,9 @@
         <button v-show="!buyButtonVisible" @click="cancleTicket" class="btn cancelTicket">取消订单</button>
         <button v-show="leaveButtonVisible" @click="leaveCar" class="btn leaveCar">确认下车</button>
     </div>
-    <user_ticket :visible="buyTicketVisible" @close="close" @openPayment="openPayment" :getTicket="getTicket" />
+    <user_ticket :visible="buyTicketVisible" :sites="sites" @close="close" @openPayment="openPayment" :getTicket="getTicket" />
     <User_proveticket :visible="provideTicketVisible" @close1="close1" @confirmInCar="confirmInCar" :from="from" :dest="dest" :carid="carid" :buyTime="buyTime"/>
-    <User_callBus :visible="callBusVisible" @close3="close3" @openPayment="openPayment" :getTicket="getTicket"/>
+    <User_callBus :visible="callBusVisible" :sites="sites" @close3="close3" @openPayment="openPayment" :getTicket="getTicket"/>
     <User_payment :visible="paymentVisible" :confirmPay="confirmPay" @close2="close2" :from="from" :dest="dest"/>
     <user_showjourney :visible="showjourneyVisible" @close_showjourney="close_showjourney" :getjourneyrecord="getjourneyrecord"/>
 </template>
@@ -39,8 +39,8 @@ import { ref, onMounted, computed, watch } from 'vue';
 import User_proveticket from './user_proveticket.vue';
 import axios from "axios";
 import {validateToken} from "@/auth.js";
-// import user_map from './user_map.vue';
-import user_map from '@/views/components/Map-user.vue';
+import user_map from './user_map.vue';
+// import user_map from '@/views/components/Map-user.vue';
 
 import {
         ElAvatar,
@@ -54,17 +54,13 @@ import {
     } from "@/stores/network"; // 导入令牌验证函数
 import User_payment from './user_payment.vue';
 import User_callBus from './user_callBus.vue';
-
 import { useUserStore } from '@/stores/userStore';
 const userStore=useUserStore();
-
+//import { getUserIDFromToken } from "@/auth.js";
 import { useWebSocketStore } from '@/stores/webSocketStore';
-
 const webSocketStore = useWebSocketStore();
-
 // 使用 computed 來確保 Message 是響應式的
 const Message = computed(() => webSocketStore.messages);
-
 // 监听 Message 队列的变化
 watch(Message, (newMessages) => {
   // 遍历消息队列，处理类型为 'case_accept' 的消息
@@ -72,7 +68,7 @@ watch(Message, (newMessages) => {
     const message = newMessages[i];
 
     // 判断消息类型
-    if (message.type === 'call_accept') {
+    if (message.type === 'call_accept' && message.passenger_id === localStorage.getItem("id")) {
       // 进行相应的处理
       carid.value = message.car_id
       console.log('Processing case_accept message:', message);
@@ -84,7 +80,7 @@ watch(Message, (newMessages) => {
   }
 }, { deep: true });
 
-
+let sites = [];
 let journeydata = ref([])
 let from = ref("榕园广场");
 let dest = ref("教学楼");
@@ -149,12 +145,14 @@ function cancleTicket(){
 }
 async function fetchCurrentOrder() {
   try {
-    //const apiBaseStore = useApiBaseStore();
-    //let endpoint = apiBaseStore.baseUrl + "/getDriverData"; 
-    let endpoint ="http://localhost:8888/getCurrentOrder";
+    // const apiBaseStore = useApiBaseStore();
+    // let endpoint = apiBaseStore.localBaseUrl+"/getCurrentOrder";
+    const prefixURL=localStorage.getItem("prefixURL")||'https://localhost:8888';
+    let endpoint = `${prefixURL}/getCurrentOrder`;
+    //let endpoint ="https://localhost:8888/getCurrentOrder";
     let method = 'POST';
     let requestBody = {
-      student_account:userStore.userInfo.id,
+      student_account:userStore.userInfo.student_account,
       pickup_time:buyTime.value
     };
     // 发送请求到后端
@@ -199,9 +197,11 @@ async function fetchCurrentOrder() {
 }
 async function fetchCurrentPayment() {
   try {
-    //const apiBaseStore = useApiBaseStore();
-    //let endpoint = apiBaseStore.baseUrl + "/getDriverData"; 
-    let endpoint ="http://localhost:8888/getCurrentPayment";
+    // const apiBaseStore = useApiBaseStore();
+    // let endpoint = apiBaseStore.localBaseUrl+"";
+    const prefixURL=localStorage.getItem("prefixURL")||'https://localhost:8888';
+    let endpoint = `${prefixURL}/getCurrentPayment`;
+    // let endpoint ="https://localhost:8888/getCurrentPayment";
     let method = 'POST';
     let requestBody = {
       order_id:currentOrderID.value,
@@ -249,11 +249,14 @@ async function fetchCurrentPayment() {
 async function submitOrder() {
   try {
     // const apiBaseStore = useApiBaseStore();
-    let endpoint = "http://localhost:8888" + "/submitUserOrder";
+    // let endpoint = apiBaseStore.localBaseUrl+"/submitUserOrder";
+    const prefixURL=localStorage.getItem("prefixURL")||'https://localhost:8888';
+    let endpoint = `${prefixURL}/submitUserOrder`;
+    // let endpoint = "https://localhost:8888" + "/submitUserOrder";
     let method = "POST";
     let requestBody = {
       order_id: null, 
-      student_account:userStore.userInfo.id,
+      student_account:userStore.userInfo.student_account,
       driver_id:driverid.value,
       car_id:carid.value,
       pickup_station_id:0,
@@ -289,11 +292,14 @@ async function submitOrder() {
 async function ChangeOrder(value) {
   try {
     // const apiBaseStore = useApiBaseStore();
-    let endpoint = "http://localhost:8888" + "/changeOrder";
+    // let endpoint = apiBaseStore.localBaseUrl+"/changeOrder";
+    const prefixURL=localStorage.getItem("prefixURL")||'https://localhost:8888';
+    let endpoint = `${prefixURL}/changeOrder`;
+    // let endpoint = "https://localhost:8888" + "/changeOrder";
     let method = "POST";
     let requestBody = {
       order_id: currentOrderID.value, 
-      student_account:userStore.userInfo.id,
+      student_account:userStore.userInfo.student_account,
       driver_id:driverid.value,
       car_id:carid.value,
       pickup_station_id:0,
@@ -329,11 +335,14 @@ async function ChangeOrder(value) {
 async function ChangeLeaveTime(value) {
   try {
     // const apiBaseStore = useApiBaseStore();
-    let endpoint = "http://localhost:8888" + "/changeLeaveTime";
+    // let endpoint = apiBaseStore.localBaseUrl+"/changeLeaveTime";
+    const prefixURL=localStorage.getItem("prefixURL")||'https://localhost:8888';
+    let endpoint = `${prefixURL}/changeLeaveTime`;
+    // let endpoint = "https://localhost:8888" + "/changeLeaveTime";
     let method = "POST";
     let requestBody = {
       order_id:currentOrderID.value, 
-      student_account:userStore.userInfo.id,
+      student_account:userStore.userInfo.student_account,
       driver_id:driverid.value,
       car_id:carid.value,
       pickup_station_id:0,
@@ -369,7 +378,10 @@ async function ChangeLeaveTime(value) {
 async function submitPayment() {
   try {
     // const apiBaseStore = useApiBaseStore();
-    let endpoint = "http://localhost:8888" + "/submitUserPayment";
+    // let endpoint = apiBaseStore.localBaseUrl+"/submitUserPayment";
+    const prefixURL=localStorage.getItem("prefixURL")||'https://localhost:8888';
+    let endpoint = `${prefixURL}/submitUserPayment`;
+    // let endpoint = "https://localhost:8888" + "/submitUserPayment";
     let method = "POST";
     let requestBody = {
       payment_id:null,
@@ -404,7 +416,10 @@ async function submitPayment() {
 async function ChangePayment(value) {
   try {
     // const apiBaseStore = useApiBaseStore();
-    let endpoint = "http://localhost:8888" + "/changePayment";
+    // let endpoint = apiBaseStore.localBaseUrl+"/changePayment";
+    const prefixURL=localStorage.getItem("prefixURL")||'https://localhost:8888';
+    let endpoint = `${prefixURL}/changePayment`;
+    // let endpoint = "https://localhost:8888" + "/changePayment";
     let method = "POST";
     let requestBody = {
       payment_id:currentPaymentID.value,
@@ -437,10 +452,9 @@ async function ChangePayment(value) {
     }
 }
 function confirmPay(value){
-    const rawValue = carid.value; // 使用 carid.value 而不是 toRaw(carid)
     let message = {
         type: 'payment_user_count',
-        car_id: rawValue._rawValue,
+        car_id: carid.value,
         count: 1, // 付款人数
         time: new Date().toLocaleString(), // 付款时间
     };
@@ -480,9 +494,15 @@ function toPlatform(){
     router.push('/user-platform');
 }
 async function getjourneyrecord(){
+        const prefixURL = localStorage.getItem("prefixURL") || 'https://localhost:8888';
+        // const token = localStorage.getItem("jwtToken");
+        // const userID = getUserIDFromToken(token);
+        // const params = new URLSearchParams();
+        // params.append("userID", userID);
     try{
-        const apiBaseStore = useApiBaseStore();
-        let endpoint = apiBaseStore.localBaseUrl + "/getjourneyrecord";
+        //const apiBaseStore = useApiBaseStore();
+        //let endpoint = apiBaseStore.localBaseUrl + "/getjourneyrecord";
+        let endpoint = prefixURL + "/getjourneyrecord";
         let method = 'GET';
         const response = await fetch(endpoint, {
             method: method,
@@ -490,7 +510,9 @@ async function getjourneyrecord(){
             'Content-Type': 'application/json',
           },
         });
+        //const response = await axios.post(`${prefixURL}/api/getOrders`, params);
         const result = await response.json();
+        //const result = response.data;
         journeydata.value = result;
         //console.log(journeydata.value);
         return journeydata.value;
@@ -505,15 +527,15 @@ function confirmTicket() {
     ChangeOrder("行程中");
     // 这里可以添加其他逻辑，例如确认上车后执行的操作
     console.log(carid);
-    const rawValue = carid.value; // 使用 carid.value 而不是 toRaw(carid)
+    // const rawValue = carid.value; // 使用 carid.value 而不是 toRaw(carid)
     let message = {
         type: 'boardingMessage',
-        car_id: rawValue._rawValue,
+        car_id: carid.value,
         boardingCount: 1, // 
         time: new Date().toLocaleString(), // 
     };
-        // 将新的呼叫信息添加到 store 中
-        webSocketStore.sendMessage(JSON.stringify(message));
+    // 将新的呼叫信息添加到 store 中
+    webSocketStore.sendMessage(JSON.stringify(message));
 }
 function leaveCar(){
     buyButtonVisible.value=true;
@@ -521,20 +543,21 @@ function leaveCar(){
     leaveTime.value = new Date().toLocaleString();
     ChangeOrder("已结束");
     ChangeLeaveTime(leaveTime.value);
+    let message = {
+        type: 'alightingMessage',
+        car_id: carid.value,
+        alightingCount: 1, // 
+        time: new Date().toLocaleString(), // 
+    };
+    // 将新的呼叫信息添加到 store 中
+    webSocketStore.sendMessage(JSON.stringify(message));
 }
 function confirmInCar(){
     buyButtonVisible.value = true;
     leaveButtonVisible.value=true;
     ChangeOrder("行程中");
-    const rawValue = carid.value; 
-    let message = {
-        type: 'alightingMessage',
-        car_id: rawValue._rawValue,
-        alightingCount: 1, // 
-        time: new Date().toLocaleString(), // 
-    };
-        // 将新的呼叫信息添加到 store 中
-        webSocketStore.sendMessage(JSON.stringify(message));
+    // const rawValue = carid.value; 
+
 }
 // function confirmInCar(){
 //     console.log("dafasf");
@@ -576,7 +599,7 @@ async function handleLogout() {
             });
             ElMessage.success("您已成功登出~");
             localStorage.removeItem('jwtToken'); // 移除令牌
-            localStorage.setItem('prefixURL', 'http://121.199.79.24:5793');
+            localStorage.setItem('prefixURL', 'https://sysuschoolbus.top:5793');
             router.push('/login'); // 跳转到登录页面
         } catch (error) {
             if (error !== "cancel") {
@@ -584,6 +607,10 @@ async function handleLogout() {
                 ElMessage.error("登出失败，请稍后再试");
             }
         }
+}
+
+function updateSites(newSites) {
+    sites = newSites;
 }
 </script>
 
