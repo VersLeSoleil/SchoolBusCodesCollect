@@ -25,15 +25,12 @@
             <div class="overlay-text">更换头像</div>
           </div>
         </div>
-        <div v-else>加载中...</div>
+        <div v-else>点击上传头像</div>
       </ElUpload>
 
-      <div class="user-info-details" v-if="userStore.userInfo && userStore.userInfo.name">
+      <div class="user-info-details">
         <h2>{{ userStore.userInfo.name }}</h2>
         <p>账号名：{{ userStore.userInfo.student_account }}</p>
-      </div>
-      <div v-else>
-        加载中...
       </div>
     </div>
 
@@ -134,6 +131,7 @@ function startEditing(field) {
 
 // 保存字段内容
 async function saveField(field) {
+  const prefixURL = localStorage.getItem("prefixURL") || 'https://localhost:8888';
   if (validateField(field)) {
     try {
       const payload = {
@@ -142,10 +140,11 @@ async function saveField(field) {
         grade: parseInt(tempUserInfo.value.grade),
         major: tempUserInfo.value.major,
         phone: tempUserInfo.value.phone,
-        avatar: userStore.userInfo.avatar.replace('http://localhost:8888', ''),
+        avatar: userStore.userInfo.avatar.replace(prefixURL, ''),
         user_id: parseInt(userStore.userInfo.user_id),
       };
       await userStore.updateUserInfo(payload);
+      
 
       editingField.value = "";
       hoveredField.value = "";

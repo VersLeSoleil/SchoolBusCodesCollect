@@ -151,7 +151,7 @@ function filterCoupons(command) {
 }
 
 onMounted(async () => {
-  const prefixURL = localStorage.getItem("prefixURL") || 'http://localhost:8888';
+  const prefixURL = localStorage.getItem("prefixURL") || 'https://localhost:8888';
   const token = localStorage.getItem("jwtToken");
   const userID = getUserIDFromToken(token);
 

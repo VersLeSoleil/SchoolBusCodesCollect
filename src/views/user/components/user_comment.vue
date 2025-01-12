@@ -26,7 +26,7 @@ const props = defineProps({
   }
 });
 async function submitComment(){
-    const prefixURL = localStorage.getItem("prefixURL") || 'http://localhost:8888';
+    const prefixURL = localStorage.getItem("prefixURL") || 'https://localhost:8888';
     if(commentarea.value == ''){
         alert("请输入评论内容");
         return;
@@ -38,7 +38,7 @@ async function submitComment(){
             studentname : tempUserInfo.value.name,
             commentcontent: commentarea.value,
             commenttime : new Date().getFullYear() + "-" + (new Date().getMonth() + 1) + "-" + new Date().getDate() + " " + new Date().toLocaleTimeString(),
-            avatar : userStore.userInfo.avatar.replace('http://localhost:8888', ''),
+            avatar : userStore.userInfo.avatar.replace(prefixURL, ''),
         };
         const response = await fetch(endpoint, {
             method: 'POST',

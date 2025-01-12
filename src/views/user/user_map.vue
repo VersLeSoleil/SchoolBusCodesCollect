@@ -303,7 +303,7 @@ export default {
     },
       // 发送位置信息到后端
     // sendLocationToBackend(driverId, longitude, latitude) {
-    //   fetch("http://localhost:8888/updateLocation", {
+    //   fetch("https://localhost:8888/updateLocation", {
     //     method: "POST",
     //     headers: {
     //       "Content-Type": "application/json",

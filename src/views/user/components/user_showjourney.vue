@@ -62,6 +62,7 @@ function changecurrent(page){
   currentpage.value = page;
 }
 async function fetchtabledata(){
+  const prefixURL = localStorage.getItem("prefixURL") || 'https://localhost:8888';
   //getjourneyrecord返回的是一个promise，而不是数据，需要这样处理
   try {
     const data = await props.getjourneyrecord();
@@ -71,7 +72,7 @@ async function fetchtabledata(){
         grade: parseInt(tempUserInfo.value.grade),
         major: tempUserInfo.value.major,
         phone: tempUserInfo.value.phone,
-        avatar: userStore.userInfo.avatar.replace('http://localhost:8888', ''),
+        avatar: userStore.userInfo.avatar.replace(prefixURL, ''),
         user_id: parseInt(userStore.userInfo.user_id),
       };
     //await userStore.updateUserInfo(payload);
