@@ -150,10 +150,10 @@
   const submitFeedback = async () => {
   // 设置评价时间
   const now = new Date();
-const chinaTime = new Date(now.getTime() + (8 * 60 * 60 * 1000)); // 将当前时间加上 8 小时，转为中国时区时间
+const chinaTime = new Date(now.getTime() + (8 * 60 * 60 * 1000)); 
 newFeedback.value.feedback_time = chinaTime.toISOString().slice(0, 16).replace('T', ' ');
 
-  const prefixURL = localStorage.getItem("prefixURL") || 'http://localhost:8888';
+  const prefixURL = localStorage.getItem("prefixURL") || 'https://localhost:8888';
 
   try {
     // 将评价数据发送到后端
@@ -182,7 +182,7 @@ newFeedback.value.feedback_time = chinaTime.toISOString().slice(0, 16).replace('
 };
 
 const fetchData = async () => {
-  const prefixURL = localStorage.getItem("prefixURL") || 'http://localhost:8888';
+  const prefixURL = localStorage.getItem("prefixURL") || 'https://localhost:8888';
   const token = localStorage.getItem("jwtToken");
   const userID = getUserIDFromToken(token);
 

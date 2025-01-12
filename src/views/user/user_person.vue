@@ -135,7 +135,7 @@
             });
 
             // 调用后端 API 进行登出操作
-            const prefixURL = localStorage.getItem("prefixURL") || "http://localhost:8888";
+            const prefixURL = localStorage.getItem("prefixURL") || "https://localhost:8888";
             await axios.post(`${prefixURL}/api/logout`, {}, {
                 headers: {
                     Authorization: `Bearer ${localStorage.getItem("jwtToken")}`,
@@ -143,7 +143,7 @@
             });
             ElMessage.success("您已成功登出~");
             localStorage.removeItem("jwtToken"); // 移除令牌
-            localStorage.setItem("prefixURL", "http://121.199.79.24:5793");
+            localStorage.setItem('prefixURL', 'https://sysuschoolbus.top:5793');
             router.push("/login"); // 跳转到登录页面
         } catch (error) {
             if (error !== "cancel") {

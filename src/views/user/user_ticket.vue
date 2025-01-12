@@ -9,21 +9,21 @@
           
           <p><strong>出发地：</strong>
             <select class="select1" v-model="select_from">
-              <option value="" disabled selected>请选择...</option>
+              <option value="" disabled selected></option>
               <option v-for="station in sites" :key="station.name" :value="station.name">{{ station.name }}</option>
             </select>
           </p>
 
           <p><strong>目的地：</strong>
             <select class="select1" v-model="select_dest">
-              <option value="" disabled selected>请选择...</option>
+              <option value="" disabled selected></option>
               <option v-for="station in sites" :key="station.name" :value="station.name">{{ station.name }}</option>
             </select>
           </p>
           <p>
             <strong>车牌号：</strong>
             <select class="select3" v-model="select_carID">
-              <option value="" disabled selected>请选择...</option>
+              <option value="" disabled selected></option>
               <option v-for="work in work_shift" :key="work.car_id" :value="work.car_id">{{ work.car_id }}</option></select>
           </p>
           <p>
@@ -42,9 +42,7 @@ import { defineProps, defineEmits } from 'vue';
 import {ref,onMounted,computed} from 'vue';
 // import { useApiBaseStore } from '@/stores/network';
 // import sites from "@/assets/bus_station_data.json";
-import {
-        useApiBaseStore
-    } from "@/stores/network"; // 导入令牌验证函数
+
 
 let select_from=ref();
 let select_dest=ref();
@@ -74,16 +72,28 @@ const props = defineProps({
   },
 });
 onMounted(fetchWorkShift);
+// 格式化当前时间为 "YYYY-MM-DD HH:mm:ss"
+function formatDateTime(date) {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      const hours = String(date.getHours()).padStart(2, '0');
+      const minutes = String(date.getMinutes()).padStart(2, '0');
+      const seconds = String(date.getSeconds()).padStart(2, '0');
+      return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+    }
+    
 async function fetchWorkShift() {
   try {
-    // const apiBaseStore = useApiBaseStore();
-    // let endpoint = apiBaseStore.localBaseUrl+"/getWorkShift";
-    const prefixURL=localStorage.getItem("prefixURL")||'https://localhost:8888';
+    
+    const prefixURL = localStorage.getItem("prefixURL") || 'https://localhost:8888';
     let endpoint = `${prefixURL}/getWorkShift`;
     let method = 'POST';
     let requestBody = {
-        current_time:new Date().toLocaleString()
+      current_time: formatDateTime(new Date())  // 使用格式化后的当前时间
+      
     };
+    console.log("current time: " + requestBody.toString);
     // 发送请求到后端
     const response = await fetch(endpoint, {
       method: method,
@@ -96,8 +106,8 @@ async function fetchWorkShift() {
     // 调试：打印响应状态码和响应内容
     console.log('Response Status:', response.status);
     console.log('Response Headers:', response.headers);
-    
-    // 如果响应状态不是200，返回错误信息
+
+    // 如果响应状态不是 200，返回错误信息
     if (!response.ok) {
       alert('请求失败，状态码：' + response.status);
       const errorText = await response.text();
@@ -112,7 +122,7 @@ async function fetchWorkShift() {
     // 处理成功与否
     if (response.ok) {
       // 司机数据成功返回，填充数据
-      work_shift.value=result;
+      work_shift.value = result;
       alert('取得工作信息成功！');
     } else {
       // 错误处理
@@ -127,6 +137,10 @@ async function fetchWorkShift() {
 const emit = defineEmits(['close','openPayment']);
 // 购票逻辑（这里暂时没有实现具体逻辑）
 function cancel() {
+    // 重置选择框的内容
+  select_from.value = '';    // 清空出发地
+  select_dest.value = '';    // 清空目的地
+  select_carID.value = '';   // 清空车牌号
   closePopup(); // 关闭弹窗
   // 你可以在这里添加付款的具体逻辑
 }

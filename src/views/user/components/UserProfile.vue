@@ -131,6 +131,7 @@ function startEditing(field) {
 
 // 保存字段内容
 async function saveField(field) {
+  const prefixURL = localStorage.getItem("prefixURL") || 'https://localhost:8888';
   if (validateField(field)) {
     try {
       const payload = {
@@ -139,7 +140,7 @@ async function saveField(field) {
         grade: parseInt(tempUserInfo.value.grade),
         major: tempUserInfo.value.major,
         phone: tempUserInfo.value.phone,
-        avatar: userStore.userInfo.avatar.replace('http://localhost:8888', ''),
+        avatar: userStore.userInfo.avatar.replace(prefixURL, ''),
         user_id: parseInt(userStore.userInfo.user_id),
       };
       await userStore.updateUserInfo(payload);

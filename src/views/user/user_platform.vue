@@ -87,7 +87,7 @@ async function getComments(){
   //获取评论内容
   try{
       //const apiBaseStore = useApiBaseStore();
-      const prefixURL = localStorage.getItem("prefixURL") || 'http://localhost:8888';
+      const prefixURL = localStorage.getItem("prefixURL") || 'https://localhost:8888';
 
       let endpoint = prefixURL + "/getcomments";
       const response = await fetch(endpoint,{
@@ -104,7 +104,7 @@ getComments();
 async function getNotices(){
   //获取公告内容
   try{
-    const prefixURL = localStorage.getItem("prefixURL") || 'http://localhost:8888';
+    const prefixURL = localStorage.getItem("prefixURL") || 'https://localhost:8888';
 
       let endpoint = prefixURL + "/getnotices";
       const response = await fetch(endpoint,{
