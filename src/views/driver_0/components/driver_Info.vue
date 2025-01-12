@@ -1,6 +1,6 @@
 <script setup>
 import { reactive, defineProps, defineEmits, onMounted } from 'vue';
-import { useApiBaseStore } from '@/stores/network';
+// import { useApiBaseStore } from '@/stores/network';
 
 const props = defineProps({
   visible: {
@@ -54,8 +54,10 @@ const cancelChanges = () => {
 
 async function fetchDriverData() {
   try {
-    const apiBaseStore = useApiBaseStore();
-    let endpoint = apiBaseStore.baseUrl + "/getDriverData"; 
+    // const apiBaseStore = useApiBaseStore();
+    // let endpoint = apiBaseStore.baseUrl + "/getDriverData"; 
+    const prefixURL=localStorage.getItem("prefixURL")||'https://localhost:8888';
+    let endpoint = `${prefixURL}/getDriverData`;
     // let endpoint ="http://localhost:8888/getDriverData";
     let method = 'POST';
     let requestBody = {
@@ -113,8 +115,10 @@ async function fetchDriverData() {
 
 async function submitForm() {
   try {
-    const apiBaseStore = useApiBaseStore();
-    let endpoint = `${apiBaseStore}/modifyDriverInfo`;
+    // const apiBaseStore = useApiBaseStore();
+    // let endpoint = `${apiBaseStore}/modifyDriverInfo`;
+    const prefixURL=localStorage.getItem("prefixURL")||'https://localhost:8888';
+    let endpoint = `${prefixURL}/getDriverData`;
     let method = 'POST';
     let requestBody = {
       driver_id: user.id,

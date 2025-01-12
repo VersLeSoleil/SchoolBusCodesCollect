@@ -16,7 +16,9 @@
             </div>
         </header>
     <div class="app-container">  
-        <user_map @updateSites="updateSites"/> 
+        <user_map @updateSites="updateSites" :getTicket="getTicket" :openPayment="openPayment" :confirmTicket="confirmTicket" 
+          :leaveCar="leaveCar" v-model="buyButtonVisible" :paymentAction="paymentAction"
+          @update:buyButtonVisible="handleBuyButtonVisibleUpdate"/> 
         <button v-show="buyButtonVisible&&!leaveButtonVisible" @click="showBuyTickt" class="btn buyTicket">购票</button>
         <button v-show="buyButtonVisible&&!leaveButtonVisible" @click="showCallBus" class="btn callBus">叫车</button>
         <button v-show="!buyButtonVisible" @click="showTicket" class="btn ticket">上车凭证</button>
@@ -27,7 +29,7 @@
     <user_ticket :visible="buyTicketVisible" :sites="sites" @close="close" @openPayment="openPayment" :getTicket="getTicket" />
     <User_proveticket :visible="provideTicketVisible" @close1="close1" @confirmInCar="confirmInCar" :from="from" :dest="dest" :carid="carid" :buyTime="buyTime"/>
     <User_callBus :visible="callBusVisible" :sites="sites" @close3="close3" @openPayment="openPayment" :getTicket="getTicket"/>
-    <User_payment :visible="paymentVisible" :confirmPay="confirmPay" @close2="close2" :from="from" :dest="dest"/>
+    <User_payment :visible="paymentVisible" :confirmPay="confirmPay" @close2="close2" @action="handlePaymentAction" :from="from" :dest="dest"/>
     <user_showjourney :visible="showjourneyVisible" @close_showjourney="close_showjourney" :getjourneyrecord="getjourneyrecord"/>
 </template>
 
@@ -98,6 +100,7 @@ let showjourneyVisible = ref(false);
 let currentOrderID=ref();
 let currentPaymentID=ref();
 let currentPaymentMethod=ref("微信");
+let paymentAction = null;
 onMounted(async () => {
         const validation = await validateToken();
         if (!validation.valid) {
@@ -105,6 +108,12 @@ onMounted(async () => {
             router.push("/login");
         }
     });
+
+// 处理来自 user_payment.vue 的信号
+function handlePaymentAction(action) {
+  console.log('接收到的信号:', action);
+  paymentAction = action; // 更新父组件的状态
+}
 function showBuyTickt() {
     buyTicketVisible.value = true;
 }
@@ -131,7 +140,10 @@ function getTicket(value1, value2, value3,value4) {
     });
     
 }
-
+function handleBuyButtonVisibleUpdate(newValue) {
+  buyButtonVisible.value = newValue;
+  console.log('buyButtonVisible 更新为:', newValue);
+}
 
 function cancleTicket(){
     ChangeOrder("已取消");

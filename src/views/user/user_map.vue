@@ -19,12 +19,49 @@ import AMapLoader from "@amap/amap-jsapi-loader";
 // import busStationData from "@/assets/bus_station_data.json";
 // import {useApiBaseStore} from "@/stores/network";
 import { useWebSocketStore } from '@/stores/webSocketStore';
-import { computed, watch, getCurrentInstance, onMounted } from 'vue';
-  
-  /* global AMap */
-  
-export default {
+import { computed, watch, getCurrentInstance, onMounted, defineComponent } from 'vue';
+
+export default defineComponent({
+  props: {
+    getTicket: {
+      type: Function,
+      required: true,
+    },
+    openPayment: {
+      type: Function,
+      required: true,
+    },
+    confirmTicket: {
+      type: Function,
+      required: true,
+    }, 
+    buyButtonVisible: {
+      type: Boolean,
+      required: true, 
+    },
+    leaveCar: {
+      type: Boolean,
+      required: true, 
+    },
+    paymentAction: {
+      type: String, // 信号的值（"confirm" 或 "cancel"）
+      default: null,
+    },
+  },
+  watch: {
+    // 监听信号的变化
+    paymentAction(newVal) {
+      console.log('支付信号更新:', newVal);
+      if (newVal === 'confirm') {
+        this.handleConfirmAction();
+      } else if (newVal === 'cancel') {
+        this.handleCancelAction();
+      }
+    },
+  },
+  emits: ["update:buyButtonVisible"], // 使用选项式 API 定义事件
   setup() {
+    /* global AMap */
     const webSocketStore = useWebSocketStore();
 
     // 通过 getter 或直接访问状态
@@ -127,9 +164,124 @@ export default {
       routes: [], // 存储从后端获取的路线数据
       sites: [], // 存储从后端获取的站点数据
       markers: [], // 存储地图上的标记
+      isOnBoard: false, // 初始化为未上车状态
+      trackingInterval: null, // 定时器句柄
+      plateNumber: null, // 存储车牌号
+      targetLocation: null, // 存储目标位置
     };
   },
   methods: {
+    handleGetOn(plateNumber, targetLocation) {
+      if (this.isOnBoard) {
+        alert("您已经上车，请勿重复点击！");
+        return;
+      }
+
+      const geolocation = new AMap.Geolocation({
+        enableHighAccuracy: true, // 开启高精度定位
+        timeout: 10000, // 超时时间
+      });
+
+      geolocation.getCurrentPosition(async (status, result) => {
+        if (status === "complete") {
+          const userLocation = result.position; // 用户的当前位置
+          const userLat = userLocation.lat;
+          const userLng = userLocation.lng;
+
+          // 目标位置
+          const targetLat = targetLocation.latitude;
+          const targetLng = targetLocation.longitude;
+
+          const distance = this.calculateDistance(
+            userLat,
+            userLng,
+            targetLat,
+            targetLng
+          );
+
+          if (distance <= 500) {
+            alert(`您在上车范围内！车牌号：${plateNumber}`);
+            this.isOnBoard = true; // 设置为已上车状态
+            // 将 plateNumber 和 targetLocation 存储到状态中
+            this.plateNumber = plateNumber;
+            this.targetLocation = targetLocation;
+            this.getTicket("select_from", "select_dest", plateNumber, 1);
+            this.openPayment();
+          } else {
+            alert(`距离目标位置 ${distance.toFixed(2)} 米，超出可上车范围！`);
+          }
+        } else {
+          alert("获取当前位置失败，请检查定位服务是否开启！");
+        }
+      });
+    },
+    // 处理确认信号
+    handleConfirmAction() {
+      console.log('处理确认逻辑');
+      this.confirmTicket();
+      // 开始检测是否超出范围
+      this.startTracking(this.plateNumber, this.targetLocation);
+    },
+    // 处理取消信号
+    handleCancelAction() {
+      console.log('处理取消逻辑');
+      // 这里执行地图的清除或其他逻辑
+      this.isOnBoard = false; // 设置为下車状态
+    },
+
+    startTracking(plateNumber, targetLocation) {
+      const geolocation = new AMap.Geolocation({
+        enableHighAccuracy: true,
+        timeout: 10000,
+      });
+
+      this.trackingInterval = setInterval(() => {
+        geolocation.getCurrentPosition((status, result) => {
+          if (status === "complete") {
+            const currentLat = result.position.lat;
+            const currentLng = result.position.lng;
+
+            const distance = this.calculateDistance(
+              currentLat,
+              currentLng,
+              targetLocation.latitude,
+              targetLocation.longitude
+            );
+
+            console.log(`当前距离目标位置：${distance.toFixed(2)} 米`);
+
+            if (distance > 400) {
+              alert("您已超出范围，将触发下车逻辑！");
+              this.handleGetOff(plateNumber);
+              clearInterval(this.trackingInterval); // 停止检测
+            }
+          }
+        });
+      }, 3000); // 每 3 秒检测一次
+    },
+
+    handleGetOff(plateNumber) {
+      alert(`已触发下车逻辑，车牌号：${plateNumber}`);
+      this.isOnBoard = false; // 重置状态为未上车
+      clearInterval(this.trackingInterval); // 停止位置检测
+      this.leaveCar();
+    },
+
+    calculateDistance(lat1, lng1, lat2, lng2) {
+      const R = 6371e3; // 地球半径，单位：米
+      const φ1 = (lat1 * Math.PI) / 180;
+      const φ2 = (lat2 * Math.PI) / 180;
+      const Δφ = ((lat2 - lat1) * Math.PI) / 180;
+      const Δλ = ((lng2 - lng1) * Math.PI) / 180;
+
+      const a =
+        Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+        Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+      return R * c;
+    },
+
     updateSites() {
       this.$emit("updateSites", this.sites);
     },
@@ -256,7 +408,6 @@ export default {
               anchor: "center",
             },
           });
-          
           this.stationMarkers.push(labelMarker);
           this.map.add(labelMarker);
         });
@@ -301,47 +452,6 @@ export default {
         console.error("浏览器不支持地理定位");
       }
     },
-      // 发送位置信息到后端
-    // sendLocationToBackend(driverId, longitude, latitude) {
-    //   fetch("http://localhost:8888/updateLocation", {
-    //     method: "POST",
-    //     headers: {
-    //       "Content-Type": "application/json",
-    //     },
-    //     body: JSON.stringify({
-    //       id: driverId,
-    //       role: "driver", // 用户角色
-    //       latitude,
-    //       longitude,
-    //       timestamp: new Date().toISOString(), // 时间戳
-    //     }),
-    //   })
-    //     .then((response) => response.text())
-    //     .then((data) => console.log("服务器响应:", data))
-    //     .catch((error) => console.error("请求错误:", error));
-    // },
-
-    // // 获取驾驶员数据
-    // async fetchDrivers() {
-    //   try {
-    //     const apiBaseStore = useApiBaseStore();
-    //     const response = await fetch(apiBaseStore.baseUrl + "/drivers");
-    //     if (!response.ok) {
-    //       throw new Error("网络请求失败");
-    //     }
-    //     this.drivers = await response.json();
-
-    //     // 验证驾驶员数据是否有效
-    //     this.drivers = this.drivers.filter(
-    //       driver => typeof driver.latitude === "number" && typeof driver.longitude === "number"
-    //     );
-
-    //     this.updateMarkers(); // 更新地图上的标记
-    //   } catch (error) {
-    //     console.error("获取驾驶员位置失败:", error);
-    //   }
-    // },
-
     // 在地图上显示驾驶员位置
     async updateMarkers() {
       if (!this.map) {
@@ -363,7 +473,53 @@ export default {
           map: this.map,
           
         });
+
+
+        // 创建 InfoWindow 实例
+        const infoWindow = new AMap.InfoWindow({
+          anchor: "top-left",
+        });
+
+        // 创建 InfoWindow 内容
+        const infoContent = document.createElement("div");
+        infoContent.style.padding = "10px";
+        infoContent.style.fontSize = "14px";
+
+        // 动态设置内容
+        infoContent.innerHTML = `
+          <p><strong>车牌号：</strong>${message.car_id || "未知车牌"}</p>
+          <button 
+            id="onBoardButton" 
+            style="padding: 5px 10px; background-color: #007BFF; color: white; border: none; border-radius: 5px; cursor: pointer;"
+            ${this.isOnBoard ? "disabled" : ""}>
+            ${this.isOnBoard ? "已上车" : "上车"}
+          </button>
+        `;
+
+        // 将内容设置到 InfoWindow
+        infoWindow.setContent(infoContent);
+
+        // 在 InfoWindow 完成渲染后绑定事件
+        this.$nextTick(() => {
+          const button = infoContent.querySelector("#onBoardButton");
+          if (button) {
+            button.addEventListener("click", () => {
+              this.handleGetOn(message.car_id, {
+                latitude: location.latitude,
+                longitude: location.longitude,
+              });
+            });
+          }
+        });
+
+        // 给 Marker 添加点击事件，点击时显示 InfoWindow
+        marker.on("click", () => {
+          infoWindow.open(this.map, [location.longitude, location.latitude]);
+        });
+
+        // 将 Marker 存储到标记列表中
         this.markers.push(marker);
+
       });
 
       // 清空已处理的消息队列
@@ -381,7 +537,7 @@ export default {
     initWebSocket (){        
       const webSocketStore = useWebSocketStore();
       webSocketStore.initWebSocket(localStorage.getItem("webprefixURL"));
-    },
+    },    
   },
 
   created() {
@@ -414,7 +570,7 @@ export default {
     const webSocketStore = useWebSocketStore();
     webSocketStore.closeWebSocket(); // 关闭 WebSocket 连接
   },
-};
+});
 </script>
 <style scoped>
   /* 地图容器样式 */

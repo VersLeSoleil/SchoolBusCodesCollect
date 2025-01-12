@@ -256,7 +256,8 @@
     const message = {
       type: "driver_gps",
       driver_id: id,
-      location: location
+      location: location,
+      car_id: "ABC12345",
     };
     try {
       webSocketStore.sendMessage(JSON.stringify(message)); // 使用 store 的方法发送消息

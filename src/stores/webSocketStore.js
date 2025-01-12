@@ -108,7 +108,7 @@ export const useWebSocketStore = defineStore('websocket', {
         handleMessage(message) {
             switch (message.type) {
                 case 'driver_gps':
-                    console.log(`接收到驾驶员GPS定位：驾驶员ID：${message.id}，位置：${message.location.latitude}, ${message.location.longitude}`);
+                    console.log(`接收到驾驶员GPS定位：驾驶员ID：${message.id}，位置：${message.location.latitude}, ${message.location.longitude}, 車牌號：${message.car_id}`);
                     this.addDriverGpsMessage(message);
                     break;
                 case 'call_accept':
