@@ -54,6 +54,7 @@ export const useUserStore = defineStore('user', {
                     this.userInfo.phone = response.data.phone;
                     this.userInfo.avatar = response.data.avatar ? `${prefixURL}${response.data.avatar}` : '';
                     this.userInfo.user_id = userID;
+                    console.log(response.data);
                 } else {
                     ElMessage.error("未找到用户信息");
                 }

@@ -452,6 +452,47 @@ export default defineComponent({
         console.error("浏览器不支持地理定位");
       }
     },
+      // 发送位置信息到后端
+    // sendLocationToBackend(driverId, longitude, latitude) {
+    //   fetch("https://localhost:8888/updateLocation", {
+    //     method: "POST",
+    //     headers: {
+    //       "Content-Type": "application/json",
+    //     },
+    //     body: JSON.stringify({
+    //       id: driverId,
+    //       role: "driver", // 用户角色
+    //       latitude,
+    //       longitude,
+    //       timestamp: new Date().toISOString(), // 时间戳
+    //     }),
+    //   })
+    //     .then((response) => response.text())
+    //     .then((data) => console.log("服务器响应:", data))
+    //     .catch((error) => console.error("请求错误:", error));
+    // },
+
+    // // 获取驾驶员数据
+    // async fetchDrivers() {
+    //   try {
+    //     const apiBaseStore = useApiBaseStore();
+    //     const response = await fetch(apiBaseStore.baseUrl + "/drivers");
+    //     if (!response.ok) {
+    //       throw new Error("网络请求失败");
+    //     }
+    //     this.drivers = await response.json();
+
+    //     // 验证驾驶员数据是否有效
+    //     this.drivers = this.drivers.filter(
+    //       driver => typeof driver.latitude === "number" && typeof driver.longitude === "number"
+    //     );
+
+    //     this.updateMarkers(); // 更新地图上的标记
+    //   } catch (error) {
+    //     console.error("获取驾驶员位置失败:", error);
+    //   }
+    // },
+
     // 在地图上显示驾驶员位置
     async updateMarkers() {
       if (!this.map) {

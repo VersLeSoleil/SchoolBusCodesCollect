@@ -54,7 +54,7 @@ const handlePageChange = (newPage) => {
 
 // 从后端获取评价数据
 const fetchFeedbackData = async () => {
-  const prefixURL = localStorage.getItem("prefixURL") || 'http://localhost:8888';
+  const prefixURL = localStorage.getItem("prefixURL") || 'https://localhost:8888';
   const token = localStorage.getItem("jwtToken");
   const userID = getUserIDFromToken(token);
 
