@@ -330,6 +330,7 @@ const sendLocationToBackendWebSocket = async (longitude, latitude) => {
     type: "driver_gps",
     driver_id: localStorage.getItem("id"),
     location: location,
+    car_id: localStorage.getItem("car_id"),
   };
 
   try {

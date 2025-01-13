@@ -1,6 +1,9 @@
 .DS_Store
 node_modules
 /dist
+key/sysuschoolbus.top.key
+key/sysuschoolbus.top.pem
+
 
 
 # local env files

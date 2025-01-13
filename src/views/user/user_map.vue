@@ -12,19 +12,56 @@
     </div>
   </div>
 </template>
-  
-  
+
+
 <script>
 import AMapLoader from "@amap/amap-jsapi-loader";
 // import busStationData from "@/assets/bus_station_data.json";
 // import {useApiBaseStore} from "@/stores/network";
 import { useWebSocketStore } from '@/stores/webSocketStore';
-import { computed, watch, getCurrentInstance, onMounted } from 'vue';
-  
-  /* global AMap */
-  
-export default {
+import { computed, watch, getCurrentInstance, onMounted, defineComponent } from 'vue';
+
+export default defineComponent({
+  props: {
+    getTicket: {
+      type: Function,
+      required: true,
+    },
+    openPayment: {
+      type: Function,
+      required: true,
+    },
+    confirmTicket: {
+      type: Function,
+      required: true,
+    },
+    buyButtonVisible: {
+      type: Boolean,
+      required: true,
+    },
+    leaveCar: {
+      type: Boolean,
+      required: true,
+    },
+    paymentAction: {
+      type: String, // 信号的值（"confirm" 或 "cancel"）
+      default: null,
+    },
+  },
+  watch: {
+    // 监听信号的变化
+    paymentAction(newVal) {
+      console.log('支付信号更新:', newVal);
+      if (newVal === 'confirm') {
+        this.handleConfirmAction();
+      } else if (newVal === 'cancel') {
+        this.handleCancelAction();
+      }
+    },
+  },
+  emits: ["update:buyButtonVisible"], // 使用选项式 API 定义事件
   setup() {
+    /* global AMap */
     const webSocketStore = useWebSocketStore();
 
     // 通过 getter 或直接访问状态
@@ -36,7 +73,7 @@ export default {
     const { proxy } = getCurrentInstance();
     // 监听 Message 的变化
     // 动态加载路线的 watcher
-    
+
     watch(
       Message, (newMessages) => {
         for (let i = 0; i < newMessages.length; i++) {
@@ -122,14 +159,134 @@ export default {
       onlineCount: 1, // 假设初始在线人数
       drivers: [], // 存储从后端获取的驾驶员位置数据
       dInfoVisible: false,
-      dInfoContent: '', 
+      dInfoContent: '',
       footerVisible: false, // 控制 footer 是否可见
       routes: [], // 存储从后端获取的路线数据
       sites: [], // 存储从后端获取的站点数据
       markers: [], // 存储地图上的标记
+      isOnBoard: false, // 初始化为未上车状态
+      trackingInterval: null, // 定时器句柄
+      plateNumber: null, // 存储车牌号
+      targetLocation: null, // 存储目标位置
     };
   },
   methods: {
+    handleGetOn(plateNumber, targetLocation) {
+      if (this.isOnBoard) {
+        alert("您已经上车，请勿重复点击！");
+        return;
+      }
+
+      const geolocation = new AMap.Geolocation({
+        enableHighAccuracy: true, // 开启高精度定位
+        timeout: 10000, // 超时时间
+      });
+
+      geolocation.getCurrentPosition(async (status, result) => {
+        if (status === "complete") {
+          const userLocation = result.position; // 用户的当前位置
+          const userLat = userLocation.lat;
+          const userLng = userLocation.lng;
+
+          // 目标位置
+          const targetLat = targetLocation.latitude;
+          const targetLng = targetLocation.longitude;
+
+          const distance = this.calculateDistance(
+            userLat,
+            userLng,
+            targetLat,
+            targetLng
+          );
+
+          if (distance <= 500) {
+            alert(`您在上车范围内！车牌号：${plateNumber}`);
+            this.isOnBoard = true; // 设置为已上车状态
+            // 将 plateNumber 和 targetLocation 存储到状态中
+            this.plateNumber = plateNumber;
+            this.targetLocation = targetLocation;
+            this.getTicket("select_from", "select_dest", plateNumber, 1);
+            this.openPayment();
+          } else {
+            alert(`距离目标位置 ${distance.toFixed(2)} 米，超出可上车范围！`);
+          }
+        } else {
+          alert("获取当前位置失败，请检查定位服务是否开启！");
+        }
+      });
+    },
+    // 处理确认信号
+    handleConfirmAction() {
+      if (this.isOnBoard == true){
+        console.log('处理确认逻辑');
+        this.confirmTicket();
+        // 开始检测是否超出范围
+        this.startTracking(this.plateNumber, this.targetLocation);
+      }
+      else{
+        this.isOnBoard = true;
+      }
+    },
+    // 处理取消信号
+    handleCancelAction() {
+      console.log('处理取消逻辑');
+      // 这里执行地图的清除或其他逻辑
+      this.isOnBoard = false; // 设置为下車状态
+    },
+
+    startTracking(plateNumber, targetLocation) {
+      const geolocation = new AMap.Geolocation({
+        enableHighAccuracy: true,
+        timeout: 10000,
+      });
+
+      this.trackingInterval = setInterval(() => {
+        geolocation.getCurrentPosition((status, result) => {
+          if (status === "complete") {
+            const currentLat = result.position.lat;
+            const currentLng = result.position.lng;
+
+            const distance = this.calculateDistance(
+              currentLat,
+              currentLng,
+              targetLocation.latitude,
+              targetLocation.longitude
+            );
+
+            console.log(`当前距离目标位置：${distance.toFixed(2)} 米`);
+
+            if (distance > 400) {
+              alert("您已超出范围，将触发下车逻辑！");
+              this.handleGetOff(plateNumber);
+              clearInterval(this.trackingInterval); // 停止检测
+            }
+          }
+        });
+      }, 3000); // 每 3 秒检测一次
+    },
+
+    handleGetOff(plateNumber) {
+      alert(`已触发下车逻辑，车牌号：${plateNumber}`);
+      this.isOnBoard = false; // 重置状态为未上车
+      clearInterval(this.trackingInterval); // 停止位置检测
+      this.leaveCar();
+    },
+
+    calculateDistance(lat1, lng1, lat2, lng2) {
+      const R = 6371e3; // 地球半径，单位：米
+      const φ1 = (lat1 * Math.PI) / 180;
+      const φ2 = (lat2 * Math.PI) / 180;
+      const Δφ = ((lat2 - lat1) * Math.PI) / 180;
+      const Δλ = ((lng2 - lng1) * Math.PI) / 180;
+
+      const a =
+        Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+        Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+      return R * c;
+    },
+
     updateSites() {
       this.$emit("updateSites", this.sites);
     },
@@ -256,7 +413,6 @@ export default {
               anchor: "center",
             },
           });
-          
           this.stationMarkers.push(labelMarker);
           this.map.add(labelMarker);
         });
@@ -355,16 +511,75 @@ export default {
 
       // 从响应式的 driverGpsMessages 中读取数据
       const messages = [...this.driverGpsMessages];
-      messages.forEach((message) => {
-        if (!message.location) return; // 确保 location 存在
+      for (const message of messages) {
+        if (!message.location) continue; // 确保 location 存在
         const { location } = message;
         const marker = new AMap.Marker({
           position: [location.longitude, location.latitude],
           map: this.map,
-          
+
         });
+
+
+        // 创建 InfoWindow 实例
+        const infoWindow = new AMap.InfoWindow({
+          anchor: "top-left",
+        });
+
+        // 创建 InfoWindow 内容
+        const infoContent = document.createElement("div");
+        infoContent.style.padding = "10px";
+        infoContent.style.fontSize = "14px";
+
+        // 获取司机相应信息，从/admin/driver/get获取一个数组
+        const prefixURL = localStorage.getItem('prefixURL') || ''
+        const res = await fetch(`${prefixURL}/admin/driver/get`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ driver_id: message.id })
+        })
+        const json = await res.json()
+
+        // 动态设置内容
+        infoContent.innerHTML = `
+          <p><strong>车牌号：</strong>${message.car_id || "未知车牌"}</p>
+          ${json.htmls[0]}
+          ${json.htmls[1]}
+          ${json.htmls[2]}
+          ${json.htmls[3]}
+          <button
+            id="onBoardButton"
+            style="padding: 5px 10px; background-color: #007BFF; color: white; border: none; border-radius: 5px; cursor: pointer;"
+            ${this.isOnBoard ? "disabled" : ""}>
+            ${this.isOnBoard ? "已上车" : "上车"}
+          </button>
+        `;
+
+        // 将内容设置到 InfoWindow
+        infoWindow.setContent(infoContent);
+
+        // 在 InfoWindow 完成渲染后绑定事件
+        this.$nextTick(() => {
+          const button = infoContent.querySelector("#onBoardButton");
+          if (button) {
+            button.addEventListener("click", () => {
+              this.handleGetOn(message.car_id, {
+                latitude: location.latitude,
+                longitude: location.longitude,
+              });
+            });
+          }
+        });
+
+        // 给 Marker 添加点击事件，点击时显示 InfoWindow
+        marker.on("click", () => {
+          infoWindow.open(this.map, [location.longitude, location.latitude]);
+        });
+
+        // 将 Marker 存储到标记列表中
         this.markers.push(marker);
-      });
+
+      }
 
       // 清空已处理的消息队列
       this.driverGpsMessages.splice(0, this.driverGpsMessages.length); // 清空队列
@@ -378,7 +593,7 @@ export default {
       }, 3000); // 每隔三秒更新一次
     },
     // 初始化 WebSocket
-    initWebSocket (){        
+    initWebSocket (){
       const webSocketStore = useWebSocketStore();
       webSocketStore.initWebSocket(localStorage.getItem("webprefixURL"));
     },
@@ -414,7 +629,7 @@ export default {
     const webSocketStore = useWebSocketStore();
     webSocketStore.closeWebSocket(); // 关闭 WebSocket 连接
   },
-};
+});
 </script>
 <style scoped>
   /* 地图容器样式 */
@@ -423,7 +638,7 @@ export default {
     height: 80%;
     z-index: 1;
   }
-  
+
   /* 输入卡片样式 */
   .input-card {
     margin-top: 20px;
@@ -432,7 +647,7 @@ export default {
     border: 1px solid #ddd;
     border-radius: 5px;
   }
-  
+
   /* 按钮样式 */
   .btn {
     display: block;
@@ -445,7 +660,7 @@ export default {
     border-radius: 5px;
     cursor: pointer;
   }
-  
+
   .btn:hover {
     background-color: #0056b3;
   }
@@ -469,7 +684,7 @@ export default {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     overflow: hidden;
   }
-  
+
   .info-container {
     position: absolute;
     top: 10px;
@@ -482,21 +697,20 @@ export default {
     color: #333;
     z-index: 10;
   }
-  
+
   .info-container h4 {
     color: #008a6c;
     font-weight: 600;
   }
-  
+
   .info-container p {
     color: #666;
     line-height: 1.6;
   }
-  
+
   @media (min-width: 1024px) {
     .map-container {
       height: 600px;
     }
   }
   </style>
-  

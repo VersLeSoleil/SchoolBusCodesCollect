@@ -46,8 +46,15 @@
   // 定义 emits
   const emit = defineEmits(['close2','confirmPay']);
   
+    // 发射信号
+    function emitAction(action) {
+        console.log('发射信号:', action);
+        emit('action', action); // 发射 "confirm" 或 "cancel"
+    }
+
   function confirmPayment(){
     emit('confirmPay');
+    emitAction('confirm')
     ElMessage.success("支付成功！");
     closePopup(); // 关闭弹窗
     props.confirmPay(selectedPaymentMethod);
@@ -55,6 +62,7 @@
   // 确定逻辑
   function cancelPayment() {
     // 你可以在这里添加确定的具体逻辑
+    emitAction('cancel')
     closePopup(); // 关闭弹窗
   }
   

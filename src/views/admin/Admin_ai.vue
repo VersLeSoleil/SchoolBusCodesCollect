@@ -294,6 +294,23 @@ export default {
 
         if (json.status === 'success') {
           if (mode.value === 'text') {
+
+            let tem = {
+              "status": "success",
+              "message": null,
+              "data": {
+                "tableColumns": ["商品名称", "库存数量", "最后更新时间"],
+                "tableData": [
+                  ["小米手机", 50, "2023-05-01 10:00:00"],
+                  ["华为平板", 120, "2023-05-02 11:30:00"],
+                  ["苹果手表", 30, "2023-05-03 09:20:00"]
+                ]
+              }
+            }
+            tableData.value = tem.data.tableData
+            tableColumns.value = tem.data.tableColumns
+
+
             responseMessage.value = json.data.text || ''
           } else if (mode.value === 'image') {
             responseMessage.value = json.data.imageUrl || ''

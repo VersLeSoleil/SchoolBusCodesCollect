@@ -108,7 +108,7 @@ export const useWebSocketStore = defineStore('websocket', {
         handleMessage(message) {
             switch (message.type) {
                 case 'driver_gps':
-                    console.log(`接收到驾驶员GPS定位：驾驶员ID：${message.id}，位置：${message.location.latitude}, ${message.location.longitude}`);
+                    console.log(`接收到驾驶员GPS定位：驾驶员ID：${message.id}，位置：${message.location.latitude}, ${message.location.longitude}, 車牌號：${message.car_id}`);
                     this.addDriverGpsMessage(message);
                     break;
                 case 'call_accept':
@@ -173,8 +173,20 @@ export const useWebSocketStore = defineStore('websocket', {
 
         // 将驾驶员 GPS 消息添加到消息队列
         addDriverGpsMessage(message) {
-            this.driverGpsMessages.push(message);
+            // 检查 message.id 是否已经存在于 driverGpsMessages 中
+            const index = this.driverGpsMessages.findIndex(
+                (item) => item.id === message.id
+            );
+
+            if (index !== -1) {
+                // 如果存在相同的 id，则替代旧的消息
+                this.driverGpsMessages.splice(index, 1, message);
+            } else {
+                // 如果不存在相同的 id，则追加消息
+                this.driverGpsMessages.push(message);
+            }
         },
+
 
         // 将付款人数消息添加到消息队列
         addPaymentUserCountMessage(message) {
