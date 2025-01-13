@@ -1,34 +1,36 @@
 <template>
-  <!-- 顶部导航栏 -->
-  <header class="header">
-          <div class="nav-menu">
-              <ElButton @click="toMycenter" type="primary" size="large" class="nav-menu-btn" round>个人中心
-              </ElButton>
-              <ElButton @click="toSchduel" type="primary" size="large" class="nav-menu-btn" round>行程计划
-              </ElButton>
-              <ElButton @click="toPlatform" type="primary" size="large" class="nav-menu-btn" round>交流平台
-              </ElButton>
-          </div>
-          <div class="user-info">
-              <ElAvatar :src="userStore.userInfo.avatar" size="medium" />
-              <span class="user-name">{{ userStore.userInfo.name }}</span>
-              <ElButton @click="handleLogout" type="danger" size="large" round>登出</ElButton>
-          </div>
-      </header>
-  <div class="app-container">  
-      <user_map @updateSites="updateSites"/> 
-      <button v-show="buyButtonVisible&&!leaveButtonVisible" @click="showBuyTickt" class="btn buyTicket">购票</button>
-      <button v-show="buyButtonVisible&&!leaveButtonVisible" @click="showCallBus" class="btn callBus">叫车</button>
-      <button v-show="!buyButtonVisible" @click="showTicket" class="btn ticket">上车凭证</button>
-      <button v-show="!buyButtonVisible" @click="confirmTicket" class="btn confirmTicket">确认上车</button>
-      <button v-show="!buyButtonVisible" @click="cancleTicket" class="btn cancelTicket">取消订单</button>
-      <button v-show="leaveButtonVisible" @click="leaveCar" class="btn leaveCar">确认下车</button>
-  </div>
-  <user_ticket :visible="buyTicketVisible" :sites="sites" @close="close" @openPayment="openPayment" :getTicket="getTicket" />
-  <User_proveticket :visible="provideTicketVisible" @close1="close1" @confirmInCar="confirmInCar" :from="from" :dest="dest" :carid="carid" :buyTime="buyTime"/>
-  <User_callBus :visible="callBusVisible" :sites="sites" @close3="close3" @openPayment="openPayment" :getTicket="getTicket"/>
-  <User_payment :visible="paymentVisible" :confirmPay="confirmPay" @close2="close2" :from="from" :dest="dest"/>
-  <user_showjourney :visible="showjourneyVisible" @close_showjourney="close_showjourney" :getjourneyrecord="getjourneyrecord"/>
+    <!-- 顶部导航栏 -->
+    <header class="header">
+            <div class="nav-menu">
+                <ElButton @click="toMycenter" type="primary" size="large" class="nav-menu-btn" round>个人中心
+                </ElButton>
+                <ElButton @click="toSchduel" type="primary" size="large" class="nav-menu-btn" round>行程计划
+                </ElButton>
+                <ElButton @click="toPlatform" type="primary" size="large" class="nav-menu-btn" round>交流平台
+                </ElButton>
+            </div>
+            <div class="user-info">
+                <ElAvatar :src="userStore.userInfo.avatar" size="medium" />
+                <span class="user-name">{{ userStore.userInfo.name }}</span>
+                <ElButton @click="handleLogout" type="danger" size="large" round>登出</ElButton>
+            </div>
+        </header>
+    <div class="app-container">  
+        <user_map @updateSites="updateSites" :getTicket="getTicket" :openPayment="openPayment" :confirmTicket="confirmTicket" 
+          :leaveCar="leaveCar" v-model="buyButtonVisible" :paymentAction="paymentAction"
+          @update:buyButtonVisible="handleBuyButtonVisibleUpdate"/> 
+        <button v-show="buyButtonVisible&&!leaveButtonVisible" @click="showBuyTickt" class="btn buyTicket">购票</button>
+        <button v-show="buyButtonVisible&&!leaveButtonVisible" @click="showCallBus" class="btn callBus">叫车</button>
+        <button v-show="!buyButtonVisible" @click="showTicket" class="btn ticket">上车凭证</button>
+        <button v-show="!buyButtonVisible" @click="confirmTicket" class="btn confirmTicket">确认上车</button>
+        <button v-show="!buyButtonVisible" @click="cancleTicket" class="btn cancelTicket">取消订单</button>
+        <button v-show="leaveButtonVisible" @click="leaveCar" class="btn leaveCar">确认下车</button>
+    </div>
+    <user_ticket :visible="buyTicketVisible" :sites="sites" @close="close" @openPayment="openPayment" :getTicket="getTicket" />
+    <User_proveticket :visible="provideTicketVisible" @close1="close1" @confirmInCar="confirmInCar" :from="from" :dest="dest" :carid="carid" :buyTime="buyTime"/>
+    <User_callBus :visible="callBusVisible" :sites="sites" @close3="close3" @openPayment="openPayment" :getTicket="getTicket"/>
+    <User_payment :visible="paymentVisible" :confirmPay="confirmPay" @close2="close2" @action="handlePaymentAction" :from="from" :dest="dest"/>
+    <user_showjourney :visible="showjourneyVisible" @close_showjourney="close_showjourney" :getjourneyrecord="getjourneyrecord"/>
 </template>
 
 <script setup>
@@ -99,6 +101,7 @@ let showjourneyVisible = ref(false);
 let currentOrderID=ref();
 let currentPaymentID=ref();
 let currentPaymentMethod=ref("微信");
+let paymentAction = null;
 onMounted(async () => {
       const validation = await validateToken();
       if (!validation.valid) {
@@ -119,7 +122,13 @@ onMounted(async () => {
             ElMessage.error("未找到用户令牌");
             router.push("/login"); // 返回登录页
         }
-  });
+    });
+
+// 处理来自 user_payment.vue 的信号
+function handlePaymentAction(action) {
+  console.log('接收到的信号:', action);
+  paymentAction = action; // 更新父组件的状态
+}
 function showBuyTickt() {
   buyTicketVisible.value = true;
 }
@@ -146,7 +155,10 @@ function getTicket(value1, value2, value3,value4) {
   });
   
 }
-
+function handleBuyButtonVisibleUpdate(newValue) {
+  buyButtonVisible.value = newValue;
+  console.log('buyButtonVisible 更新为:', newValue);
+}
 
 function cancleTicket(){
   ChangeOrder("2"); //order status = 已取消
@@ -565,6 +577,7 @@ function confirmTicket() {
   webSocketStore.sendMessage(JSON.stringify(message));
 }
 function leaveCar(){
+  paymentAction = 'cancel';
   buyButtonVisible.value=true;
   leaveButtonVisible.value=false;
   leaveTime.value = formatDateTime(new Date())  // 使用格式化后的当前时间
