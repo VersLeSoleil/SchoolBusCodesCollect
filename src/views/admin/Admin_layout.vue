@@ -32,7 +32,7 @@ import Header from './Admin_header.vue'
 
 .content {
   padding: 16px;
-  overflow-y: hidden;
+  overflow-y: auto;
   margin-top: 50px; /* 避免与header重叠 */
   background-color: #f9f9f9; /* 给主内容区淡色背景，突出侧边栏与header */
   min-height: calc(100vh - 60px);

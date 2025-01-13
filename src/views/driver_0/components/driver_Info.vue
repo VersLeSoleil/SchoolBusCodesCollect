@@ -1,6 +1,9 @@
 <script setup>
 import { reactive, defineProps, defineEmits, onMounted } from 'vue';
-// import { useApiBaseStore } from '@/stores/network';
+import { useApiBaseStore } from '@/stores/network';
+import {validateToken} from '@/auth.js';
+import {useRouter} from 'vue-router'; // Vue Router 的组合式 API
+import axios from 'axios';
 
 const props = defineProps({
   visible: {
@@ -14,7 +17,7 @@ const props = defineProps({
 });
 
 const emit = defineEmits(['close']);
-
+const router = useRouter();
 const closepopup = () => {
   emit('close');
 };
@@ -24,7 +27,7 @@ const user = reactive({
   avatar: '', // 头像图片链接
   name: '',
   id: localStorage.getItem("id"),
-  password: '',
+  wages: '',
   sex: '',
   phone: '',
   status: '',
@@ -54,11 +57,8 @@ const cancelChanges = () => {
 
 async function fetchDriverData() {
   try {
-    // const apiBaseStore = useApiBaseStore();
-    // let endpoint = apiBaseStore.baseUrl + "/getDriverData"; 
-    const prefixURL=localStorage.getItem("prefixURL")||'https://localhost:8888';
-    let endpoint = `${prefixURL}/getDriverData`;
-    // let endpoint ="http://localhost:8888/getDriverData";
+    const apiBaseStore = useApiBaseStore();
+    let endpoint = apiBaseStore.baseUrl + "/getDriverData"; 
     let method = 'POST';
     let requestBody = {
       driver_id: user.id,  // 假设 user.id 是前端存储的当前用户的 ID
@@ -96,9 +96,10 @@ async function fetchDriverData() {
       user.avatar = driverData.driver_avatar || '';  // 确保数据不为空
       user.name = driverData.driver_name;
       user.id = driverData.driver_id;
-      user.sex = driverData.driver_sex;
-      user.phone = driverData.driver_phone;
-      user.status = driverData.driver_status;
+      user.sex = driverData.driver_sex==1? "男":"女";
+      user.phone = driverData.driver_tel;
+      user.wages=driverData.driver_wages;
+      user.status = driverData.driver_status=="1"?"在职":"休息";
 
       alert('取得司机信息成功！');
     } else {
@@ -115,17 +116,14 @@ async function fetchDriverData() {
 
 async function submitForm() {
   try {
-    // const apiBaseStore = useApiBaseStore();
-    // let endpoint = `${apiBaseStore}/modifyDriverInfo`;
-    const prefixURL=localStorage.getItem("prefixURL")||'https://localhost:8888';
-    let endpoint = `${prefixURL}/getDriverData`;
+    const apiBaseStore = useApiBaseStore();
+    let endpoint = apiBaseStore.baseUrl +"/modifyDriverInfo";
     let method = 'POST';
     let requestBody = {
       driver_id: user.id,
       driver_name: user.name,
       driver_sex: user.sex,
       driver_tel: user.phone,
-      driver_isworking: user.status,
     };
     const response = await fetch(endpoint, {
       method: method,
@@ -156,9 +154,41 @@ const saveChanges = () => {
   submitForm();
 };
 
+
+// 登出逻辑
+async function handleLogout() {
+  const validation = await validateToken(); // 再次验证令牌
+  if (!validation.valid) {
+    alert(validation.message); // 如果令牌无效，直接跳转到登录页面
+    router.push('/login');
+    return;
+  }
+
+  try {
+    const apiBaseStore = useApiBaseStore();
+    await axios.post(apiBaseStore.baseUrl + '/api/logout', {}, {
+      headers: {
+        Authorization: localStorage.getItem('jwtToken'),
+      },
+    });
+    alert('您已成功登出');
+    localStorage.removeItem('jwtToken'); // 移除令牌
+    localStorage.setItem('prefixURL', 'https://sysuschoolbus.top:5793');
+    router.push('/login'); // 跳转到登录页面
+  } catch (error) {
+    console.error('登出失败:', error);
+    alert('登出失败，请稍后再试');
+  }
+}
+
 // 加载用户数据
-onMounted(() => {
+onMounted(async () =>{
   fetchDriverData();
+  const validation = await validateToken(); // 验证令牌
+  if (!validation.valid) {
+    alert(validation.message); // 如果令牌无效，提示并跳转到登录页面
+    router.push('/login');
+  }
 });
 </script>
 
@@ -180,12 +210,7 @@ onMounted(() => {
               <strong>账号:</strong>
               <span v-if="!isEditingMode.value">{{ user.id }}</span>
               <input v-else v-model="user.id" type="text" />
-            </p>
-            <p>
-              <strong>密码:</strong>
-              <span v-if="!isEditingMode.value">{{ user.password }}</span>
-              <input v-else v-model="user.password" type="password" />
-            </p>
+            </p> 
             <p>
               <strong>性别:</strong>
               <span v-if="!isEditingMode.value">{{ user.sex }}</span>
@@ -200,13 +225,12 @@ onMounted(() => {
               <input v-else v-model="user.phone" type="text" />
             </p>
             <p>
+              <strong>工资:</strong>
+              <span >{{ user.wages }}</span>
+            </p>
+            <p>
               <strong>工作状态:</strong>
-              <select v-model="user.status" id="driver_isworking" required>
-                <option value="" disabled>请选择状态</option>
-                <option value="0">停职</option>
-                <option value="1">工作</option>
-                <option value="2">休息</option>
-              </select>
+              <span>{{user.status}} </span>
             </p>
           </div>
 
@@ -216,7 +240,7 @@ onMounted(() => {
             修改信息
           </button>
 
-          <button v-if="!isEditingMode.value" @click="1" class="logoutbutton">
+          <button v-if="!isEditingMode.value" @click="handleLogout" class="logoutbutton">
             退出账号
           </button>
 

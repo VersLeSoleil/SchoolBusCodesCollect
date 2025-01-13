@@ -2,30 +2,15 @@
   <div class="page-container">
     <div id="container" class="map-container"></div>
     <div class="controls-container">
-      <!-- <button @click="showDriverInfo" class="showDriverInfoBtn">我的</button> -->
       <driver_Info :visible="dInfoVisible" :content="dInfoContent" @close="closeDInfo" />
       <!-- <button @click="toggleFooterControls" class="showMoreInfoBtn">
         {{ footerVisible ? "收起" : "更多" }}
       </button> -->
     </div>
+    <RemarkPlane />
     <transition name="slide-up">
-      <div
-        v-show="footerVisible"
-        class="footer-controls-container"
-      >
-        <!-- <button class="btn" @click="toggleRoutes">
-          {{ routesVisible ? "隐藏现有路线" : "显示现有路线" }}
-        </button> -->
-        <!-- <button class="btn toggleButton" @click="toggleStations">
-          {{ stationsVisible ? "隐藏站点" : "显示站点" }}
-        </button> -->
-        <!-- <button class="btn autoLocateButton" @click="autoLocateCampus">
-          自动定位到校区
-        </button> -->
-
-        <RemarkPlane />
-
-        
+      <div v-show="footerVisible" class="footer-controls-container">
+        <RemarkPlane />    
       </div>
     </transition>
   </div>
@@ -123,10 +108,8 @@ export default {
   },
   name: "MapComponent",
   components: {
-
     driver_Info,
     RemarkPlane,
-    // ref,
   },
   data() {
     return {
