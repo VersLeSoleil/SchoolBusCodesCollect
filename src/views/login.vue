@@ -301,11 +301,15 @@ export default {
     toggleServerConnection() {
       const apiBaseStore = useApiBaseStore(); // 引入 apiBaseStore
       if (this.isUsingDeployed) {
-        localStorage.setItem('prefixURL', apiBaseStore.localBaseUrl);
-        localStorage.setItem('webprefixURL', apiBaseStore.webLocalBaseUrl);
+        apiBaseStore.switchToLocal();
+        localStorage.setItem('prefixURL', apiBaseStore.baseUrl);
+        localStorage.setItem('webprefixURL', apiBaseStore.webBaseUrl);
+        // console.log(apiBaseStore.webBaseUrl);
       } else {
-        localStorage.setItem('prefixURL', apiBaseStore.deployedBaseUrl);
-        localStorage.setItem('webprefixURL', apiBaseStore.webDeployedBaseUrl);
+        apiBaseStore.switchToDeployed();
+        localStorage.setItem('prefixURL', apiBaseStore.baseUrl);
+        localStorage.setItem('webprefixURL', apiBaseStore.webBaseUrl);
+        // console.log(apiBaseStore.webBaseUrl);
       }
 
       this.isUsingDeployed = !this.isUsingDeployed;
