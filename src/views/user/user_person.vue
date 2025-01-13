@@ -3,9 +3,9 @@
         <!-- 顶部导航栏 -->
         <header class="header">
             <div class="nav-menu">
-                <ElButton @click="navigateTo('购票页面')" type="primary" size="large" class="nav-menu-btn" round>
+                <!-- <ElButton @click="navigateTo('购票页面')" type="primary" size="large" class="nav-menu-btn" round>
                     <i class="el-icon-tickets"></i> 购票页面
-                </ElButton>
+                </ElButton> -->
                 <ElButton @click="navigateTo('乘车页面')" type="primary" size="large" class="nav-menu-btn2" round>
                     <i class="el-icon-truck"></i> 乘车页面
                 </ElButton>
@@ -98,7 +98,7 @@
                 router.push("/login"); // 返回登录页
             }
         } else {
-            ElMessage.error("未找到用户令牌");
+            // ElMessage.error("未找到用户令牌");
             router.push("/login"); // 返回登录页
         }
     });

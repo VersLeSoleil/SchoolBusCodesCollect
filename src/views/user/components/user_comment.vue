@@ -14,9 +14,25 @@
 import {defineEmits, defineProps, ref} from 'vue'
 import { ElInput } from "element-plus";
 //import {useApiBaseStore} from "@/stores/network"; // 导入令牌验证函数
+// import { ElMessage } from 'element-plus';
 import { useUserStore } from "@/stores/userStore"; // 引入 User Store
+import {
+
+        onMounted
+    } from "vue";
+
+    import {
+
+        ElMessage,
+
+    } from "element-plus";
+    import {
+        useRouter
+    } from "vue-router";
+    const router = useRouter();
+    import { getUserIDFromToken } from "@/auth.js";
 const userStore = useUserStore();
-const tempUserInfo = ref({ ...userStore.userInfo });
+// const tempUserInfo = ref({ ...userStore.userInfo });
 const emit = defineEmits(['close_showjourney']);
 const commentarea = ref('');
 const props = defineProps({
@@ -25,19 +41,30 @@ const props = defineProps({
     required: true, 
   }
 });
+
+function formatDateTime(date) {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      const hours = String(date.getHours()).padStart(2, '0');
+      const minutes = String(date.getMinutes()).padStart(2, '0');
+      const seconds = String(date.getSeconds()).padStart(2, '0');
+      return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+    }
+
 async function submitComment(){
     const prefixURL = localStorage.getItem("prefixURL") || 'https://localhost:8888';
     if(commentarea.value == ''){
-        alert("请输入评论内容");
+        ElMessage.error("请输入评论内容");
         return;
     }
     try{
         //const apiBaseStore = useApiBaseStore();
         let endpoint = prefixURL + "/submitUserComment";
         let requestBody = {
-            studentname : tempUserInfo.value.name,
+            studentname :  userStore.userInfo.name,
             commentcontent: commentarea.value,
-            commenttime : new Date().getFullYear() + "-" + (new Date().getMonth() + 1) + "-" + new Date().getDate() + " " + new Date().toLocaleTimeString(),
+            commenttime : formatDateTime(new Date()),  // 使用格式化后的当前时间
             avatar : userStore.userInfo.avatar.replace(prefixURL, ''),
         };
         const response = await fetch(endpoint, {
@@ -50,13 +77,16 @@ async function submitComment(){
         const result = await response.json();
         if (response.ok) {
         // 信息提交成功
-        alert("操作成功！");
+
+        ElMessage.success("评论成功");
+        emit('close_WriteComment'); //调用user_platform的close_WriteComment函数
         } else {
         // 错误处理
-        alert(result.message || "操作失败，请检查输入！");
+
+        ElMessage.error(result.message || "操作失败，请检查输入！");
         }
     }catch (error) {
-      alert("提交失败，请稍后再试！");
+      ElMessage.error("提交失败，请稍后再试！");
     }
 }
 function handleclose(){
@@ -66,7 +96,25 @@ function handleconfirm(){
     //alert(new Date().getFullYear() + "-" + (new Date().getMonth() + 1) + "-" + new Date().getDate() + " " + new Date().toLocaleTimeString(),);
     submitComment();
     commentarea.value = '';
+    
 }
+
+onMounted(async () => {
+        const token = localStorage.getItem("jwtToken");
+        if (token) {
+            const userID = getUserIDFromToken(token); // 解析 token 获取 userID
+            if (userID) {
+                await userStore.fetchUserInfo(); // 向后端请求用户信息
+            } else {
+                ElMessage.error("无效的用户令牌");
+                router.push("/login"); // 返回登录页
+            }
+        } else {
+            // ElMessage.error("未找到用户令牌");
+            router.push("/login"); // 返回登录页
+        }
+    });
+
 </script>
 
 <style scoped>

@@ -41,6 +41,7 @@
   import { defineProps, defineEmits } from 'vue';
   import { ref, onMounted } from 'vue';
   import { useWebSocketStore } from '@/stores/webSocketStore';
+  import { ElMessage } from 'element-plus';
     // 讀取 bus station 數據
     // import busStationsData from '@/assets/bus_station_data.json';
     // 設置出發地點和目標地點
@@ -99,13 +100,19 @@ onMounted(() => {
   
   // 关闭弹窗
   function closePopup() {
+    fromLocation.value = null; // 清空出发地点
+  toLocation.value = null;   // 清空目标地点
     emit('close3');
   }
 
     // 發送呼叫請求
     const sendCallRequest = () => {
-      if (!fromLocation.value || !toLocation.value) {
-        alert('請選擇出發地和目標地！');
+      if (!fromLocation.value) {
+        ElMessage.error('请选择出发地点！');
+        return;
+      }
+      else if (!toLocation.value){
+        ElMessage.error('请选择目标的地！');
         return;
       }
       const from_location = {

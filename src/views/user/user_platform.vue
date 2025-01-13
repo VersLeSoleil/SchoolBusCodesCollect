@@ -26,10 +26,10 @@
               
               <div class="comment-header">
                 <el-avatar :size="48" :src="comment.avatar"></el-avatar>
-                <div class="comment-name">{{ comment.studentname }}</div>
+                <div class="comment-name">{{ comment.student_name }}</div>
               </div>
-              <div class="comment-time">评论时间：{{ comment.commenttime }}</div>
-              <div class="comment-content">{{ comment.commentcontent }}</div>
+              <div class="comment-time">评论时间：{{ comment.comment_time }}</div>
+              <div class="comment-content">{{ comment.comment_content }}</div>
             </ElCard>
             <!-- <ElCard shadow="hover">{{ comment.studentname }}</ElCard>
             <ElCard shadow="hover">{{ comment.commenttime }}</ElCard>
@@ -58,11 +58,16 @@
 <script setup>
 import router from '@/router';
 import user_comment from './components/user_comment.vue'
+import axios from 'axios';
+
 import { ElButton ,ElContainer, ElHeader, ElMain, ElAside, ElPagination,ElCard, ElAvatar } from "element-plus";
-import { computed,ref } from 'vue';
+import { computed,ref,onMounted } from 'vue';
+
+
 const comments = ref([]);
 let currentpage = ref(1); // 当前页码
 const pageSize = 4; //每页显示的评论数
+
 let CreateCommentVisible = ref(false);
 // 示例公告数据
 const notices = ref([]);
@@ -83,24 +88,25 @@ const notices = ref([]);
 function close_WriteComment(){
   CreateCommentVisible.value = false;
 }
-async function getComments(){
-  //获取评论内容
-  try{
-      //const apiBaseStore = useApiBaseStore();
-      const prefixURL = localStorage.getItem("prefixURL") || 'https://localhost:8888';
+// async function getComments(){
+//   //获取评论内容
+//   try{
+//       //const apiBaseStore = useApiBaseStore();
+//       const prefixURL = localStorage.getItem("prefixURL") || 'https://localhost:8888';
 
-      let endpoint = prefixURL + "/getcomments";
-      const response = await fetch(endpoint,{
-        method: 'GET',
-        headers:{'Content-Type':'application/json',},
-      });
-      const result = await response.json();
-      comments.value = result;
-    }catch(error){
-      console.error('There was an error fetching the data!', error)
-    }
-}
-getComments();
+//       let endpoint = prefixURL + "/getcomments";
+//       const response = await fetch(endpoint,{
+//         method: 'GET',
+//         headers:{'Content-Type':'application/json',},
+//       });
+//       const result = await response.json();
+//       comments.value = result;
+//     }catch(error){
+//       console.error('There was an error fetching the data!', error)
+//     }
+// }
+
+// getComments();
 async function getNotices(){
   //获取公告内容
   try{
@@ -112,6 +118,8 @@ async function getNotices(){
         headers:{'Content-Type':'application/json',},
       });
       const result = await response.json();
+      // 按 notice_time 降序排序
+    result.sort((a, b) => new Date(b.noticeid) - new Date(a.noticeid));
       notices.value = result;
     }catch(error){
       console.error('There was an error fetching the data!', error)
@@ -132,6 +140,44 @@ function make_comment(){
 function changecurrent(page){
   currentpage.value = page;
 }
+import { getUserIDFromToken } from "@/auth.js";
+// 从后端获取评价数据
+const fetchFeedbackData = async () => {
+  const prefixURL = localStorage.getItem("prefixURL") || 'https://localhost:8888';
+  const token = localStorage.getItem("jwtToken");
+  const userID = getUserIDFromToken(token);
+
+  const params = new URLSearchParams();
+  params.append("userID", userID);
+
+  try {
+    const response = await axios.post(`${prefixURL}/getcomments`, params);
+    if (response.data) {
+      // 处理 avatar 字段为完整路径
+      const processedData = response.data.map(comment => {
+        if (comment.avatar) {
+          comment.avatar = `${prefixURL}${comment.avatar}`;
+        }
+        return comment;
+      });
+// 按 comment_time 降序排序（时间最新的排在最前）
+processedData.sort((a, b) => new Date(b.comment_time) - new Date(a.comment_time));
+
+      comments.value = processedData;
+      console.log("Received comments data:", comments.value);
+      console.log("Received response data:", response.data);
+    } else {
+      console.error("No comments data returned");
+    }
+  } catch (error) {
+    console.error("Failed to fetch feedback data:", error);
+  }
+};
+
+
+onMounted(() => {
+  fetchFeedbackData();
+});
 </script>
 
 <style scoped>
