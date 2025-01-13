@@ -12,8 +12,8 @@
     </div>
   </div>
 </template>
-  
-  
+
+
 <script>
 import AMapLoader from "@amap/amap-jsapi-loader";
 // import busStationData from "@/assets/bus_station_data.json";
@@ -34,14 +34,14 @@ export default defineComponent({
     confirmTicket: {
       type: Function,
       required: true,
-    }, 
+    },
     buyButtonVisible: {
       type: Boolean,
-      required: true, 
+      required: true,
     },
     leaveCar: {
       type: Boolean,
-      required: true, 
+      required: true,
     },
     paymentAction: {
       type: String, // 信号的值（"confirm" 或 "cancel"）
@@ -73,7 +73,7 @@ export default defineComponent({
     const { proxy } = getCurrentInstance();
     // 监听 Message 的变化
     // 动态加载路线的 watcher
-    
+
     watch(
       Message, (newMessages) => {
         for (let i = 0; i < newMessages.length; i++) {
@@ -159,7 +159,7 @@ export default defineComponent({
       onlineCount: 1, // 假设初始在线人数
       drivers: [], // 存储从后端获取的驾驶员位置数据
       dInfoVisible: false,
-      dInfoContent: '', 
+      dInfoContent: '',
       footerVisible: false, // 控制 footer 是否可见
       routes: [], // 存储从后端获取的路线数据
       sites: [], // 存储从后端获取的站点数据
@@ -511,13 +511,13 @@ export default defineComponent({
 
       // 从响应式的 driverGpsMessages 中读取数据
       const messages = [...this.driverGpsMessages];
-      messages.forEach((message) => {
-        if (!message.location) return; // 确保 location 存在
+      for (const message of messages) {
+        if (!message.location) continue; // 确保 location 存在
         const { location } = message;
         const marker = new AMap.Marker({
           position: [location.longitude, location.latitude],
           map: this.map,
-          
+
         });
 
 
@@ -531,11 +531,24 @@ export default defineComponent({
         infoContent.style.padding = "10px";
         infoContent.style.fontSize = "14px";
 
+        // 获取司机相应信息，从/admin/driver/get获取一个数组
+        const prefixURL = localStorage.getItem('prefixURL') || ''
+        const res = await fetch(`${prefixURL}/admin/driver/get`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ driver_id: message.id })
+        })
+        const json = await res.json()
+
         // 动态设置内容
         infoContent.innerHTML = `
           <p><strong>车牌号：</strong>${message.car_id || "未知车牌"}</p>
-          <button 
-            id="onBoardButton" 
+          ${json.htmls[0]}
+          ${json.htmls[1]}
+          ${json.htmls[2]}
+          ${json.htmls[3]}
+          <button
+            id="onBoardButton"
             style="padding: 5px 10px; background-color: #007BFF; color: white; border: none; border-radius: 5px; cursor: pointer;"
             ${this.isOnBoard ? "disabled" : ""}>
             ${this.isOnBoard ? "已上车" : "上车"}
@@ -566,7 +579,7 @@ export default defineComponent({
         // 将 Marker 存储到标记列表中
         this.markers.push(marker);
 
-      });
+      }
 
       // 清空已处理的消息队列
       this.driverGpsMessages.splice(0, this.driverGpsMessages.length); // 清空队列
@@ -580,10 +593,10 @@ export default defineComponent({
       }, 3000); // 每隔三秒更新一次
     },
     // 初始化 WebSocket
-    initWebSocket (){        
+    initWebSocket (){
       const webSocketStore = useWebSocketStore();
       webSocketStore.initWebSocket(localStorage.getItem("webprefixURL"));
-    },    
+    },
   },
 
   created() {
@@ -625,7 +638,7 @@ export default defineComponent({
     height: 80%;
     z-index: 1;
   }
-  
+
   /* 输入卡片样式 */
   .input-card {
     margin-top: 20px;
@@ -634,7 +647,7 @@ export default defineComponent({
     border: 1px solid #ddd;
     border-radius: 5px;
   }
-  
+
   /* 按钮样式 */
   .btn {
     display: block;
@@ -647,7 +660,7 @@ export default defineComponent({
     border-radius: 5px;
     cursor: pointer;
   }
-  
+
   .btn:hover {
     background-color: #0056b3;
   }
@@ -671,7 +684,7 @@ export default defineComponent({
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     overflow: hidden;
   }
-  
+
   .info-container {
     position: absolute;
     top: 10px;
@@ -684,21 +697,20 @@ export default defineComponent({
     color: #333;
     z-index: 10;
   }
-  
+
   .info-container h4 {
     color: #008a6c;
     font-weight: 600;
   }
-  
+
   .info-container p {
     color: #666;
     line-height: 1.6;
   }
-  
+
   @media (min-width: 1024px) {
     .map-container {
       height: 600px;
     }
   }
   </style>
-  
