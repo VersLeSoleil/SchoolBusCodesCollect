@@ -21,7 +21,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue';
-import { useApiBaseStore } from '@/stores/network';
+// import { useApiBaseStore } from '@/stores/network';
 
 // 声明响应式变量
 const isVisible = ref(true); // 是否显示评论栏
@@ -30,8 +30,10 @@ const info="getComment";
 
 const fetchComments = async () => {
   try {
-    const apiBaseStore = useApiBaseStore();
-    let endpoint = apiBaseStore.baseUrl + "/getDComments";
+    const prefixURL=localStorage.getItem("prefixURL")||'https://localhost:8888';
+    let endpoint = `${prefixURL}/getDComments`;
+    // const apiBaseStore = useApiBaseStore();
+    // let endpoint = apiBaseStore.baseUrl + "/getDComments";
     console.log('请求的 URL:', endpoint);
     let method = 'POST';
     let requestBody = { info };

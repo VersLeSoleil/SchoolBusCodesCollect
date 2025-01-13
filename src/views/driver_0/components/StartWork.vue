@@ -34,7 +34,7 @@
 
   <script>
   import {useRouter} from 'vue-router';
-  import {useApiBaseStore} from "@/stores/network"; // Vue Router 的组合式 API
+  // import {useApiBaseStore} from "@/stores/network"; // Vue Router 的组合式 API
 
   export default {
     data() {
@@ -71,8 +71,10 @@
       // 提交表单
       async submitForm() {
         try {
-          const apiBaseStore = useApiBaseStore();
-          let endpoint = apiBaseStore.baseUrl + "/start";
+          const prefixURL=localStorage.getItem("prefixURL")||'https://localhost:8888';
+          let endpoint = `${prefixURL}/start`;
+          // const apiBaseStore = useApiBaseStore();
+          // let endpoint = apiBaseStore.baseUrl + "/start";
           let method = "POST";
           let requestBody = {
               driver_id: this.formData.driver_id,

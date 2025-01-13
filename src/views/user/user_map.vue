@@ -619,10 +619,16 @@ export default defineComponent({
 });
 </script>
 <style scoped>
+#container {
+    width: 100%;
+    height: 900px; /* 設置適當的高度 */
+    z-index: 1;
+}
+
   /* 地图容器样式 */
   #map-container {
     width: 100%;
-    height: 80%;
+    height: 1px;
     z-index: 1;
   }
   
@@ -652,8 +658,8 @@ export default defineComponent({
     background-color: #0056b3;
   }
   .page-container {
-    width: 95%;
-    height:70vx;
+    width: 100%;
+    height: 70vh; /* 使用視窗高度 */
     overflow: hidden;
     display: flex;
     flex-direction: column;
@@ -665,7 +671,9 @@ export default defineComponent({
 
   .map-container {
     position: relative;
-    height:100%;
+    /* height: 50%;
+    width: 100%; */
+    height: 100%;
     width: 100%;
     border-radius: 12px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
