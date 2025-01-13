@@ -577,6 +577,7 @@ function confirmTicket() {
   webSocketStore.sendMessage(JSON.stringify(message));
 }
 function leaveCar(){
+  paymentAction = 'cancel';
   buyButtonVisible.value=true;
   leaveButtonVisible.value=false;
   leaveTime.value = formatDateTime(new Date())  // 使用格式化后的当前时间

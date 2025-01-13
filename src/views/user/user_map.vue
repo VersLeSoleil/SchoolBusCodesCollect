@@ -217,10 +217,15 @@ export default defineComponent({
     },
     // 处理确认信号
     handleConfirmAction() {
-      console.log('处理确认逻辑');
-      this.confirmTicket();
-      // 开始检测是否超出范围
-      this.startTracking(this.plateNumber, this.targetLocation);
+      if (this.isOnBoard == true){
+        console.log('处理确认逻辑');
+        this.confirmTicket();
+        // 开始检测是否超出范围
+        this.startTracking(this.plateNumber, this.targetLocation);
+      }
+      else{
+        this.isOnBoard = true;
+      }
     },
     // 处理取消信号
     handleCancelAction() {
