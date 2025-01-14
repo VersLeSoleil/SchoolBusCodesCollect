@@ -24,6 +24,18 @@
         </div> -->
       <!-- </div>
     </div> -->
+    <div>
+          <div style="display: flex; margin-top: 0px; height: 100px;">
+            <transition name="el-zoom-in-center">
+              <div v-show="show2" class="transition-box"><PaymentCount /></div>
+            </transition>
+
+            <transition name="el-zoom-in-center">
+              <div v-show="show2" class="transition-box"><CallCount /></div>
+            </transition>
+
+          </div>
+          </div>
   </div>
 </template>
 
@@ -37,10 +49,14 @@ import driver_Info from '@/views/driver_0/components/driver_Info.vue';
 // import { useUserStore } from "@/stores/user";
 import { useWebSocketStore } from '@/stores/webSocketStore';
 import { defineExpose } from 'vue';
+import PaymentCount from '@/views/driver_1/components/PaymentCount.vue';
+import CallCount from '@/views/driver_1/components/CallCount.vue';
+
 // import { useApiBaseStore } from '@/stores/network';
 
 /* global AMap */
 
+const show2 = ref(false);
 // 引入 store
 const webSocketStore = useWebSocketStore();
 
@@ -66,6 +82,12 @@ const dInfoVisible = ref(false);
 const dInfoContent = ref(null); // 根据需要初始化内容
 
 // const onlineCount = ref(1); // 假设初始在线人数
+
+const show2change = () => {
+  show2.value = !show2.value;
+};
+
+
 
 // 定义辅助方法
 const getRouteColor = (index) => {
@@ -476,6 +498,7 @@ onBeforeUnmount(() => {
 defineExpose({
   showDriverInfo,
   closeDInfo,
+  show2change,
 });
 </script>
 
@@ -602,7 +625,7 @@ defineExpose({
   border-radius: 12px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   overflow: hidden;
-  margin-bottom: 20px;
+  margin-bottom: 0px;
 }
 
 .info-container {
@@ -626,6 +649,19 @@ defineExpose({
 .info-container p {
   color: #666;
   line-height: 1.6;
+}
+
+.transition-box {
+    margin-bottom: 5px;
+    margin-top: 0px;
+    width: 500px;
+    height: 600px;
+    border-radius: 4px;
+    text-align: center;
+    color: #fff;
+    padding: 40px 20px;
+    box-sizing: border-box;
+    margin-right: 20px;
 }
 
 @media (min-width: 1024px) {
