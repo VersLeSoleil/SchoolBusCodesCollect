@@ -24,7 +24,7 @@
         </div> -->
       <!-- </div>
     </div> -->
-    <div>
+    <!-- <div>
           <div style="display: flex; margin-top: 0px; height: 100px;">
             <transition name="el-zoom-in-center">
               <div v-show="show2" class="transition-box"><PaymentCount /></div>
@@ -35,7 +35,7 @@
             </transition>
 
           </div>
-          </div>
+          </div> -->
   </div>
 </template>
 
