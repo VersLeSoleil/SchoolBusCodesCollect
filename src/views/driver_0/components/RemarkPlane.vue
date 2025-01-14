@@ -10,6 +10,7 @@
           <div class="comment">
             <div class="comment-author">{{ comment.student_name }}</div> 
             <div class="comment-body">{{ comment.comment_content }}</div>  
+            <el-avatar :size="48" :src="comment.avatar"></el-avatar>
           </div>
         </li>
       </ul>
@@ -21,58 +22,43 @@
 
 <script setup>
 import { ref, onMounted } from 'vue';
-import { useApiBaseStore } from '@/stores/network';
-
+// import { useApiBaseStore } from '@/stores/network';
+import axios from 'axios';
+import { getUserIDFromToken } from "@/auth.js";
 // 声明响应式变量
 const isVisible = ref(true); // 是否显示评论栏
 const comments = ref([]);    // 评论内容
-const info="getComment";
+// const info="getComment";
 
 const fetchComments = async () => {
+  const prefixURL = localStorage.getItem("prefixURL") || 'https://localhost:8888';
+  const token = localStorage.getItem("jwtToken");
+  const userID = getUserIDFromToken(token);
+
+  const params = new URLSearchParams();
+  params.append("userID", userID);
+
   try {
-    const apiBaseStore = useApiBaseStore();
-    let endpoint = apiBaseStore.baseUrl + "/getDComments";
-    console.log('请求的 URL:', endpoint);
-    let method = 'POST';
-    let requestBody = { info };
+    const response = await axios.post(`${prefixURL}/getcommentsForPlats`, params);
+    if (response.data) {
+      // 处理 avatar 字段为完整路径
+      const processedData = response.data.map(comment => {
+        if (comment.avatar) {
+          comment.avatar = `${prefixURL}${comment.avatar}`;
+        }
+        return comment;
+      });
+// 按 comment_time 降序排序（时间最新的排在最前）
+processedData.sort((a, b) => new Date(b.comment_time) - new Date(a.comment_time));
 
-    // 发送请求到后端
-    const response = await fetch(endpoint, {
-      method: method,
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(requestBody),  // 将请求体转为 JSON 格式
-    });
-
-    // 如果响应状态不是200，返回错误信息
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.log('Error Response:', errorText);  // 打印返回的 HTML 或其他内容
-      alert('请求失败，状态码：' + response.status + ' 错误信息：' + errorText);
-      return;
-    }
-
-    // 解析响应
-    const result = await response.json();
-
-    // 在解析响应后打印数据
-    console.log('Response Data:', result);
-    
-
-    // 处理成功与否
-    if (result && result.comments) {
-      // 评论数据成功返回，填充数据
-      comments.value = result.comments || [];  // 确保使用 comments 字段
-      alert('取得评论数据成功！');
-      console.log('评论数据:', comments.value);
+      comments.value = processedData;
+      console.log("Received comments data:", comments.value);
+      console.log("Received response data:", response.data);
     } else {
-      // 错误处理
-      alert(result.error || '取得评论数据失败！');
+      console.error("No comments data returned");
     }
   } catch (error) {
-    console.error('获取评论数据失败:', error);
-    alert('获取评论数据失败，请稍后再试！');
+    console.error("Failed to fetch feedback data:", error);
   }
 };
 

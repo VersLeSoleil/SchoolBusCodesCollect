@@ -79,7 +79,9 @@ async function submitComment(){
         // 信息提交成功
 
         ElMessage.success("评论成功");
+        emit('update_comments');
         emit('close_WriteComment'); //调用user_platform的close_WriteComment函数
+        
         } else {
         // 错误处理
 
