@@ -17,7 +17,7 @@
 
 <script>
 import {useRouter} from 'vue-router';
-import {useApiBaseStore} from "@/stores/network"; // Vue Router 的组合式 API
+// import {useApiBaseStore} from "@/stores/network"; // Vue Router 的组合式 API
 
 export default {
   data() {
@@ -54,8 +54,10 @@ export default {
     // 提交表单
     async submitForm() {
       try {
-        const apiBaseStore = useApiBaseStore();
-        let endpoint = apiBaseStore.baseUrl + "/end";
+        const prefixURL=localStorage.getItem("prefixURL")||'https://localhost:8888';
+        let endpoint = `${prefixURL}/end`;
+        // const apiBaseStore = useApiBaseStore();
+        // let endpoint = apiBaseStore.baseUrl + "/end";
         let method = "POST";
         let requestBody = {
             driver_id: this.formData.driver_id,
@@ -77,7 +79,8 @@ export default {
         if (response.ok) {
           // 信息提交成功
           alert("操作成功！");
-          this.router.push('/driver-0'); // 跳转到 `/driver-0`
+          window.location.href = "/driver-0"
+          // this.router.push('/driver-0'); // 跳转到 `/driver-0`
           // window.location.href = "/driver-1"; // 替换为目标页面路径
         } else {
           // 错误处理

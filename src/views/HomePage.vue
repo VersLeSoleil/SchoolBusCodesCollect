@@ -3,9 +3,8 @@ import {ref, onMounted} from 'vue'; // 引入 Vue Composition API
 import {useRouter} from 'vue-router'; // Vue Router 的组合式 API
 import axios from 'axios';
 import {validateToken} from '@/auth.js';
-import {useApiBaseStore} from "@/stores/network"; // 导入令牌验证函数
+// import {useApiBaseStore} from "@/stores/network"; // 导入令牌验证函数
 import {
-
         ElMessage,
         ElMessageBox,
     } from "element-plus";
@@ -39,8 +38,9 @@ async function handleLogout() {
               type: "warning",
           });
           // 调用后端 API 进行登出操作
-          const apiBaseStore = useApiBaseStore();
-          await axios.post(apiBaseStore.baseUrl + '/api/logout', {}, {
+          const prefixURL=localStorage.getItem("prefixURL")||'https://localhost:8888';
+          let endpoint = `${prefixURL}/api/logout`;
+          await axios.post(endpoint, {}, {
               headers: {
                   Authorization: localStorage.getItem('jwtToken'),
               },
