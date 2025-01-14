@@ -49,8 +49,8 @@ import driver_Info from '@/views/driver_0/components/driver_Info.vue';
 // import { useUserStore } from "@/stores/user";
 import { useWebSocketStore } from '@/stores/webSocketStore';
 import { defineExpose } from 'vue';
-import PaymentCount from '@/views/driver_1/components/PaymentCount.vue';
-import CallCount from '@/views/driver_1/components/CallCount.vue';
+//import PaymentCount from '@/views/driver_1/components/PaymentCount.vue';
+//import CallCount from '@/views/driver_1/components/CallCount.vue';
 
 // import { useApiBaseStore } from '@/stores/network';
 
