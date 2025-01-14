@@ -1,30 +1,30 @@
 <template>
-  <el-card style=" height: 330px; width: 300px;">
-  <div class="payment-count-container">
-    <h3 class="title">付款人数统计</h3>
-    <div class="stats">
-      <div class="stat-item">
-        <span class="label">当天付款人数:</span>
-        <span class="value">{{ currentCount }}</span>
+  <el-card style="height: auto; width: auto;" shadow="always">
+    <div class="payment-count-container">
+      <!-- 标题 -->
+      <h3 class="title">付款人数统计</h3>
+      <div class="stats">
+        <!-- 当天付款人数 -->
+        <div class="stat-item">
+          <span class="label">当天付款人数:</span>
+          <span class="value">{{ currentCount }}</span>
+        </div>
       </div>
-      <!-- <div class="stat-item">
-        <span class="label">上次付款人数:</span>
-        <span class="value">{{ lastCount }}</span>
+
+      <h3 class="title">车内人数统计</h3>
+      <div class="stats">
+        <!-- 车内人数 -->
+        <div class="stat-item">
+          <span class="label">车内人数:</span>
+          <span class="value">{{ personCount }}</span>
+        </div>
       </div>
-      <div class="stat-item">
-        <span class="label">上上次付款人数:</span>
-        <span class="value">{{ previousCount }}</span>
-      </div> -->
+
+      <!-- 清空按钮 -->
+      <!-- <button class="clear-button" @click="clearCurrentCount">
+        清空本次付款人数
+      </button> -->
     </div>
-    <h3 class="title">车内人数统计</h3>
-    <div class="stats">
-      <div class="stat-item">
-        <span class="label">车内人数:</span>
-        <span class="value">{{ personCount }}</span>
-      </div>
-    </div> 
-    <!-- <button class="clear-button" @click="clearCurrentCount">清空本次付款人数</button> -->
-  </div>
   </el-card>
 </template>
 
@@ -95,65 +95,89 @@ watch(Message, (newMessages) => {
 </script>
 
 <style scoped>
+/* 容器样式 */
 .payment-count-container {
-  width: 100%;
-  max-width: 400px;
-  margin: 20px auto;
+  width: auto;
+  height: auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  border-radius: 12px;
+  background: linear-gradient(145deg, #f3f4f6, #e5e7eb);
+  box-shadow: inset 4px 4px 6px rgba(0, 0, 0, 0.1),
+    inset -4px -4px 6px rgba(255, 255, 255, 0.7);
   padding: 20px;
-  border-radius: 8px;
-  background-color: #f9f9f9;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  font-family: Arial, sans-serif;
+  font-family: 'Roboto', sans-serif;
 }
 
+/* 标题样式 */
 .title {
   font-size: 1.5em;
   color: #333;
   text-align: center;
   margin-bottom: 20px;
-  border-bottom: 2px solid #007bff;
   padding-bottom: 10px;
+  border-bottom: 2px solid #007bff;
+  letter-spacing: 1px;
 }
 
+/* 数据统计区域 */
 .stats {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 15px;
   margin-bottom: 20px;
 }
 
+/* 单条统计项样式 */
 .stat-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  background-color: #ffffff;
+  border-radius: 8px;
+  padding: 10px 15px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s, box-shadow 0.3s;
 }
 
+.stat-item:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* 标签样式 */
 .label {
   font-size: 1.2em;
   color: #555;
 }
 
+/* 值样式 */
 .value {
   font-size: 1.5em;
   font-weight: bold;
   color: #007bff;
 }
 
+/* 按钮样式 */
 .clear-button {
   display: block;
   width: 100%;
-  padding: 10px 0;
+  padding: 12px 0;
   font-size: 1em;
   font-weight: bold;
   color: #fff;
-  background-color: #ff4d4f;
+  background: linear-gradient(145deg, #ff6b6b, #ff4d4f);
   border: none;
-  border-radius: 5px;
+  border-radius: 8px;
   cursor: pointer;
-  transition: background-color 0.3s;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
 }
 
 .clear-button:hover {
-  background-color: #d9363e;
+  background: linear-gradient(145deg, #d9363e, #ff4d4f);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+  transform: translateY(-2px);
 }
 </style>

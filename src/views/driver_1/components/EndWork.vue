@@ -79,7 +79,8 @@ export default {
         if (response.ok) {
           // 信息提交成功
           alert("操作成功！");
-          this.router.push('/driver-0'); // 跳转到 `/driver-0`
+          window.location.href = "/driver-0"
+          // this.router.push('/driver-0'); // 跳转到 `/driver-0`
           // window.location.href = "/driver-1"; // 替换为目标页面路径
         } else {
           // 错误处理

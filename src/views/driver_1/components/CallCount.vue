@@ -1,41 +1,47 @@
 <template>
-  <!-- <el-card class="container"> -->
-  <el-card  style=" height: 330px;width: 300px;background-color: transparent;">
-    <el-col :align="middle">
+  <el-card class="vehicle-call-card" shadow="always">
+    <div class="header">
       <h3>车辆呼叫列表</h3>
-    <div v-if="vehicleCallMessages.length > 0" class="message-list">
-      接收呼叫
-      <div 
-        v-for="(message, index) in vehicleCallMessages" 
-        :key="index" 
-        class="message-item" 
-        :class="{ accepted: message.isAccepted, completed: message.isCompleted }"
-      >
-        <p>
-          <strong>呼叫信息：</strong> 从 
-          [{{ message.from_str }}] 
-          到 
-          [{{ message.to_str }}]
-        </p>
-        <button 
-          v-if="!message.isAccepted" 
-          @click="acceptCall(message)"
-          class="accept-btn"
+    </div>
+    <div class="content">
+      <!-- 有呼叫信息时 -->
+      <div v-if="vehicleCallMessages.length > 0" class="message-list">
+        <div
+          v-for="(message, index) in vehicleCallMessages"
+          :key="index"
+          class="message-item"
+          :class="{ accepted: message.isAccepted, completed: message.isCompleted }"
         >
-          接收呼叫
-        </button>
-        <span v-else-if="!message.isCompleted" class="status">正在前往出发地...</span>
-        <span v-else class="status">已完成</span>
+          <p>
+            <strong>呼叫信息：</strong>
+            从 [{{ message.from_str }}] 到 [{{ message.to_str }}]
+          </p>
+          <div class="actions">
+            <button
+              v-if="!message.isAccepted"
+              @click="acceptCall(message)"
+              class="accept-btn"
+            >
+              接收呼叫
+            </button>
+            <span v-else-if="!message.isCompleted" class="status">
+              正在前往出发地...
+            </span>
+            <span v-else class="status completed">
+              已完成
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 无呼叫信息时 -->
+      <div v-else class="no-messages">
+        <p>暂无车辆呼叫信息</p>
       </div>
     </div>
-    <div v-else>
-      <p>暂无车辆呼叫信息</p>
-    </div>
-    </el-col>
-    
   </el-card>
-
 </template>
+
 
 <script setup>
 import { computed, watch } from 'vue';
@@ -116,25 +122,42 @@ const simulateDriverArrival = (message) => {
 </script>
 
 <style scoped>
-.container {
-  font-family: Arial, sans-serif;
+/* 主卡片样式 */
+.vehicle-call-card {
+  width: 100%;
+  max-width: 400px;
+  margin: auto;
   padding: 20px;
-  background-color: #f9f9f9;
-  border: 1px solid #ddd;
-  border-radius: 10px;
+  border-radius: 12px;
+  background: linear-gradient(145deg, #ffffff, #f0f0f0);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  font-family: 'Roboto', sans-serif;
 }
 
-h3 {
-  margin-bottom: 20px;
+/* 卡片标题样式 */
+.header h3 {
+  font-size: 1.5em;
   color: #333;
+  text-align: center;
+  margin-bottom: 20px;
+  border-bottom: 2px solid #007bff;
+  padding-bottom: 10px;
+  letter-spacing: 1px;
 }
 
+/* 卡片内容区域 */
+.content {
+  padding: 10px 0;
+}
+
+/* 呼叫信息列表 */
 .message-list {
   display: flex;
   flex-direction: column;
   gap: 15px;
 }
 
+/* 单个呼叫信息项 */
 .message-item {
   background: #fff;
   padding: 15px;
@@ -144,6 +167,12 @@ h3 {
   transition: all 0.3s ease;
 }
 
+.message-item:hover {
+  transform: translateY(-3px);
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* 接收呼叫状态 */
 .message-item.accepted {
   border-color: #4caf50;
   background-color: #e8f5e9;
@@ -154,6 +183,7 @@ h3 {
   background-color: #e3f2fd;
 }
 
+/* 按钮样式 */
 .accept-btn {
   background-color: #4caf50;
   color: #fff;
@@ -161,14 +191,29 @@ h3 {
   padding: 8px 12px;
   border-radius: 5px;
   cursor: pointer;
+  font-weight: bold;
+  transition: all 0.3s ease;
 }
 
 .accept-btn:hover {
   background-color: #45a049;
 }
 
+/* 状态信息 */
 .status {
   font-weight: bold;
   color: #555;
+}
+
+.status.completed {
+  color: #2196f3;
+}
+
+/* 没有呼叫信息时 */
+.no-messages {
+  text-align: center;
+  color: #888;
+  font-size: 1.2em;
+  padding: 20px;
 }
 </style>

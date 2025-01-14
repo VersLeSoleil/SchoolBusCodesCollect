@@ -2,6 +2,7 @@
   <div class="page-container">
     <div id="container" class="map-container">
       <div class="info-container">
+        <p><strong>运行巴士数量： {{ nbo }}</strong></p>
         <button class="btn" @click="toggleRoutes" style="margin-bottom: 5px">
           {{ routesVisible ? '隐藏现有路线' : '显示现有路线' }}
         </button>
@@ -148,6 +149,7 @@ export default defineComponent({
   },
   data() {
     return {
+      nbo: 0,
       map: null, // 地图实例，用于存储高德地图对象
       marker: null, // 当前用户位置的标记
       intervalId: null, // 定时器 ID，用于位置更新
@@ -511,13 +513,19 @@ export default defineComponent({
 
       // 从响应式的 driverGpsMessages 中读取数据
       const messages = [...this.driverGpsMessages];
+      this.nbo = messages.length;
       for (const message of messages) {
         if (!message.location) continue; // 确保 location 存在
         const { location } = message;
         const marker = new AMap.Marker({
           position: [location.longitude, location.latitude],
           map: this.map,
-
+          icon: new AMap.Icon({
+            image: require("@/assets/driver-icon.png"), // 确保图片路径正确
+            size: new AMap.Size(90, 90), // 设置图标大小
+            imageSize: new AMap.Size(90, 90), // 确保图标显示大小一致
+          }),
+          offset: new AMap.Pixel(-45, -45), // 偏移值，让图标居中显示
         });
 
 
@@ -530,16 +538,23 @@ export default defineComponent({
         const infoContent = document.createElement("div");
         infoContent.style.padding = "10px";
         infoContent.style.fontSize = "14px";
-
+        console.log(message.id)
         // 获取司机相应信息，从/admin/driver/get获取一个数组
         const prefixURL = localStorage.getItem('prefixURL') || ''
         const res = await fetch(`${prefixURL}/admin/driver/get`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ driver_id: message.id })
+          body: JSON.stringify(message.id),
         })
-        const json = await res.json()
+        // 检查响应状态
+        if (!res.ok) {
+          console.error(`HTTP error! Status: ${res.status}`);
+          infoContent.innerHTML = `<p>获取司机信息失败，请稍后重试。</p>`;
+          return;
+        }
 
+        const json = await res.json()
+        
         // 动态设置内容
         infoContent.innerHTML = `
           <p><strong>车牌号：</strong>${message.car_id || "未知车牌"}</p>
@@ -578,7 +593,7 @@ export default defineComponent({
 
         // 将 Marker 存储到标记列表中
         this.markers.push(marker);
-
+        // this.map.add(marker);
       }
 
       // 清空已处理的消息队列
