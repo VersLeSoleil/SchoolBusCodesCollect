@@ -1,5 +1,5 @@
 <template>
-  
+  <div class="container">
   <div class="page-container">
       <div id="container" class="map-container">
           <div class="info-container">
@@ -25,12 +25,13 @@
       </button>
       <input type="file" @change="handleFileUpload" accept=".json" style="margin-top: 10px" />
   </div>
-  <div id="app">
+  <div id="app" style="margin: auto">
       <!-- 管理员的功能 -->
       <RouteEditor :polylineEditor="polylineEditor" :polylines="polylines" :route_id="route_id" @add-polyline="addPolyline"
           @remove-polyline="removePolyline" />
 
           <mod :sites="sites" />
+  </div>
   </div>
 </template>
 
@@ -60,7 +61,7 @@ export default {
 
     // 监听 Message 的变化
     // 动态加载路线的 watcher
-    
+
     watch(
       Message, (newMessages) => {
         for (let i = 0; i < newMessages.length; i++) {
@@ -255,7 +256,9 @@ export default {
       if (!this.map) return;
       if (Array.isArray(this.sites) && this.sites.length > 0) {
         this.sites.forEach((site) => {
+          console.log("asfd");
           if (site.is_used == 0) return;
+          console.log("123123s");
           const labelMarker = new AMap.LabelMarker({
             position:  [site.location.longitude,
                 site.location.latitude],
@@ -276,7 +279,7 @@ export default {
               anchor: "center",
             },
           });
-          
+
           this.stationMarkers.push(labelMarker);
           this.map.add(labelMarker);
         });
@@ -343,7 +346,7 @@ export default {
         const marker = new AMap.Marker({
           position: [location.longitude, location.latitude],
           map: this.map,
-          
+
         });
         this.markers.push(marker);
       });
@@ -361,7 +364,7 @@ export default {
     },
 
     // 初始化 WebSocket
-    initWebSocket (){        
+    initWebSocket (){
       const webSocketStore = useWebSocketStore();
       webSocketStore.initWebSocket(localStorage.getItem("webprefixURL"));
     },
@@ -404,6 +407,11 @@ export default {
 #container {
   width: 100%;
   height: 500px;
+
+}
+
+.container {
+  margin-left: 215px;
 }
 
 #map-wrapper {
@@ -414,11 +422,12 @@ export default {
 
 /* 输入卡片样式 */
 .input-card {
-  margin-top: 20px;
-  padding: 10px;
+
+  align-items: center;
   background-color: #f9f9f9;
   border: 1px solid #ddd;
   border-radius: 5px;
+  margin: auto;
 }
 
 /* 地图顶部状态栏样式 */
@@ -467,6 +476,7 @@ export default {
   position: relative;
   width: 100%;
   height: 100px;
+
 }
 
 /* 地图顶部覆盖条 */
@@ -485,12 +495,17 @@ export default {
   justify-content: space-between;
 }
 
+.page-container{
+  margin-top: 25px;
+}
+
 /* 地图容器样式 */
 #map-container {
   width: 100%;
   height: 100%;
   z-index: 1;
   /* 底层组件 */
+
 }
 
 /* 输入卡片样式 */
@@ -538,7 +553,11 @@ export default {
 }
 
 .page-container {
-  width: 95%;
+  width: 100%;
+  margin-left: 10px;
+  margin-right: 10px;
+  margin-top: -10px;
+
 }
 
 .page-title {

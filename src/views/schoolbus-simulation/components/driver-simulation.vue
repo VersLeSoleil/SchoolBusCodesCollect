@@ -78,7 +78,7 @@
   const driverLocations = ref([]); // 存储驾驶员位置的数组
   let webSocket = null; // WebSocket 实例
   let timer = null; // 用于控制路径发送的定时器
-  let currentDriverId = 100; // 起始驾驶员 ID
+  let currentDriverId = 100003; // 起始驾驶员 ID
   const routes = ref([]); // 存储所有上传的路径信息
   // 获取 WebSocket Store 实例  
   const webSocketStore = useWebSocketStore();

@@ -225,7 +225,7 @@ const fetchStats = async () => {
 
 
     // // 3
-    weeklyActiveSeries.value = [{name: 'WAU', data: data.weekly_active_series}];
+    weeklyActiveSeries.value = [{name: 'HAU', data: data.weekly_active_series}];
     // 我知道你很急但你先别急
     await wait(100);
     weeklyActiveOptions.value = {
@@ -667,4 +667,3 @@ onBeforeUnmount(() => {
   }
 }
 </style>
-

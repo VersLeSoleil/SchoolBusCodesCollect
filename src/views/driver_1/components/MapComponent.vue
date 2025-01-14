@@ -282,6 +282,12 @@ const updateLocation = () => {
 
           // 转换为高德地图坐标（GCJ-02）
           const gps = [[longitude, latitude]];
+          // if (!isMapInitialized.value) {
+          //   initMap(longitude, latitude);
+          // } else if (marker.value) {
+          //   marker.value.setPosition([longitude, latitude]);
+          // }
+          sendLocationToBackendWebSocket(longitude, latitude);
           AMap.convertFrom(gps, 'gps', (status, result) => {
             if (result.info === 'ok') {
               const { lng, lat } = result.locations[0];
@@ -296,6 +302,14 @@ const updateLocation = () => {
               sendLocationToBackendWebSocket(lng, lat);
             } else {
               console.error("坐标转换失败", result);
+              if (!isMapInitialized.value) {
+                initMap(longitude, latitude);
+              } else if (marker.value) {
+                marker.value.setPosition([longitude, latitude]);
+              }
+
+              // 发送转换后的坐标到后端
+              sendLocationToBackendWebSocket(longitude, latitude);
             }
           });
         },

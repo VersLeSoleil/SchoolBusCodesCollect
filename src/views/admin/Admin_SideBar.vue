@@ -80,6 +80,7 @@ const menuItems = [
     children: [
       {path: '/admin_home/userspass', title: '学生列表', icon: 'el-icon-document', name: 'UserList'},
       {path: '/admin_home/feedback', title: '投诉意见处理', icon: 'el-icon-bell', name: 'Feedback'},
+      {path: '/admin_home/usersorders', title: '订单查看', icon: 'el-icon-bell', name: 'UsersOrders'},
     ]
   },
   {
@@ -110,7 +111,6 @@ const menuItems = [
     name: 'Route',
     children: [
       {path: '/admin_home/variables', title: '变量管理', icon: 'el-icon-s-tools', name: 'SystemSettings'},
-      {path: '/admin_home/manage_routes', title: '编辑路线', icon: 'el-icon-edit', name: 'RouteEdit'}
     ]
   },
   {
