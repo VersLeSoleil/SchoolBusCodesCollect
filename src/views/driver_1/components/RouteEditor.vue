@@ -1,26 +1,32 @@
 <template>
-  <div>
-    <button @click="startNewRoute" v-if="!editingNewRoute">新增路线</button>
-    <button @click="endEditing(true)" v-if="editingNewRoute">保存并结束新增</button>
-    <button @click="endEditing(false)" v-if="editingNewRoute">取消新增</button>
+  <div style="display: flex; flex-direction: column; align-items: center; margin-top: 10px">
+    <!-- 新增路线相关按钮 -->
+    <div style="margin-bottom: 10px;">
+      <button @click="startNewRoute" v-if="!editingNewRoute">新增路线</button>
+      <button @click="endEditing(true)" v-if="editingNewRoute">保存并结束新增</button>
+      <button @click="endEditing(false)" v-if="editingNewRoute">取消新增</button>
+    </div>
 
-    <button @click="startEditingRoutes" v-if="!editingAllRoutes">编辑现有路线</button>
-    <button @click="endEditingRoutes" v-if="editingAllRoutes">取消编辑</button>
-    <button @click="saveEditedPolyline" v-if="editingAllRoutes">保存编辑</button>
+    <!-- 编辑现有路线相关按钮 -->
+    <div style="margin-bottom: 10px;">
+      <button @click="startEditingRoutes" v-if="!editingAllRoutes">编辑现有路线</button>
+      <button @click="endEditingRoutes" v-if="editingAllRoutes">取消编辑</button>
+      <button @click="saveEditedPolyline" v-if="editingAllRoutes">保存编辑</button>
+    </div>
 
-    <div v-if="editingAllRoutes">
-      <div v-for="(polyline, index) in polylines" :key="index">
-        <!-- 将 route_id[index] 传递给 startEditingPolyline -->
+    <!-- 编辑每条路线的按钮 -->
+    <div v-if="editingAllRoutes" style="width: 100%; display: flex; flex-direction: column; align-items: center;">
+      <div v-for="(polyline, index) in polylines" :key="index" style="display: flex; justify-content: center; gap: 10px; margin-bottom: 10px;">
+        <!-- 编辑按钮 -->
         <button @click="startEditingPolyline(polyline, route_id[index])">
           编辑路线 {{ route_id[index] }}
         </button>
         <!-- 删除按钮 -->
-        <button @click="deleteRoute(route_id[index])" style="color: red">
+        <button @click="deleteRoute(route_id[index])" style="color: red;">
           删除路线 {{ route_id[index] }}
         </button>
       </div>
     </div>
-
   </div>
 </template>
 
