@@ -650,7 +650,7 @@ export default defineComponent({
 #container {
     width: 100%;
     height: 900px; /* 設置適當的高度 */
-    z-index: 1;
+    z-index: 0; 
 }
 
   /* 地图容器样式 */
