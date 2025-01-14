@@ -49,7 +49,7 @@
 
         <!-- 使用 transition 包裹 feedback-section -->
         <transition name="feedback">
-          <div class="feedback-section" v-if="isThinking || errorMessage || responseMessage || tableData.length > 0 || chartData">
+          <div class="feedback-section" v-if="isThinking || errorMessage || responseMessage || tableData.length > 0 || (chartOption && mode === 'chart')">
             <p v-if="errorMessage" class="error-msg">
               {{ errorMessage }}
             </p>
@@ -76,7 +76,7 @@
                 </tbody>
               </table>
             </div>
-            <div v-else-if="chartData && mode === 'chart'" class="chart-container" ref="chart"></div>
+            <div v-else-if="chartOption && mode === 'chart'" class="chart-container" ref="chart"></div>
           </div>
         </transition>
       </div>
@@ -85,7 +85,7 @@
 </template>
 
 <script>
-import { ref, computed, onMounted, watch, nextTick } from 'vue'
+import { ref, computed, onMounted, watch, nextTick, onBeforeUnmount } from 'vue'
 import * as echarts from 'echarts'
 // 如果使用粒子效果库（如 tsparticles），请根据需要导入
 
@@ -100,20 +100,18 @@ export default {
     const showReset = ref(false)
 
     // ============ 模式相关 ============
-    const modes = ['text', 'image', 'table', 'chart'] // 可扩展模式
+    const modes = ['text', 'table', 'chart'] // 可扩展模式
     const mode = ref('text') // 默认模式
 
     // 计算下一个模式的标签和图标（可根据需要自定义图标）
     const modeIcons = {
       text: '<i class="fas fa-font"></i>',
-      image: '<i class="fas fa-image"></i>',
       table: '<i class="fas fa-table"></i>',
       chart: '<i class="fas fa-chart-bar"></i>',
     }
 
     const modeLabels = {
-      text: '图像模式',
-      image: '表格模式',
+      text: '表格模式',
       table: '图表模式',
       chart: '文本模式',
     }
@@ -144,12 +142,11 @@ export default {
     })
 
     // ============ 图表相关 ============
-    const chartData = ref(null)
+    const chartOption = ref(null) // 接收后端返回的 chartOption
     const tableData = ref([]) // 初始化为空数组
     const tableColumns = ref(['列1', '列2', '列3']) // 示例列名，根据实际情况调整
-    let chartInstance = null
-    // eslint-disable-next-line no-unused-vars
-    const chartRef = ref(null)
+    const chart = ref(null) // 对应模板中的 ref="chart"
+    let chartInstance = ref(null) // 使用 ref 跟踪 chartInstance
 
     // ============ 球体动画相关 ============
     const sphereState = ref('noInput')
@@ -247,7 +244,7 @@ export default {
       }
     }
 
-    /** 就近定义或放到工具函数里 */
+    /** 工具函数 */
     /**
      * 将字符串按照指定字符数进行强制换行，并删除多余连续空格。
      * @param {string} str - 原始字符串
@@ -256,17 +253,16 @@ export default {
      * @returns {string} - 处理后的字符串
      */
     function forceLineBreak(str, chunkSize = 115, maxSpaces = 2) {
-      if (!str) return '';
+      if (!str) return ''
 
       // 步骤 1: 删除多余连续空格
-      const sanitizedStr = str.replace(new RegExp(` {${maxSpaces + 1},}`, 'g'), ' '.repeat(maxSpaces));
+      const sanitizedStr = str.replace(new RegExp(` {${maxSpaces + 1},}`, 'g'), ' '.repeat(maxSpaces))
 
       // 步骤 2: 按 chunkSize 强制分段换行
-      const re = new RegExp(`.{1,${chunkSize}}`, 'g');
-      const chunks = sanitizedStr.match(re) || [];
-      return chunks.join('\n');
+      const re = new RegExp(`.{1,${chunkSize}}`, 'g')
+      const chunks = sanitizedStr.match(re) || []
+      return chunks.join('\n')
     }
-
 
     /** computed：每次 responseMessage 更新，自动返回“强制换行后”的文本 */
     const forcedBreakMessage = computed(() => forceLineBreak(responseMessage.value))
@@ -276,7 +272,7 @@ export default {
       isThinking.value = true
       errorMessage.value = ''
       responseMessage.value = ''
-      chartData.value = null
+      chartOption.value = null // 重置 chartOption
       tableData.value = []
       showReset.value = false
 
@@ -284,33 +280,128 @@ export default {
       applySphereState('waiting')
 
       try {
+        // 模拟 API 响应
+        // 请根据实际情况取消注释并使用真实 API
+
         const prefixURL = localStorage.getItem('prefixURL') || ''
         const res = await fetch(`${prefixURL}/admin/ai/command`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ command: inputValue.value, mode: mode.value })
         })
-        const json = await res.json()
+        let json = await res.json()
+
+
+        // // 根据当前模式模拟不同的响应
+        // let json = {}
+        // if (mode.value === 'text') {
+        //   json = { status: 'success', message: null, data: { text: '这是一个测试文本' } }
+        // } else if (mode.value === 'image') {
+        //   json = { status: 'success', message: null, data: { imageUrl: 'https://via.placeholder.com/150' } }
+        // } else if (mode.value === 'table') {
+        //   json = {
+        //     status: 'success',
+        //     message: null,
+        //     data: {
+        //       tableColumns: ["商品名称", "库存数量", "最后更新时间"],
+        //       tableData: [
+        //         ["小米手机", 50, "2023-05-01 10:00:00"],
+        //         ["华为平板", 120, "2023-05-02 11:30:00"],
+        //         ["苹果手表", 30, "2023-05-03 09:20:00"]
+        //       ]
+        //     }
+        //   }
+        // } else if (mode.value === 'chart') {
+        //   json = {
+        //     "status": "success",
+        //     "message": null,
+        //     "data": {
+        //       "chartOption": {
+        //         "title": {
+        //           "text": "年度销售与利润对比",
+        //           "left": "center",
+        //           "textStyle": {
+        //             "color": "#fff",
+        //             "fontSize": 20
+        //           }
+        //         },
+        //         "tooltip": {
+        //           "trigger": "axis",
+        //           "axisPointer": {
+        //             "type": "cross",
+        //             "label": {
+        //               "backgroundColor": "#6a7985"
+        //             }
+        //           }
+        //         },
+        //         "legend": {
+        //           "data": ["销售额", "利润"],
+        //           "left": "center",
+        //           "top": "10%",
+        //           "textStyle": {
+        //             "color": "#fff"
+        //           }
+        //         },
+        //         "xAxis": {
+        //           "type": "category",
+        //           "data": ["2023-01", "2023-02", "2023-03", "2023-04", "2023-05", "2023-06"],
+        //           "axisLine": { "lineStyle": { "color": "#fff" } },
+        //           "axisLabel": { "color": "#fff" }
+        //         },
+        //         "yAxis": [
+        //           {
+        //             "type": "value",
+        //             "name": "销售额",
+        //             "axisLine": { "lineStyle": { "color": "#fff" } },
+        //             "axisLabel": { "color": "#fff" }
+        //           },
+        //           {
+        //             "type": "value",
+        //             "name": "利润",
+        //             "axisLine": { "lineStyle": { "color": "#fff" } },
+        //             "axisLabel": { "color": "#fff" },
+        //             "position": "right"
+        //           }
+        //         ],
+        //         "series": [
+        //           {
+        //             "name": "销售额",
+        //             "type": "bar",
+        //             "data": [150, 200, 250, 300, 350, 400],
+        //             "itemStyle": { "color": "#FFDD33" }
+        //           },
+        //           {
+        //             "name": "利润",
+        //             "type": "line",
+        //             "yAxisIndex": 1,
+        //             "data": [30, 40, 50, 60, 70, 80],
+        //             "itemStyle": { "color": "#FF6A6A" },
+        //             "markPoint": {
+        //               "data": [
+        //                 { "type": "max", "name": "最大值" },
+        //                 { "type": "min", "name": "最小值" }
+        //               ]
+        //             }
+        //           }
+        //         ],
+        //         "toolbox": {
+        //           "show": true,
+        //           "orient": "vertical",
+        //           "left": "right",
+        //           "top": "center",
+        //           "feature": {
+        //             "dataZoom": { "show": true },
+        //             "restore": { "show": true }
+        //           }
+        //         }
+        //       }
+        //     }
+        //   }
+        //
+        // }
 
         if (json.status === 'success') {
           if (mode.value === 'text') {
-
-            let tem = {
-              "status": "success",
-              "message": null,
-              "data": {
-                "tableColumns": ["商品名称", "库存数量", "最后更新时间"],
-                "tableData": [
-                  ["小米手机", 50, "2023-05-01 10:00:00"],
-                  ["华为平板", 120, "2023-05-02 11:30:00"],
-                  ["苹果手表", 30, "2023-05-03 09:20:00"]
-                ]
-              }
-            }
-            tableData.value = tem.data.tableData
-            tableColumns.value = tem.data.tableColumns
-
-
             responseMessage.value = json.data.text || ''
           } else if (mode.value === 'image') {
             responseMessage.value = json.data.imageUrl || ''
@@ -318,9 +409,7 @@ export default {
             tableData.value = json.data.tableData || []
             tableColumns.value = json.data.tableColumns || ['列1', '列2', '列3']
           } else if (mode.value === 'chart') {
-            chartData.value = json.data.chartData
-            await nextTick()
-            initChart()
+            chartOption.value = json.data.chartOption || null // 直接接收 chartOption
           }
         } else {
           errorMessage.value = json.message || '后端处理失败'
@@ -340,44 +429,42 @@ export default {
     }
 
     // ============ 初始化图表 ============
-    const chart = ref(null)
     const initChart = () => {
-      if (!chart.value) return
-      if (!chartInstance) {
-        chartInstance = echarts.init(chart.value)
+      console.log("initChart called")
+      console.log("chart.value:", chart.value)
+      console.log("chartOption.value:", chartOption.value)
+
+      if (!chartInstance.value && chart.value) {
+        try {
+          chartInstance.value = echarts.init(chart.value)
+          console.log("chartInstance initialized")
+        } catch (error) {
+          console.error("ECharts initialization failed:", error)
+        }
       }
 
-      const option = {
-        title: {
-          text: '可视化结果',
-          left: 'center',
-          textStyle: { color: '#fff' }
-        },
-        backgroundColor: 'transparent',
-        tooltip: {},
-        xAxis: {
-          type: 'category',
-          data: chartData.value.map(d => d.x),
-          axisLine: { lineStyle: { color: '#fff' } },
-          axisLabel: { color: '#fff' }
-        },
-        yAxis: {
-          type: 'value',
-          axisLine: { lineStyle: { color: '#fff' } },
-          axisLabel: { color: '#fff' }
-        },
-        series: [
-          {
-            data: chartData.value.map(d => d.y),
-            type: 'bar',
-            itemStyle: { color: '#FFDD33' }
-          }
-        ]
+      if (chartInstance.value && chartOption.value) {
+        console.log("Setting chart option")
+        chartInstance.value.setOption(chartOption.value)
+      } else {
+        console.log("chartInstance or chartOption is not available")
       }
-      chartInstance.setOption(option)
     }
-    watch(chartData, () => {
-      if (chartData.value && chartInstance) {
+
+    // 添加一个 watcher 监听 chart.value 的变化
+    watch(chart, async (newVal) => {
+      if (newVal && mode.value === 'chart' && chartOption.value) {
+        console.log("Chart container is now available")
+        await nextTick()
+        initChart()
+      }
+    })
+
+    // 监听 chartOption 的变化
+    watch(chartOption, async () => {
+      console.log("chartOption changed:", chartOption.value)
+      if (chartOption.value && mode.value === 'chart') {
+        await nextTick()
         initChart()
       }
     })
@@ -387,11 +474,18 @@ export default {
       inputValue.value = ''
       errorMessage.value = ''
       responseMessage.value = ''
-      chartData.value = null
+      chartOption.value = null // 重置 chartOption
       tableData.value = []
       showReset.value = false
       sphereState.value = 'noInput'
       applySphereState('noInput')
+
+      // 销毁现有的 ECharts 实例
+      if (chartInstance.value) {
+        chartInstance.value.dispose()
+        chartInstance.value = null
+      }
+
       nextTick(() => {
         autoResize()
       })
@@ -402,8 +496,68 @@ export default {
 
     // ============ 粒子效果 ============
     const particlesRef = ref(null)
-    onMounted(() => {
-      // 初始化 tsparticles 或其他粒子效果库
+    onMounted(async () => {
+      // 初始化粒子效果或其他逻辑
+      // 示例：初始化图表（如果有初始数据）
+      if (mode.value === 'chart' && chartOption.value) {
+        await nextTick()
+        initChart()
+      } else {
+        console.error('Chart container is not mounted or no chart option.')
+      }
+
+      // 测试硬编码数据（可选）
+      /*
+      chartOption.value = {
+        title: {
+          text: '销售数据',
+          left: 'center',
+          textStyle: { color: '#fff' }
+        },
+        tooltip: {
+          trigger: 'axis'
+        },
+        xAxis: {
+          type: 'category',
+          data: ['2023-01-01', '2023-01-02', '2023-01-03', '2023-01-04'],
+          axisLine: { lineStyle: { color: '#fff' } },
+          axisLabel: { color: '#fff' }
+        },
+        yAxis: {
+          type: 'value',
+          axisLine: { lineStyle: { color: '#fff' } },
+          axisLabel: { color: '#fff' }
+        },
+        series: [
+          {
+            data: [120, 150, 90, 200],
+            type: 'bar',
+            itemStyle: { color: '#FFDD33' }
+          }
+        ]
+      }
+      mode.value = 'chart'
+      await nextTick()
+      // initChart 会由 watcher 自动调用
+      */
+    })
+
+    // 定义 resize 处理函数
+    const handleResize = () => {
+      if (chartInstance.value) {
+        chartInstance.value.resize()
+      }
+    }
+
+    // 添加监听器
+    window.addEventListener('resize', handleResize)
+
+    // 移除监听器并销毁 ECharts 实例
+    onBeforeUnmount(() => {
+      window.removeEventListener('resize', handleResize)
+      if (chartInstance.value) {
+        chartInstance.value.dispose()
+      }
     })
 
     // ============ 定义条件数组和计算属性 ============
@@ -417,11 +571,11 @@ export default {
         width: '70%',
       },
       {
-        condition: () => mode.value === 'table' && tableData.value.length > 5,
+        condition: () => mode.value === 'table' && tableData.value.length > 0,
         width: '90%',
       },
       {
-        condition: () => mode.value === 'chart' && chartData.value && chartData.value.length > 0,
+        condition: () => mode.value === 'chart' && chartOption.value,
         width: '85%',
       },
       // 默认条件
@@ -429,17 +583,16 @@ export default {
         condition: () => true,
         width: '25%', // 默认宽度设为25%
       },
-    ];
+    ]
 
     const computedWidth = computed(() => {
       for (const condition of widthConditions) {
         if (condition.condition()) {
-          return condition.width;
+          return condition.width
         }
       }
-      return '25%'; // 默认宽度
-    });
-
+      return '25%' // 默认宽度
+    })
 
     return {
       inputValue,
@@ -447,7 +600,7 @@ export default {
       errorMessage,
       responseMessage,
       showReset,
-      chartData,
+      chartOption, // 导出 chartOption
       tableData,
       tableColumns,
       chart,
@@ -465,7 +618,6 @@ export default {
       inputPlaceholder,
       computedWidth, // 导出计算宽度
       forcedBreakMessage
-
     }
   }
 }
@@ -500,7 +652,7 @@ export default {
   margin-left: 215px;
   margin-top: -60px;
   margin-right: 10px;
-  width: 87.6% !important; /* 使用100%宽度，避免固定宽度导致布局问题 */
+  width: 87.6% !important; /* 使用百分比宽度，避免固定宽度导致布局问题 */
   max-width: 87.6% !important; /* 限制反馈部分的最大宽度 */
   min-height: 100vh; /* 确保最小高度 */
   position: relative;
@@ -560,7 +712,6 @@ export default {
   z-index: 1;
   text-align: center;
   margin-top: 50px;
-
 }
 
 /* ====== 表单区域 ====== */
@@ -576,9 +727,6 @@ export default {
   margin: 10px auto; /* 使用 auto 左右外边距以居中 */
   transition: width 0.5s ease; /* 平滑过渡宽度 */
 }
-
-
-
 
 /* h2 样式 */
 h2 {
@@ -671,26 +819,48 @@ h2 {
   background-color: #2691e9;
 }
 
-
-
 /* ====== 图表容器 ====== */
 .chart-container {
   max-width: 100%; /* 限制反馈部分的最大宽度 */
   width: 100%; /* 占满反馈区域的宽度 */
   height: 300px;
-  margin-top: 20px;
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 10px;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
   background: rgba(255, 255, 255, 0.1);
   transition: all 0.5s ease; /* 添加过渡效果 */
+  display: flex;
+  justify-content: center;  /* 水平居中 */
+  align-items: center;      /* 垂直居中 */
 }
 
+/* 添加表格显示动画 */
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+
+/* 鼠标悬停时的效果 */
+.table-result tr:hover {
+  background-color: rgba(0, 0, 0, 0.1);
+  transition: background-color 0.3s ease;
+}
 
 .table-result table {
   width: 100%; /* 表格占满反馈区域的宽度 */
   border-collapse: collapse;
   table-layout: auto; /* 自动调整列宽 */
+  animation: fadeIn 0.5s ease-out;
+  opacity: 1;
+  overflow-y: hidden; /* 隐藏垂直滚动条 */
+
 }
 
 .table-result th,
@@ -713,11 +883,14 @@ h2 {
 }
 
 .feedback-section {
+  margin-top: 10px;
   max-width: 100%; /* 限制反馈部分的最大宽度 */
   overflow-x: auto; /* 隐藏水平溢出 */
+  overflow-y: hidden; /* 隐藏垂直溢出 */
 }
 
 .feedback {
+  margin-top: 10px;
   max-width: 100%; /* 限制反馈部分的最大宽度 */
   overflow-x: auto; /* 隐藏水平溢出 */
 }
@@ -727,6 +900,7 @@ h2 {
   width: 100%; /* 确保表格不会超出父容器 */
   table-layout: fixed; /* 固定表格布局，避免内容撑开 */
   word-wrap: break-word; /* 确保长内容换行 */
+  overflow-y: hidden; /* 隐藏垂直滚动条 */
 }
 
 .image-result img {
@@ -744,7 +918,4 @@ h2 {
   overflow-y: auto;
   overflow-x: auto;
 }
-
-
-
 </style>
