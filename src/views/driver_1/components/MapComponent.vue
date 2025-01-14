@@ -24,7 +24,7 @@
         </div> -->
       <!-- </div>
     </div> -->
-    <div>
+    <!-- <div>
           <div style="display: flex; margin-top: 0px; height: 100px;">
             <transition name="el-zoom-in-center">
               <div v-show="show2" class="transition-box"><PaymentCount /></div>
@@ -35,7 +35,7 @@
             </transition>
 
           </div>
-          </div>
+          </div> -->
   </div>
 </template>
 
@@ -49,8 +49,8 @@ import driver_Info from '@/views/driver_0/components/driver_Info.vue';
 // import { useUserStore } from "@/stores/user";
 import { useWebSocketStore } from '@/stores/webSocketStore';
 import { defineExpose } from 'vue';
-import PaymentCount from '@/views/driver_1/components/PaymentCount.vue';
-import CallCount from '@/views/driver_1/components/CallCount.vue';
+//import PaymentCount from '@/views/driver_1/components/PaymentCount.vue';
+//import CallCount from '@/views/driver_1/components/CallCount.vue';
 
 // import { useApiBaseStore } from '@/stores/network';
 
@@ -304,6 +304,12 @@ const updateLocation = () => {
 
           // 转换为高德地图坐标（GCJ-02）
           const gps = [[longitude, latitude]];
+          // if (!isMapInitialized.value) {
+          //   initMap(longitude, latitude);
+          // } else if (marker.value) {
+          //   marker.value.setPosition([longitude, latitude]);
+          // }
+          sendLocationToBackendWebSocket(longitude, latitude);
           AMap.convertFrom(gps, 'gps', (status, result) => {
             if (result.info === 'ok') {
               const { lng, lat } = result.locations[0];
@@ -318,6 +324,14 @@ const updateLocation = () => {
               sendLocationToBackendWebSocket(lng, lat);
             } else {
               console.error("坐标转换失败", result);
+              if (!isMapInitialized.value) {
+                initMap(longitude, latitude);
+              } else if (marker.value) {
+                marker.value.setPosition([longitude, latitude]);
+              }
+
+              // 发送转换后的坐标到后端
+              sendLocationToBackendWebSocket(longitude, latitude);
             }
           });
         },

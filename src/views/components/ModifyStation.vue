@@ -26,20 +26,20 @@
           <label>位置</label>
           <label>緯度</label>
           <input
-            v-model="station.location.latitude"
-            type="text"
-            :disabled="!isEditing"
-            required
-          />
-          <span v-if="isEditing && !station.location.latitude" class="error-message">緯度不能為空！</span>
-          <label>經度</label>
-          <input
             v-model="station.location.longitude"
             type="text"
             :disabled="!isEditing"
             required
           />
-          <span v-if="isEditing && !station.location.longitude" class="error-message">經度不能為空！</span>
+          <span v-if="isEditing && !station.location.longitude" class="error-message">緯度不能為空！</span>
+          <label>經度</label>
+          <input
+            v-model="station.location.latitude"
+            type="text"
+            :disabled="!isEditing"
+            required
+          />
+          <span v-if="isEditing && !station.location.latitude" class="error-message">經度不能為空！</span>
         </div>
         <div class="form-group">
           <label>是否正在使用:</label>
@@ -159,8 +159,8 @@ const saveChanges = async () => {
         id: index + 1, // 如果無 ID，默認為 0
         name: station.name,
         location: {
-          latitude: parseFloat(station.location.latitude),
-          longitude: parseFloat(station.location.longitude),
+          longitude: parseFloat(station.location.latitude),
+          latitude: parseFloat(station.location.longitude),
         },
         site_passenger: station.site_passenger || 0, // 默認為 0
         is_used: station.is_used,
@@ -193,7 +193,7 @@ const addStation = () => {
   const newStation = {
     id: Date.now(),
     name: '',
-    location: { latitude: '', longitude: '' },
+    location: { longitude: '', latitude: '' },
     is_used: 0,
     note: '',
   };

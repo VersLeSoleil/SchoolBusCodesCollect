@@ -256,7 +256,9 @@ export default {
       if (!this.map) return;
       if (Array.isArray(this.sites) && this.sites.length > 0) {
         this.sites.forEach((site) => {
+          console.log("asfd");
           if (site.is_used == 0) return;
+          console.log("123123s");
           const labelMarker = new AMap.LabelMarker({
             position:  [site.location.longitude,
                 site.location.latitude],
