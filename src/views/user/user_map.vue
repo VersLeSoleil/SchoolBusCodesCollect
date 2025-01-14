@@ -20,7 +20,7 @@ import AMapLoader from "@amap/amap-jsapi-loader";
 // import busStationData from "@/assets/bus_station_data.json";
 // import {useApiBaseStore} from "@/stores/network";
 import { useWebSocketStore } from '@/stores/webSocketStore';
-import { computed, watch, getCurrentInstance, onMounted, defineComponent } from 'vue';
+import { computed, watch, getCurrentInstance, onMounted, defineComponent, ref } from 'vue';
 
 export default defineComponent({
   props: {
@@ -170,9 +170,70 @@ export default defineComponent({
       trackingInterval: null, // 定时器句柄
       plateNumber: null, // 存储车牌号
       targetLocation: null, // 存储目标位置
+      work_shift: null, // 工作班次数据
     };
   },
   methods: {
+    async fetchWorkShift() {
+      try {
+        const prefixURL = localStorage.getItem("prefixURL") || 'https://localhost:8888';
+        const endpoint = `${prefixURL}/getWorkShift`;
+        const method = 'POST';
+        const requestBody = {
+          current_time: this.formatDateTime(new Date()), // 使用格式化后的当前时间
+        };
+
+        console.log("Current time: ", requestBody.current_time);
+
+        // 发送请求到后端
+        const response = await fetch(endpoint, {
+          method: method,
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(requestBody), // 将请求体转为 JSON 格式
+        });
+
+        // 调试：打印响应状态码和响应内容
+        console.log('Response Status:', response.status);
+        console.log('Response Headers:', response.headers);
+
+        // 如果响应状态不是 200，返回错误信息
+        if (!response.ok) {
+          alert('请求失败，状态码：' + response.status);
+          const errorText = await response.text();
+          console.log('Error Response:', errorText); // 打印返回的 HTML 或其他内容
+          return;
+        }
+
+        // 解析响应
+        const result = await response.json();
+        console.log('Response Data:', result);
+
+        // 处理成功与否
+        if (response.ok) {
+          // 成功时更新数据
+          this.work_shift = result; // 假设 `work_shift` 是组件的响应式变量
+        } else {
+          // 错误处理
+          alert(result.error || '取得工作信息失败！');
+        }
+      } catch (error) {
+        console.error('提交时间失败:', error);
+        alert('提交时间失败，请稍后再试！');
+      }
+    },
+
+    // 时间格式化方法
+    formatDateTime(date) {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      const hours = String(date.getHours()).padStart(2, '0');
+      const minutes = String(date.getMinutes()).padStart(2, '0');
+      const seconds = String(date.getSeconds()).padStart(2, '0');
+      return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+    },
     handleGetOn(plateNumber, targetLocation) {
       if (this.isOnBoard) {
         alert("您已经上车，请勿重复点击！");
@@ -200,14 +261,27 @@ export default defineComponent({
             targetLat,
             targetLng
           );
+          this.fetchWorkShift();
+          if (!this.work_shift || !Array.isArray(this.work_shift)) {
+            console.error("work_shift 数据无效或不是数组");
+            return null;
+          }
 
+          // 使用 find 查找 car_id 等于 plateNumber 的项
+          const workShiftEntry = this.work_shift.find(
+            (entry) => entry.car_id === plateNumber
+          );
+          let a = ref("se");
+          let b = ref("se");
+          let c = ref(plateNumber);
+          let d = ref(parseInt(workShiftEntry.driver_id));
           if (distance <= 500) {
             alert(`您在上车范围内！车牌号：${plateNumber}`);
             this.isOnBoard = true; // 设置为已上车状态
             // 将 plateNumber 和 targetLocation 存储到状态中
             this.plateNumber = plateNumber;
             this.targetLocation = targetLocation;
-            this.getTicket("select_from", "select_dest", plateNumber, 1);
+            this.getTicket(a, b, c, d);
             this.openPayment();
           } else {
             alert(`距离目标位置 ${distance.toFixed(2)} 米，超出可上车范围！`);
@@ -554,7 +628,7 @@ export default defineComponent({
         }
 
         const json = await res.json()
-        
+        // localStorage.setItem("car")
         // 动态设置内容
         infoContent.innerHTML = `
           <p><strong>车牌号：</strong>${message.car_id || "未知车牌"}</p>
@@ -650,7 +724,7 @@ export default defineComponent({
 #container {
     width: 100%;
     height: 900px; /* 設置適當的高度 */
-    z-index: 1;
+    z-index: 0; 
 }
 
   /* 地图容器样式 */
