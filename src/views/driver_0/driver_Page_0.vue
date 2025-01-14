@@ -3,12 +3,15 @@ import { ref,} from 'vue';
 import MapComponent from '@/views/driver_0/components/MapComponent.vue';
 import {  Menu as IconMenu ,location} from '@element-plus/icons-vue';
 import StartWork from './components/StartWork.vue';
+import RemarkPlane from './components/RemarkPlane.vue';
 
 
 // 使用 `ref` 来创建响应式的变量
 const mapComponent = ref(null);
 const menuActiveIndex = ref('1');
 const startWork = ref(null);
+const remarkplane=ref(null);
+
 // 打开和关闭菜单时的回调函数
 const handleOpen = (key, keyPath) => {
   console.log('Open menu:', key, keyPath);
@@ -41,6 +44,10 @@ const openForm = () => {
   startWork.value.openForm(); // 直接调用 startWork 中的方法
 };
 
+const toggleVisibility = () => {
+  remarkplane.value.toggleVisibility(); 
+};
+
 
 
 </script>
@@ -69,6 +76,7 @@ const openForm = () => {
               <el-menu-item index="1-2" @click="toggleStations" style="font-size: 20px;">隐藏/显示站点</el-menu-item>
               <el-menu-item index="1-3" @click="toggleRoutes" style="font-size: 20px;">隐藏/显示现有路线</el-menu-item>
               <el-menu-item index="1-4" @click="autoLocateCampus" style="font-size: 20px;">自动定位到校区</el-menu-item>
+              <el-menu-item index="1-5" @click="toggleVisibility" style="font-size: 20px;">评论</el-menu-item>
             </el-sub-menu>
             <el-menu-item index="2" @click="showDriverInfo">
               <el-icon><icon-menu /></el-icon>
@@ -79,6 +87,7 @@ const openForm = () => {
         <el-main>     
             <MapComponent ref="mapComponent"/>    
             <StartWork ref="startWork" />
+            <RemarkPlane ref="remarkplane"/>
         </el-main>
       </el-container>
     </el-container>
