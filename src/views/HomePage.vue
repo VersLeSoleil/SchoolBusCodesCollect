@@ -4,7 +4,10 @@ import {useRouter} from 'vue-router'; // Vue Router 的组合式 API
 import axios from 'axios';
 import {validateToken} from '@/auth.js';
 // import {useApiBaseStore} from "@/stores/network"; // 导入令牌验证函数
-
+import {
+        ElMessage,
+        ElMessageBox,
+    } from "element-plus";
 const router = useRouter(); // 获取路由实例
 const message = ref(''); // 定义消息状态
 
@@ -18,30 +21,40 @@ onMounted(async () => {
 });
 
 // 登出逻辑
-async function handleLogout() {
-  const validation = await validateToken(); // 再次验证令牌
-  if (!validation.valid) {
-    alert(validation.message); // 如果令牌无效，直接跳转到登录页面
-    router.push('/login');
-    return;
-  }
 
-  try {
-    const prefixURL=localStorage.getItem("prefixURL")||'https://localhost:8888';
-    let endpoint = `${prefixURL}/api/logout`;
-    await axios.post(endpoint, {}, {
-      headers: {
-        Authorization: localStorage.getItem('jwtToken'),
-      },
-    });
-    alert('您已成功登出');
-    localStorage.removeItem('jwtToken'); // 移除令牌
-    localStorage.setItem('prefixURL', 'https://sysuschoolbus.top:5793');
-    router.push('/login'); // 跳转到登录页面
-  } catch (error) {
-    console.error('登出失败:', error);
-    alert('登出失败，请稍后再试');
-  }
+async function handleLogout() {
+      const validation = await validateToken();
+      if (!validation.valid) {
+          ElMessage.error(validation.message);
+          router.push("/login");
+          return;
+      }
+
+      // 确认是否登出
+      try {
+          await ElMessageBox.confirm("确定要登出吗？", "提示", {
+              confirmButtonText: "确定",
+              cancelButtonText: "取消",
+              type: "warning",
+          });
+          // 调用后端 API 进行登出操作
+          const prefixURL=localStorage.getItem("prefixURL")||'https://localhost:8888';
+          let endpoint = `${prefixURL}/api/logout`;
+          await axios.post(endpoint, {}, {
+              headers: {
+                  Authorization: localStorage.getItem('jwtToken'),
+              },
+          });
+          ElMessage.success("您已成功登出~");
+          localStorage.removeItem('jwtToken'); // 移除令牌
+          localStorage.setItem('prefixURL', 'https://sysuschoolbus.top:5793');
+          router.push('/login'); // 跳转到登录页面
+      } catch (error) {
+          if (error !== "cancel") {
+              console.error("登出失败:", error);
+              ElMessage.error("登出失败，请稍后再试");
+          }
+      }
 }
 
 // 跳转到司机页面逻辑

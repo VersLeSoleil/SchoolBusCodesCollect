@@ -169,6 +169,7 @@ function cancleTicket(){
   paymentVisible.value=false;
   leaveButtonVisible.value=false;
   callBusVisible.value=false;
+  
 }
 
 
@@ -214,7 +215,7 @@ try {
     // 司机数据成功返回，填充数据
     currentOrderID.value=result.order_id;
 
-    alert('取得订单信息成功！');
+    // alert('取得订单信息成功！');
   } else {
     // 错误处理
     alert(result.error || '取得订单信息失败！');
@@ -265,7 +266,7 @@ try {
   if (response.ok) {
     // 司机数据成功返回，填充数据
     currentPaymentID.value=result.payment_id;
-    alert('取得支付信息成功！');
+    // alert('取得支付信息成功！');
   } else {
     // 错误处理
     alert(result.error || '取得支付信息失败！');
@@ -308,7 +309,7 @@ try {
   const result = await response.json();
   if (response.ok) {
     // 信息提交成功
-    alert("操作成功！");
+    // alert("操作成功！");
   } else {
     // 错误处理
     alert(result.message || "操作失败，请检查输入！");
@@ -351,7 +352,7 @@ try {
   const result = await response.json();
   if (response.ok) {
     // 信息提交成功
-    alert("操作成功！");
+    // alert("操作成功！");
   } else {
     // 错误处理
     alert(result.message || "操作失败，请检查输入！");
@@ -394,7 +395,7 @@ try {
   const result = await response.json();
   if (response.ok) {
     // 信息提交成功
-    alert("操作成功！");
+    // alert("操作成功！");
   } else {
     // 错误处理
     alert(result.message || "操作失败，请检查输入！");
@@ -432,7 +433,7 @@ try {
   const result = await response.json();
   if (response.ok) {
     // 信息提交成功
-    alert("操作成功！");
+    // alert("操作成功！");
   } else {
     // 错误处理
     alert(result.message || "操作失败，请检查输入！");
@@ -470,7 +471,7 @@ try {
   const result = await response.json();
   if (response.ok) {
     // 信息提交成功
-    alert("操作成功！");
+    // alert("操作成功！");
   } else {
     // 错误处理
     alert(result.message || "操作失败，请检查输入！");
@@ -565,7 +566,7 @@ function confirmTicket() {
   leaveButtonVisible.value=true;
   ChangeOrder("0");  
   // 这里可以添加其他逻辑，例如确认上车后执行的操作
-  console.log("carid=",carid);
+  console.log("carid=",from.value,dest.value);
   // const rawValue = carid.value; // 使用 carid.value 而不是 toRaw(carid)
   let message = {
       type: 'boardingMessage',
@@ -573,6 +574,7 @@ function confirmTicket() {
       boardingCount: 1, // 
       time: formatDateTime(new Date())  // 使用格式化后的当前时间
   };
+
   // 将新的呼叫信息添加到 store 中
   webSocketStore.sendMessage(JSON.stringify(message));
 }

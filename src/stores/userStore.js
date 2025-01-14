@@ -6,7 +6,7 @@ import { getUserIDFromToken } from '@/auth.js';
 
 const token = localStorage.getItem("jwtToken");
 if (!token) {
-    ElMessage.error("未找到用户令牌");
+    // ElMessage.error("未找到用户令牌");
 }
 
 const userID = getUserIDFromToken(token);
@@ -53,6 +53,7 @@ export const useUserStore = defineStore('user', {
                     this.userInfo.studentId = response.data.student_number;
                     this.userInfo.phone = response.data.phone;
                     this.userInfo.avatar = response.data.avatar ? `${prefixURL}${response.data.avatar}` : '';
+                    console.log("avatar =",this.userInfo.avatar);
                     this.userInfo.user_id = userID;
                     console.log(response.data);
                 } else {

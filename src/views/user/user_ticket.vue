@@ -42,6 +42,7 @@ import { defineProps, defineEmits } from 'vue';
 import {ref,onMounted,computed} from 'vue';
 // import { useApiBaseStore } from '@/stores/network';
 // import sites from "@/assets/bus_station_data.json";
+import { ElMessage } from 'element-plus';
 
 
 let select_from=ref();
@@ -123,7 +124,7 @@ async function fetchWorkShift() {
     if (response.ok) {
       // 司机数据成功返回，填充数据
       work_shift.value = result;
-      alert('取得工作信息成功！');
+      // alert('取得工作信息成功！');
     } else {
       // 错误处理
       alert(result.error || '取得工作信息失败！');
@@ -146,19 +147,31 @@ function cancel() {
 }
 // 确定逻辑
 function confirm() {
-  if (!select_from.value || !select_dest.value||!select_carID.value) {
-        alert('請選擇出發地和目標地和车辆！');
+  if (!select_from.value) {
+    ElMessage.error('请选择出发地！');
+        return;
+    }
+    else if(!select_dest.value){
+      ElMessage.error('请选择目的地！');
+        return;
+    }
+    else if(!select_carID.value){
+      ElMessage.error('请选择车牌号码！');
         return;
     }
   fetchWorkShift().then(()=>{
     props.getTicket(select_from,select_dest,select_carID, parseInt(driverIDs.value[0]));
     console.log('确定功能触发');
+    closePopup();
     emit('openPayment');
   })
 }
-
+//121111111111111111111
 // 关闭弹窗
 function closePopup() {
+  select_from.value = '';    // 清空出发地
+  select_dest.value = '';    // 清空目的地
+  select_carID.value = '';   // 清空车牌号
   emit('close');
 }
 </script>
