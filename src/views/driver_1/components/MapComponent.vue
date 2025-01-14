@@ -11,27 +11,27 @@
         </button>
       </div>
     </div>
-    <div id="app">
+    <!-- <div id="app">
       <div id="container"></div>
-      <!-- 地图外层容器 -->
-      <div id="map-wrapper">
+      地图外层容器
+      <div id="map-wrapper"> -->
         <!-- 顶部覆盖条 -->
-        <div class="map-top-bar">
+        <!-- <div class="map-top-bar">
           <ErrorBoundary>
             <VehicleStatusToggle @status-change="handleStatusChange" />
             <span class="online-count">在线 {{ onlineCount }} 人</span>
           </ErrorBoundary>
-        </div>
-      </div>
-    </div>
+        </div> -->
+      <!-- </div>
+    </div> -->
   </div>
 </template>
 
 <script setup>
 import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue';
 import AMapLoader from "@amap/amap-jsapi-loader";
-import VehicleStatusToggle from "@/views/driver_1/components/VehicleStatusToggle.vue";
-import ErrorBoundary from "@/views/driver_1/components/ErrorBoundary.vue";
+// import VehicleStatusToggle from "@/views/driver_1/components/VehicleStatusToggle.vue";
+// import ErrorBoundary from "@/views/driver_1/components/ErrorBoundary.vue";
 
 import driver_Info from '@/views/driver_0/components/driver_Info.vue';
 // import { useUserStore } from "@/stores/user";
@@ -65,7 +65,7 @@ const stationsVisible = ref(true);
 const dInfoVisible = ref(false);
 const dInfoContent = ref(null); // 根据需要初始化内容
 
-const onlineCount = ref(1); // 假设初始在线人数
+// const onlineCount = ref(1); // 假设初始在线人数
 
 // 定义辅助方法
 const getRouteColor = (index) => {
@@ -391,29 +391,29 @@ const startUpdatingMarkers = () => {
 };
 
 // 处理状态变化
-const handleStatusChange = (status) => {
-  console.log("状态已更新为：", status);
-  updateMapStatus(status);
-};
+// const handleStatusChange = (status) => {
+//   console.log("状态已更新为：", status);
+//   updateMapStatus(status);
+// };
 
-const updateMapStatus = (status) => {
-  let statusDisplay = document.getElementById("map-status-display");
-  if (!statusDisplay) {
-    const newStatus = document.createElement("div");
-    newStatus.id = "map-status-display";
-    newStatus.style.position = "absolute";
-    newStatus.style.top = "10px";
-    newStatus.style.right = "10px";
-    newStatus.style.background = "rgba(0, 0, 0, 0.5)";
-    newStatus.style.color = "white";
-    newStatus.style.padding = "5px 10px";
-    newStatus.style.borderRadius = "5px";
-    document.body.appendChild(newStatus);
-    newStatus.innerText = `状态：${status === "normal" ? "正常运营" : "试通行"}`;
-  } else {
-    statusDisplay.innerText = `状态：${status === "normal" ? "正常运营" : "试通行"}`;
-  }
-};
+// const updateMapStatus = (status) => {
+//   let statusDisplay = document.getElementById("map-status-display");
+//   if (!statusDisplay) {
+//     const newStatus = document.createElement("div");
+//     newStatus.id = "map-status-display";
+//     newStatus.style.position = "absolute";
+//     newStatus.style.top = "10px";
+//     newStatus.style.right = "10px";
+//     newStatus.style.background = "rgba(0, 0, 0, 0.5)";
+//     newStatus.style.color = "white";
+//     newStatus.style.padding = "5px 10px";
+//     newStatus.style.borderRadius = "5px";
+//     document.body.appendChild(newStatus);
+//     newStatus.innerText = `状态：${status === "normal" ? "正常运营" : "试通行"}`;
+//   } else {
+//     statusDisplay.innerText = `状态：${status === "normal" ? "正常运营" : "试通行"}`;
+//   }
+// };
 
 // 初始化 WebSocket
 const initWebSocket = () => {
@@ -468,7 +468,7 @@ defineExpose({
 <style scoped>
 #container {
   width: 100%;
-  height: 1000px;
+  height: 800px;
 }
 
 #map-wrapper {
@@ -523,7 +523,7 @@ defineExpose({
 /* 地图容器样式 */
 #map-container {
   width: 100%;
-  height: 60%;
+  height: 50%;
   z-index: 1;
   /* 底层组件 */
 }
@@ -583,7 +583,7 @@ defineExpose({
 
 .map-container {
   position: relative;
-  height: 700px;
+  height: 10px;
   width: 100%;
   border-radius: 12px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
