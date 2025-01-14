@@ -196,7 +196,9 @@ const fetchData = async () => {
             ...order,
             isRated: order.is_rated,
         })) || [];
+        orderData.value.sort((a, b) => b.order_id - a.order_id);
       paymentData.value = response.data.payments || [];
+      paymentData.value.sort((a, b) => b.payment_id - a.payment_id);
       console.log("Fetched orders successfully:", orderData.value);
 
       

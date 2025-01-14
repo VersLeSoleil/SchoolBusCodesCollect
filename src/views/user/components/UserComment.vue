@@ -65,6 +65,8 @@ const fetchFeedbackData = async () => {
     const response = await axios.post(`${prefixURL}/api/getFeedback`, params);
     if (response.data) {
       feedbackData.value = response.data || [];
+      feedbackData.value.sort((a, b) => parseInt(b.feedback_id) - parseInt(a.feedback_id));
+
       console.log("Received feedback data:", response.data);
     } else {
       console.error("No feedback data returned");
