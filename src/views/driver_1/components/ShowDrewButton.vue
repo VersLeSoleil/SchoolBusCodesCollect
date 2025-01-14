@@ -16,9 +16,17 @@ const handleClose = (done) => {
     })
     .catch(() => {});
 };
+
+
+
 </script>
 
+
 <template>
+
+
+
+
   <!-- 主按钮 -->
   <el-button  @click="drawer = true"  type="warning" round style="height: 60px; width: 180px; margin: 10px;"><p style="font-size: 20px;">更多功能</p></el-button>
 
@@ -28,7 +36,7 @@ const handleClose = (done) => {
     :direction="direction"
     :modal="false"
     :before-close="handleClose"
-    size="30%"
+    size="40%"
     custom-class="custom-drawer">
     
     <!-- 抽屉标题 -->
@@ -37,7 +45,7 @@ const handleClose = (done) => {
     </div>
 
     <!-- 内容区域 -->
-    <el-row :gutter="20" class="drawer-content">
+    <el-row :gutter="1" class="drawer-content">
       <el-col :span="12" class="content-col">
         <el-card shadow="always" class="content-card">
           <PaymentCount />
@@ -122,5 +130,8 @@ const handleClose = (done) => {
   transform: translateY(-5px);
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
 }
+
+
+
 
 </style>
