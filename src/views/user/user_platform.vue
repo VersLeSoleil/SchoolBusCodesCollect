@@ -52,7 +52,7 @@
     <el-pagination layout="prev, pager, next" :total="1000" />
   </div> -->
   </ElContainer>
-  <user_comment @close_WriteComment="close_WriteComment" :visible="CreateCommentVisible" />
+  <user_comment @close_WriteComment="close_WriteComment"   @update_comments="fetchFeedbackData"  :visible="CreateCommentVisible" />
 </template>
 
 <script setup>
@@ -151,7 +151,7 @@ const fetchFeedbackData = async () => {
   params.append("userID", userID);
 
   try {
-    const response = await axios.post(`${prefixURL}/getcomments`, params);
+    const response = await axios.post(`${prefixURL}/getcommentsForPlats`, params);
     if (response.data) {
       // 处理 avatar 字段为完整路径
       const processedData = response.data.map(comment => {
